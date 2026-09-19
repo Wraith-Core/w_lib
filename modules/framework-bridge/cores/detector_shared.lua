@@ -1,4 +1,14 @@
 return {
+  -- Wraith Core `provide`s the vorp_core / rsg-core / qbr-core names for third-party scripts;
+  -- when it runs it is the only core (shared.lua drops the alias matches). Its id is "rsg"
+  -- because WCore speaks the RSG-Core PlayerData contract (w.framework:is("rsg") is true).
+  {
+    id = "rsg",
+    name = "Wraith Core",
+    folder = "w_core",
+    matchResources = { "w_core" },
+    exclusive = true,
+  },
   {
     id = "vorp",
     name = "VORP Core",

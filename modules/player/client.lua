@@ -134,6 +134,46 @@ function w.player.healthPercent(ped)
   return math.floor(math.max(0, math.min(100, health / max * 100)) + 0.5)
 end
 
+--- Full health, cores and stamina, blood wiped -- the "heal" every admin / medic action wants.
+--- Callers that keep a laststand state of their own clear it themselves.
+---@param ped? number (defaults to the player's ped)
+---@return boolean
+function w.player.heal(ped)
+  ped = ped or PlayerPedId()
+  if not ped or ped == 0 or not DoesEntityExist(ped) then return false end
+  local max = GetEntityMaxHealth(ped)
+  if not max or max < 100 then max = 600 end
+  SetEntityHealth(ped, max, 0)
+  -- cores: 0 health, 1 stamina, 2 dead eye (_SET_ATTRIBUTE_CORE_VALUE)
+  Citizen.InvokeNative(0xC6258F41D86676E0, ped, 0, 100)
+  Citizen.InvokeNative(0xC6258F41D86676E0, ped, 1, 100)
+  Citizen.InvokeNative(0xC6258F41D86676E0, ped, 2, 100)
+  pcall(RestorePedStamina, ped, 100.0)
+  pcall(ClearPedBloodDamage, ped)
+  return true
+end
+
+--- Bring a dead player back where he lies (or at `coords`, facing `heading`) and heal him.
+--- The framework's own death state (metadata.isdead / laststand) is the caller's business:
+--- this is the ped-level part every revive shares.
+---@param ped? number (defaults to the player's ped)
+---@param coords? vector3|vector4 (where to stand up; the current position when nil)
+---@param heading? number
+---@return boolean
+function w.player.revive(ped, coords, heading)
+  ped = ped or PlayerPedId()
+  if not ped or ped == 0 or not DoesEntityExist(ped) then return false end
+  local at = coords or GetEntityCoords(ped)
+  heading = heading or (type(coords) == "vector4" and coords.w) or GetEntityHeading(ped)
+  NetworkResurrectLocalPlayer(at.x, at.y, at.z, heading, true, false)
+  pcall(ResurrectPed, ped)
+  ClearPedTasksImmediately(ped, true, true)
+  SetEntityInvincible(ped, false)
+  SetEntityCanBeDamaged(ped, true)
+  w.player.heal(ped)
+  return true
+end
+
 --- The player's stamina as a percentage, 0-100.
 ---@param ped? number
 ---@return number

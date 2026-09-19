@@ -47,6 +47,9 @@ local function getMatchedEntries(entries)
       waitForResources(entry.matchResources)
       matchedEntries[#matchedEntries + 1] = entry
       gprint(("%s detected"):format(entry.name))
+      -- an exclusive entry (Wraith Core) provides the other names itself: stop here so the
+      -- aliases are not reported as extra cores
+      if entry.exclusive then break end
     end
   end
   return matchedEntries
@@ -123,6 +126,53 @@ function w.framework:getCore()
   local core = rawget(self, "core")
   if type(core) == "table" and next(core) ~= nil then return core end
   return nil
+end
+
+--- The core object fetched from the running framework (both sides), cached in
+--- w.framework.core. On Wraith Core it is WCore (exports.w_core:GetCoreObject()), on RSG
+--- RSGCore, on QBR the QBR shape w_lib builds, on VORP the VORP core (server only).
+--- Consumers assign it at load: `WCore = w.framework:getCoreObject()`.
+---@return table|nil
+function w.framework:getCoreObject()
+  local core = self:getCore()
+  if core then return core end
+
+  local detected = self:getFrameworkDetected()
+  local folder = detected and detected.folder
+  local id = detected and detected.id
+  local ok, obj
+
+  if folder == "w_core" or GetResourceState("w_core") == "started" then
+    ok, obj = pcall(function() return exports.w_core:GetCoreObject() end)
+  elseif id == "rsg" or id == "rsg_v2" then
+    ok, obj = pcall(function() return exports["rsg-core"]:GetCoreObject() end)
+  elseif id == "qbr" then
+    ok, obj = pcall(function() return exports["qbr-core"]:GetCoreObject() end)
+    if not ok or type(obj) ~= "table" then
+      ok, obj = pcall(function() return exports.w_lib:FwGetCore() end)
+    end
+  elseif id == "qr" then
+    ok, obj = pcall(function() return exports["qr-core"]:GetCoreObject() end)
+  elseif id == "vorp" then
+    ok, obj = pcall(function() return exports.vorp_core:GetCore() end)
+  elseif id == "rpx" then
+    ok, obj = pcall(function() return exports["rpx-core"]:GetCoreObject() end)
+  elseif id == "tpz" then
+    ok, obj = pcall(function() return exports.tpz_core:getCoreAPI() end)
+  end
+
+  if ok and type(obj) == "table" then
+    rawset(self, "core", obj)
+    return obj
+  end
+  return nil
+end
+
+--- Is the running core Wraith Core (w_core hosting the rsg-core / vorp_core / qbr-core names)?
+---@return boolean
+function w.framework:isWraith()
+  local detected = self:getFrameworkDetected()
+  return detected and detected.folder == "w_core" or false
 end
 
 local function loadFile(...)

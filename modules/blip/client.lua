@@ -35,8 +35,9 @@ end)
 ---@param sprite string|integer The sprite name or its hash ([Non exhaustive list](https://github.com/femga/rdr3_discoveries/tree/master/useful_info_from_rpfs/textures/blips))
 ---@param blipHash? integer The blip type hash - default: `1664425300`
 ---@param color? string The color modifier name applied to the blip (resolved via `GetHashFromString`)
+---@param scale? number The blip scale (default 1.0)
 ---@return integer|false blip The blip ID on success, or `false` if the entity does not exist
-function w.blip.create(locationOrEntity, name, sprite, blipHash, color)
+function w.blip.create(locationOrEntity, name, sprite, blipHash, color, scale)
   if not blipHash then blipHash = 1664425300 end
   if type(sprite) == "string" then sprite = joaat(sprite) end
 
@@ -55,10 +56,80 @@ function w.blip.create(locationOrEntity, name, sprite, blipHash, color)
   if color then
     BlipAddModifier(blip, GetHashFromString(color))
   end
+  if tonumber(scale) and tonumber(scale) > 0 then
+    SetBlipScale(blip, tonumber(scale) + 0.0)
+  end
   Blips[#Blips + 1] = blip
 
-  Known[blip] = { name = name, sprite = sprite, color = color }
+  Known[blip] = { name = name, sprite = sprite, color = color, scale = scale }
   announce(blip, Known[blip])
 
   return blip
 end
+
+--- Rename a blip made with w.blip.create (w_map learns the new name too).
+---@param blip integer
+---@param name string
+---@return boolean
+function w.blip.setName(blip, name)
+  if not blip or not DoesBlipExist(blip) then return false end
+  SetBlipName(blip, name)
+  if Known[blip] then
+    Known[blip].name = name
+    announce(blip, Known[blip])
+  end
+  return true
+end
+
+--- Change the sprite of a blip made with w.blip.create.
+---@param blip integer
+---@param sprite string|integer
+---@return boolean
+function w.blip.setSprite(blip, sprite)
+  if not blip or not DoesBlipExist(blip) then return false end
+  if type(sprite) == "string" then sprite = joaat(sprite) end
+  SetBlipSprite(blip, sprite)
+  if Known[blip] then
+    Known[blip].sprite = sprite
+    announce(blip, Known[blip])
+  end
+  return true
+end
+
+--- Move a coordinate blip.
+---@param blip integer
+---@param coords vector3
+---@return boolean
+function w.blip.setCoords(blip, coords)
+  if not blip or not DoesBlipExist(blip) or not coords then return false end
+  SetBlipCoords(blip, coords.x + 0.0, coords.y + 0.0, (coords.z or 0.0) + 0.0)
+  return true
+end
+
+--- Change the scale of a blip.
+---@param blip integer
+---@param scale number
+---@return boolean
+function w.blip.setScale(blip, scale)
+  if not blip or not DoesBlipExist(blip) then return false end
+  SetBlipScale(blip, (tonumber(scale) or 1.0) + 0.0)
+  return true
+end
+
+--- Remove a blip made with w.blip.create.
+---@param blip integer
+---@return boolean
+function w.blip.remove(blip)
+  if not blip then return false end
+  if DoesBlipExist(blip) then RemoveBlip(blip) end
+  Known[blip] = nil
+  for i = #Blips, 1, -1 do
+    if Blips[i] == blip then table.remove(Blips, i) end
+  end
+  if GetResourceState('w_map') == 'started' then
+    pcall(function() exports.w_map:Unregister(blip) end)
+  end
+  return true
+end
+
+w.blip.delete = w.blip.remove

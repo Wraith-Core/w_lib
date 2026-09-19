@@ -207,6 +207,36 @@ exports('SetNextPageKey', function(id, key)
 end)
 
 -- ============================================================
+-- Walk-up arbitration (w.prompt.at across resources)
+-- Every resource arbitrates its own records; between resources the closest claim wins.
+-- A claim is renewed every frame while the owner shows its group and lapses after 250 ms.
+-- ============================================================
+local walkup = { owner = nil, distance = math.huge, at = 0 }
+
+--- May the calling resource display a walk-up prompt at this distance?
+---@param distance number
+---@return boolean
+exports('WalkupClaim', function(distance)
+    local owner = GetInvokingResource() or GetCurrentResourceName()
+    local now = GetGameTimer()
+    distance = tonumber(distance) or 0.0
+
+    if walkup.owner and walkup.owner ~= owner and (now - walkup.at) < 250 and walkup.distance <= distance then
+        return false
+    end
+
+    walkup.owner, walkup.distance, walkup.at = owner, distance, now
+    return true
+end)
+
+exports('WalkupRelease', function()
+    local owner = GetInvokingResource() or GetCurrentResourceName()
+    if walkup.owner == owner then
+        walkup.owner, walkup.distance, walkup.at = nil, math.huge, 0
+    end
+end)
+
+-- ============================================================
 -- حلقة الاستطلاع الداخلية
 -- تعمل فقط حين تكون هناك مجموعة معروضة، وتبث حدثاً عند الاكتمال
 -- فلا يستطلع أي سكربت خارجي شيئاً

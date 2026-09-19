@@ -109,14 +109,24 @@ end
 function w.entity.create(model, coords, ...)
 	local args = { ... }
 	local networked, fadeDuration = false, 0
-	if type(coords) == vector4 then
-		networked = GetValue(args[1], false)
-		fadeDuration = GetValue(args[2], 0)
+	local isV4 = (type(coords) == "vector4") or (type(coords) == "table" and coords.w ~= nil) or (coords and coords.w ~= nil)
+	if isV4 then
+		if type(args[1]) == "number" then
+			coords = vec4(coords.x, coords.y, coords.z, args[1])
+			networked = GetValue(args[2], false)
+			fadeDuration = args[3]
+		else
+			coords = vec4(coords.x, coords.y, coords.z, coords.w or 0.0)
+			networked = GetValue(args[1], false)
+			fadeDuration = args[2]
+		end
 	else
-		coords = vec4(coords.x, coords.y, coords.z, GetValue(args[1], 0))
+		coords = vec4(coords.x, coords.y, coords.z, (type(args[1]) == "number" and args[1]) or 0.0)
 		networked = GetValue(args[2], false)
-		fadeDuration = GetValue(args[3], 0)
+		fadeDuration = args[3]
 	end
+	fadeDuration = (type(fadeDuration) == "number" and fadeDuration) or (tonumber(fadeDuration) or 0)
+
 	model = GetHashFromString(model)
 	w.utils.loadGameData(model, true)
 	local entity
@@ -141,21 +151,25 @@ function w.entity.create(model, coords, ...)
 		SetEntityHealth(entity, 600, 1)
 		SetAttributeCoreValue(entity, 1, 100)
 		RestorePedStamina(entity, 1065330373)
+	elseif IsModelAVehicle(model) then
+		entity = CreateVehicle(model, coords.x, coords.y, coords.z, coords.w or 0.0, networked, false)
 	elseif IsModelAnObject(model) then
 		entity = CreateObject(model, vec3(0, 0, 0), networked, true, false)
 	end
 	SetModelAsNoLongerNeeded(model)
-	if fadeDuration > 0 then
-		SetEntityAlpha(entity, 0)
+	if entity and DoesEntityExist(entity) then
+		if fadeDuration > 0 then
+			SetEntityAlpha(entity, 0)
+		end
+		SetEntityCoords(entity, coords.xyz)
+		SetEntityHeading(entity, coords.w)
+		if fadeDuration > 0 then
+			CreateThreadNow(function()
+				w.entity.fadeIn(entity, fadeDuration)
+			end)
+		end
+		Entities[entity] = true
 	end
-	SetEntityCoords(entity, coords.xyz)
-	SetEntityHeading(entity, coords.w)
-	if fadeDuration > 0 then
-		CreateThreadNow(function()
-			w.entity.fadeIn(entity, fadeDuration)
-		end)
-	end
-	Entities[entity] = true
 	return entity
 end
 

@@ -161,6 +161,27 @@ function w.callback.triggerClient(name, source, cb, ...)
   return unpack(Await(responseCallback) or {})
 end
 
+--- Server mirror of the client's w.callback.await: ask a client and wait for its answer.
+---@param name string (The name of the client callback)
+---@param source integer (The player to ask)
+---@param ... any (The arguments)
+---@return any (The values the client callback returned)
+function w.callback.await(name, source, ...)
+  return w.callback.triggerClient(name, source, nil, ...)
+end
+
 exports("getCallbackAPI", function()
   return w.callback
 end)
+
+setmetatable(w.callback, {
+  __call = function(self, name, source, cb, ...)
+    if isAFunction(source) then
+      return self.triggerServer(name, source, cb, ...)
+    elseif type(source) == "number" or (type(source) == "string" and tonumber(source)) then
+      return self.triggerClient(name, tonumber(source), cb, ...)
+    else
+      return self.triggerServer(name, source, cb, ...)
+    end
+  end
+})

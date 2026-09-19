@@ -30,7 +30,11 @@ local alias = {
   pedTexture = "ped-texture",
   gameEvents = "game-events",
   triggerEvent = "trigger-event",
-  promptNui = "prompt-nui"
+  promptNui = "prompt-nui",
+  -- w.rawKeys must always be the raw-keys MODULE (bind / listen / getVK): without the alias a
+  -- consumer that touches w.rawKeys before anything required "raw-keys" fell through to the
+  -- ox import of the same name, which has no bind().
+  rawKeys = "raw-keys"
 }
 
 local function getAlias(module)

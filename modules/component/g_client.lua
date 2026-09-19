@@ -379,6 +379,28 @@ function w.component.refreshPed(ped)
   refreshPed(ped)
 end
 
+--- The body weight ("waist type") of a metaped: one of the outfit hashes the creator lists
+--- (w_creators' WAIST_TYPES). Applied like applySkin's bodyWeight, then the ped is refreshed.
+---@param ped integer (The entity ID)
+---@param hash integer (The waist outfit hash)
+---@return boolean
+function w.component.setWaistType(ped, hash)
+  ped = ped or PlayerPedId()
+  hash = GetHashFromString(hash)
+  if not ped or ped == 0 or not DoesEntityExist(ped) or not hash or hash == 0 then return false end
+  EquipMetaPedOutfit(ped, hash)
+  w.component.refreshPed(ped)
+  return true
+end
+
+--- The body type of a metaped (applySkin's bodyType outfit hash), then the ped is refreshed.
+---@param ped integer (The entity ID)
+---@param hash integer (The body type outfit hash)
+---@return boolean
+function w.component.setBodyType(ped, hash)
+  return w.component.setWaistType(ped, hash)
+end
+
 --- A function to wait the refresh of ped
 --- @param ped integer (The entity ID)
 function w.component.waitPedLoaded(ped)

@@ -30,10 +30,46 @@ local function fromLibrary()
   return GetConvar("w_lib:locale", GetConvar("w_lib:i18n:locale", DEFAULT))
 end
 
---- The current language key
+--- The current language key. On the server `src` asks for THAT player's language (his own
+--- choice from /w_lib, mirrored into Player(src).state['w_lib:locale']); without it, or on
+--- the client, the language of this side.
+---@param src? number (server only: a player's server id)
 ---@return string (Return `"ar"`, `"en"`, ... always two lower-case letters)
-function language.key()
+function language.key(src)
+  if src and IsDuplicityVersion() then
+    local ok, key = pcall(function() return exports.w_lib:getPlayerLocaleKey(src) end)
+    if ok and type(key) == "string" and key ~= "" then return normalize(key) end
+  end
   return normalize(fromLibrary())
+end
+
+--- The language a piece of text is written in, from its script: Arabic letters -> "ar",
+--- Latin letters -> "en", anything else (digits, emoji, empty) -> `fallback` or the current
+--- language. Counts letters, so "ok شكرا" is Arabic and "شكرا ok thanks" is English.
+---@param text any
+---@param fallback? string
+---@return string
+function language.fromText(text, fallback)
+  local default = normalize(fallback or language.key())
+  if type(text) ~= "string" or text == "" then return default end
+  local arabic, latin = 0, 0
+  for ch in text:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
+    local b = ch:byte(1)
+    if #ch == 2 and b >= 0xD8 and b <= 0xDD then
+      -- U+0600..U+077F: Arabic, Arabic supplement (lead bytes D8..DD)
+      arabic = arabic + 1
+    elseif #ch == 3 and b == 0xEF then
+      -- U+FB50..U+FDFF and U+FE70..U+FEFF: the Arabic presentation forms
+      local b2 = ch:byte(2)
+      if (b2 >= 0xAD and b2 <= 0xB7) or (b2 >= 0xB9 and b2 <= 0xBB) then arabic = arabic + 1 end
+    elseif #ch == 1 and ((b >= 65 and b <= 90) or (b >= 97 and b <= 122)) then
+      latin = latin + 1
+    end
+  end
+  if arabic == 0 and latin == 0 then return default end
+  if arabic > latin then return "ar" end
+  if latin > arabic then return "en" end
+  return default
 end
 
 --- Is the current (or given) language written right to left?

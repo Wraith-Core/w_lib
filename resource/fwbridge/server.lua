@@ -1472,3 +1472,110 @@ end)
 exports('FwGetSharedItems', function() return (WFW.Core and WFW.Core.Shared and WFW.Core.Shared.Items) or {} end)
 exports('FwGetSharedWeapons', function() return (WFW.Core and WFW.Core.Shared and WFW.Core.Shared.Weapons) or {} end)
 exports('FwGetSharedJobs', function() return (WFW.Core and WFW.Core.Shared and WFW.Core.Shared.Jobs) or {} end)
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- Host / backend, character rows, offline roles, bank accounts, native core calls
+-- ════════════════════════════════════════════════════════════════════════════
+
+-- column whitelist of the character table per core (no caller string reaches the SQL)
+local ROW_COLUMNS = {
+    rsgcore = { citizenid = 'citizenid', license = 'license', name = 'name', job = 'job', gang = 'gang' },
+    vorp    = { citizenid = 'charidentifier', charidentifier = 'charidentifier', identifier = 'identifier', job = 'job', firstname = 'firstname', lastname = 'lastname' },
+}
+
+--- Character rows of the core's own table. `field` is one of citizenid / license / name /
+--- job / gang (RSG-family: job and gang match the JSON column's name) or charidentifier /
+--- identifier / job / firstname / lastname on VORP. Returns raw rows ({} when nothing matches).
+exports('FwCharacterRows', function(field, value)
+    local columns = ROW_COLUMNS[WFW.Name] or {}
+    local column = columns[tostring(field or '')]
+    if not column or value == nil then return {} end
+    if WFW.Name == 'rsgcore' then
+        if column == 'job' or column == 'gang' then
+            return MySQL.query.await(('SELECT * FROM players WHERE JSON_UNQUOTE(JSON_EXTRACT(%s, "$.name")) = ?'):format(column), { tostring(value) }) or {}
+        end
+        return MySQL.query.await(('SELECT * FROM players WHERE %s = ?'):format(column), { value }) or {}
+    elseif WFW.Name == 'vorp' then
+        return MySQL.query.await(('SELECT * FROM characters WHERE %s = ?'):format(column), { value }) or {}
+    end
+    return {}
+end)
+
+--- Write a job / gang onto a character that may be offline. `role` is the full table the
+--- core stores ({ name, label, grade = { level, name }, ... }); `expectedCurrent` (optional)
+--- must be the character's current role name or nothing is written (a boss fires only his own
+--- employees). An online player is updated through the core so his HUD follows.
+---@return boolean
+exports('FwSetOfflineRole', function(citizenid, kind, role, expectedCurrent)
+    if (kind ~= 'job' and kind ~= 'gang') or type(role) ~= 'table' or not citizenid then return false end
+    if WFW.Name == 'rsgcore' then
+        local core = WFW.Core
+        local online = core and core.Functions.GetPlayerByCitizenId and core.Functions.GetPlayerByCitizenId(citizenid)
+        if online then
+            local current = online.PlayerData[kind] and online.PlayerData[kind].name
+            if expectedCurrent and current ~= expectedCurrent then return false end
+            local grade = type(role.grade) == 'table' and role.grade.level or role.grade or 0
+            if kind == 'job' then return online.Functions.SetJob(role.name, grade) ~= false end
+            return online.Functions.SetGang(role.name, grade) ~= false
+        end
+        local affected
+        if expectedCurrent then
+            affected = MySQL.update.await(('UPDATE players SET %s = ? WHERE citizenid = ? AND JSON_UNQUOTE(JSON_EXTRACT(%s, "$.name")) = ?'):format(kind, kind),
+                { json.encode(role), citizenid, tostring(expectedCurrent) })
+        else
+            affected = MySQL.update.await(('UPDATE players SET %s = ? WHERE citizenid = ?'):format(kind), { json.encode(role), citizenid })
+        end
+        return (affected or 0) > 0
+    elseif WFW.Name == 'vorp' then
+        if kind ~= 'job' then return false end
+        local grade = type(role.grade) == 'table' and role.grade.level or role.grade or 0
+        local affected
+        if expectedCurrent then
+            affected = MySQL.update.await('UPDATE characters SET job = ?, joblabel = ?, jobgrade = ? WHERE charidentifier = ? AND job = ?',
+                { role.name, role.label or role.name, grade, citizenid, tostring(expectedCurrent) })
+        else
+            affected = MySQL.update.await('UPDATE characters SET job = ?, joblabel = ?, jobgrade = ? WHERE charidentifier = ?',
+                { role.name, role.label or role.name, grade, citizenid })
+        end
+        return (affected or 0) > 0
+    end
+    return false
+end)
+
+--- The character whose bank account number this is: a player object (online) or an offline
+--- player object of the core, plus `true` when it is offline (call receiver.Functions.Save()).
+---@return table|nil receiver, boolean offline
+exports('FwFindBankAccount', function(accountNumber)
+    accountNumber = tostring(accountNumber or ''):gsub('%s', '')
+    if accountNumber == '' then return nil end
+    if WFW.Name == 'rsgcore' then
+        local core = WFW.Core
+        if not core then return nil end
+        for _, id in ipairs(GetPlayers()) do
+            local player = core.Functions.GetPlayer(tonumber(id))
+            local info = player and player.PlayerData and player.PlayerData.charinfo
+            if info and tostring(info.account or '') == accountNumber then return player, false end
+        end
+        local row = MySQL.single.await('SELECT citizenid FROM players WHERE JSON_UNQUOTE(JSON_EXTRACT(charinfo, "$.account")) = ?', { accountNumber })
+        if row and core.Player and core.Player.GetOfflinePlayer then
+            local offline = core.Player.GetOfflinePlayer(row.citizenid)
+            if offline then return offline, true end
+        end
+    end
+    return nil
+end)
+
+--- Call a function of the running core by name (Core.Functions.<fn>, Core.Player.<fn> or the
+--- core resource's export <fn>), whatever the core is. Used for Login / DeleteCharacter /
+--- ExploitBan on the RSG-family cores.
+exports('FwNativeCoreCall', function(fn, ...)
+    local core = WFW.Core
+    if type(fn) ~= 'string' or not core then return nil end
+    if core.Functions and core.Functions[fn] then return core.Functions[fn](...) end
+    if core.Player and core.Player[fn] then return core.Player[fn](...) end
+    local host = WFW.Host or (WFW.Name == 'vorp' and 'vorp_core') or (WFW.PublicName == 'qbr' and 'qbr-core') or 'rsg-core'
+    local ok, result = pcall(function(...) return exports[host][fn](nil, ...) end, ...)
+    if ok then return result end
+    print(('^1[w_lib] FwNativeCoreCall: %s is not a function of %s (%s)^0'):format(fn, host, tostring(result)))
+    return nil
+end)

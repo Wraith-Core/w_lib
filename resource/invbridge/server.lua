@@ -649,3 +649,41 @@ CreateThread(function()
         Wait(attempts < 150 and 200 or 2000)
     end
 end)
+
+-- ───────────────────────── several lines at once (w_shops, voice orders) ─────────────────────────
+-- lines = { { item = 'bread', count = 2, metadata = {...} }, ... } (`name` is accepted for `item`)
+
+--- Can the player take every line? -> ok, reason ('inventory_full' | 'unavailable')
+exports('InvCanCarryItems', function(src, lines)
+    if not ensure() then return false, 'unavailable' end
+    if type(lines) ~= 'table' then return false, 'unavailable' end
+    for _, line in ipairs(lines) do
+        local item = line.item or line.name
+        if not item then return false, 'unavailable' end
+        if A.CanCarry(src, item, tonumber(line.count) or 1) ~= true then return false, 'inventory_full' end
+    end
+    return true
+end)
+
+--- Give every line; on a failure the lines already given are taken back.
+--- -> ok, reason ('inventory_full' | 'rollback_pending' | 'unavailable')
+exports('InvAddItems', function(src, lines)
+    if not ensure() then return false, 'unavailable' end
+    if type(lines) ~= 'table' then return false, 'unavailable' end
+    local given = {}
+    for _, line in ipairs(lines) do
+        local item = line.item or line.name
+        local count = tonumber(line.count) or 1
+        if not item or A.AddItem(src, item, count, line.metadata) ~= true then
+            for i = #given, 1, -1 do
+                local g = given[i]
+                if A.RemoveItem(src, g.item, g.count, g.metadata) ~= true then
+                    return false, 'rollback_pending'
+                end
+            end
+            return false, 'inventory_full'
+        end
+        given[#given + 1] = { item = item, count = count, metadata = line.metadata }
+    end
+    return true
+end)

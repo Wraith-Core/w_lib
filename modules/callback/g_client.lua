@@ -151,3 +151,15 @@ function w.callback.await(name, delay, ...)
   end
   return w.callback.triggerServer(name, nil, ...)
 end
+
+setmetatable(w.callback, {
+  __call = function(self, name, delay, cb, ...)
+    if isAFunction(delay) then
+      return self.triggerServer(name, delay, cb, ...)
+    elseif isAFunction(cb) then
+      return self.triggerServer(name, cb, ...)
+    else
+      return self.await(name, delay, cb, ...)
+    end
+  end
+})

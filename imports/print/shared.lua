@@ -43,13 +43,23 @@ local function libPrint(level, ...)
     if level > resourcePrintLevel then return end
 
     local args = { ... }
+    local n = select('#', ...)
 
-    for i = 1, #args do
+    for i = 1, n do
         local arg = args[i]
         args[i] = type(arg) == 'table' and json.encode(arg, jsonOptions) or tostring(arg)
     end
 
-    print(template:format(levelPrefixes[level], table.concat(args, '\t')))
+    -- w.print.warn('%d item(s) missing: %s', count, list): a format string as the first
+    -- argument is applied (the jo-style print does the same); anything else is tab-joined.
+    if n > 1 and args[1]:find('%%[%-%d%.]*[sdfgqxXic]') then
+        local ok, formatted = pcall(string.format, table.unpack(args, 1, n))
+        if ok then
+            return print(template:format(levelPrefixes[level], formatted))
+        end
+    end
+
+    print(template:format(levelPrefixes[level], table.concat(args, '\t', 1, n)))
 end
 
 lib.print = {

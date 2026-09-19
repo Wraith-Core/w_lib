@@ -6,7 +6,7 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 
 name 'w_lib'
 author 'Wraith Studio'
-version '3.39.0'
+version '4.0.0'
 -- Includes adaptations from ox_lib and jo_libs; preserve their original notices.
 -- See CREDITS.md and LICENSES/ for upstream attribution and license copies.
 license 'LGPL-3.0-or-later'
@@ -29,6 +29,8 @@ files {
     'web/build/index.html',
     'web/build/**/*',
     'locales/*.json',
+    -- dialect host layer: loaded by init.lua inside the core that provides rsg-core / vorp_core / qbr-core / ox_lib
+    'compat/*.lua',
 
     -- ── modules loaded at runtime by w_init / NUI assets / locales ──
     'w_init.lua',
@@ -63,6 +65,7 @@ files {
 escrow_ignore {
     'init.lua',
     'w_init.lua',
+    'compat/*.lua',
     'imports/**/*.lua',
     'modules/**/*.lua',
     'resource/settings.lua',

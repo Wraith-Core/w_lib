@@ -450,6 +450,45 @@ else
 end
 
 -- ══════════════════════════════════════════════════════════════════════════
+-- Dialect host (w_core): the core that `provide`s rsg-core / qbr-core / vorp_core /
+-- vorp_menu / vorp_inputs / vorp_progressbar / ox_lib gets the public contracts of
+-- those names installed into ITS OWN VM here (compat/host_*.lua). A `provide` only
+-- aliases the resource name for dependencies and GetResourceState; it does NOT alias
+-- exports (exports['rsg-core']:GetCoreObject() looks for the event
+-- __cfx_export_rsg-core_GetCoreObject, which only code running inside the providing
+-- resource can register). Third-party RSG/VORP/ox scripts therefore run on w_core
+-- unchanged. See compat/COMPATIBILITY.md.
+-- ══════════════════════════════════════════════════════════════════════════
+do
+    local dialects = {
+        ['rsg-core'] = true, ['qbr-core'] = true, ['vorp_core'] = true, ['ox_lib'] = true,
+        ['vorp_inputs'] = true, ['vorp_menu'] = true, ['vorp_progressbar'] = true,
+    }
+    local provided = {}
+    for i = 1, GetNumResourceMetadata(cache.resource, 'provide') do
+        local name = GetResourceMetadata(cache.resource, 'provide', i - 1)
+        if dialects[name] then provided[#provided + 1] = name end
+    end
+
+    if #provided > 0 then
+        _ENV.WCompat = { provided = provided, host = cache.resource }
+        for _, part in ipairs({ 'shared', context }) do
+            local path = ('compat/host_%s.lua'):format(part)
+            local chunk = LoadResourceFile(w_lib, path)
+            if chunk then
+                local fn, err = load(chunk, '@@w_lib/' .. path)
+                if fn then
+                    local ok, runErr = pcall(fn)
+                    if not ok then print(('^1[w_lib] dialect host (%s) failed: %s^0'):format(path, runErr)) end
+                else
+                    print(('^1[w_lib] dialect host (%s) failed to parse: %s^0'):format(path, err))
+                end
+            end
+        end
+    end
+end
+
+-- ══════════════════════════════════════════════════════════════════════════
 -- jo — اسم مستعار لنفس السطح.
 --   w_lib هو jo_libs بعد إعادة التسمية: نفس الوحدات ونفس الواجهة. الموارد
 --   المبنيّة على jo_libs تستدعي jo.* ، فبهذا السطر تعمل عليها كما هي بلا

@@ -400,3 +400,6 @@ function w.prompt.createGroup(title, position)
 
   return group
 end
+
+-- walk-up prompts (w.prompt.at / atEntity / atClosestPlayer) live in their own file
+w.file.load("prompt.walkup_client")

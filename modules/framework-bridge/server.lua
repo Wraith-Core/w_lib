@@ -106,6 +106,33 @@ function w.framework:getRPName(source)
   return user:getRPName()
 end
 
+--- The character's name (first and last) or nil when no character is loaded.
+---@param source integer (The source ID of the player)
+---@return string|nil
+function w.framework:getCharacterName(source)
+  local user = w.framework.UserClass:get(source)
+  if not user or type(user) ~= "table" then return nil end
+  local ok, name = pcall(user.getRPName, user)
+  return ok and name or nil
+end
+
+--- How many of an item the player carries. Adapters may override it; the default asks the
+--- library's inventory bridge (w_inventory / vorp_inventory / rsg-inventory / qbr-inventory).
+---@param source integer (The source ID of the player)
+---@param item string (The name of the item)
+---@param meta? table (Metadata the stack must match)
+---@return integer
+function w.framework:getItemCount(source, item, meta)
+  local ok, count = pcall(function() return exports.w_lib:InvGetItemCount(source, item, meta) end)
+  if ok and tonumber(count) then return tonumber(count) end
+  local user = w.framework.UserClass:get(source)
+  if user and user.data and user.data.Functions and user.data.Functions.GetItemByName then
+    local found = user.data.Functions.GetItemByName(item)
+    return found and (found.amount or found.count) or 0
+  end
+  return 0
+end
+
 --- Checks if a player has sufficient funds of a specified currency type
 ---@param source integer (The source ID of the player)
 ---@param amount number (The amount of money the player needs to have <br> {money = 10.5, gold = 3, rol = 1.5})

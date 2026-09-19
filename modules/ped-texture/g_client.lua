@@ -440,7 +440,7 @@ local function updateAllPedTexture(ped, category)
       return IsPedReadyToRender(ped)
     end)
     dprint(("Ped ready in %.4fms"):format(GetNumberOfMicrosecondsSinceLastCall() / 1000))
-    if pedsTextures[ped][category].textureId ~= nil then
+    if pedsTextures[ped] and pedsTextures[ped][category] and pedsTextures[ped][category].textureId ~= nil then
       ClearPedTexture(pedsTextures[ped][category].textureId)
       dprint("Old texture cleared")
     end
@@ -570,23 +570,31 @@ end
 --- A function to refresh the ped texture
 ---@param ped integer (The entity ID)
 function w.pedTexture.refreshAll(ped)
+  if not ped or ped == 0 or not DoesEntityExist(ped) then return end
   dprint("Refresh all ped texture", ped)
   pedsTextures[ped] = pedsTextures[ped] or Entity(ped).state["w_pedTexture"] or {}
   if table.count(pedsTextures[ped]) == 0 then return end
 
   for _, data in pairs(pedsTextures[ped]) do
-    for layername, layer in pairs(data.layers) do
+    for layername, layer in pairs(data.layers or {}) do
       w.pedTexture.apply(ped, layername, layer)
     end
   end
-  if delays["updatePedTexture" .. ped] then
-    delays["updatePedTexture" .. ped]:execute()
+  local delay = delays["updatePedTexture" .. ped]
+  if delay then
+    delays["updatePedTexture" .. ped] = nil
+    delay:execute()
   end
 end
 
 --- A function to apply now the ped texture modification
 function w.pedTexture.refreshNow(ped)
-  if delays["updatePedTexture" .. ped]:execute() then
+  if not ped or ped == 0 or not DoesEntityExist(ped) then return end
+  local delay = delays["updatePedTexture" .. ped]
+  if delay then
+    delays["updatePedTexture" .. ped] = nil
+    delay:execute()
+  else
     dprint("No texture to apply for this ped", ped)
   end
 end

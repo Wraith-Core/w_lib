@@ -22,3 +22,27 @@ function lib.getLocaleKey()
 end
 
 exports('getLocaleKey', lib.getLocaleKey)
+
+--- The language a player sees: his own choice (mirrored by the client into
+--- Player(src).state['w_lib:locale']) or the server's language.
+---@param src number
+---@return string
+function lib.getPlayerLocaleKey(src)
+    src = tonumber(src)
+    if src and src > 0 then
+        local key = Player(src).state['w_lib:locale']
+        if type(key) == 'string' and key ~= '' then return key end
+    end
+    return lib.getLocaleKey()
+end
+
+exports('getPlayerLocaleKey', lib.getPlayerLocaleKey)
+
+-- the client reports its language (resource/locale/client.lua); two lower-case letters only
+RegisterNetEvent('w_lib:playerLocale', function(key)
+    local src = source
+    if type(key) ~= 'string' then return end
+    key = key:lower():match('^%s*([a-z][a-z])') or nil
+    if not key then return end
+    Player(src).state:set('w_lib:locale', key, true)
+end)

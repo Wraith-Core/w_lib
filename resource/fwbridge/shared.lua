@@ -6,7 +6,7 @@
 --   ملاحظة: يعمل داخل مورد w_lib نفسه (لا وسيط w هنا) — نعتمد النواة مباشرةً.
 -- ════════════════════════════════════════════════════════════════════════════
 
-WFW = WFW or { Name = nil, PublicName = nil, Core = nil, Inventory = nil, Ready = false }
+WFW = WFW or { Name = nil, PublicName = nil, Core = nil, Inventory = nil, Ready = false, Host = nil }
 
 -- QBR exposes small functions directly from qbr-core rather than a GetCoreObject
 -- table. Build the tiny QB-style shape used by the unified bridge so every Fw*
@@ -38,6 +38,16 @@ end
 
 -- محاولة كشف صامتة (بلا طباعة) — تُعاد حتى ينجح
 local function tryDetect()
+    -- Wraith Core first: it `provide`s the vorp_core / rsg-core / qbr-core names, so every
+    -- later check below would otherwise match the alias instead of the real core.
+    if GetResourceState('w_core') == 'started' then
+        local ok, core = pcall(function() return exports['w_core']:GetCoreObject() end)
+        if ok and core then
+            -- WCore speaks the RSG-Core contract; consumers keyed on FwName() == 'rsgcore' keep working.
+            WFW.Name = 'rsgcore'; WFW.PublicName = 'rsgcore'; WFW.Core = core; WFW.Inventory = 'w_inventory'; WFW.Host = 'w_core'
+            return true
+        end
+    end
     if GetResourceState('vorp_core') == 'started' then
         local ok, core = pcall(function() return exports['vorp_core']:GetCore() end)
         if ok and core then
@@ -91,3 +101,13 @@ exports('FwInventory', function()
     return (ok and n) or WFW.Inventory
 end)
 exports('FwGetCore', function() return WFW.Core end)
+exports('FwHost', function() return WFW.Host end)
+
+--- Which core actually answers: 'wcore' (Wraith Core hosting the dialect names), 'vorp',
+--- 'rsg' or 'qbr'. w_inventory keys its weapon backend on it (both sides).
+exports('FwBackend', function()
+    if WFW.Host == 'w_core' or GetResourceState('w_core') == 'started' then return 'wcore' end
+    local name = WFW.PublicName or WFW.Name
+    if name == 'rsgcore' then return 'rsg' end
+    return name
+end)

@@ -76,4 +76,80 @@ end
 ---@deprecated
 lib.raycast.cam = lib.raycast.fromCamera
 
+-- ════════════════════════════════════════════════════════════════════════════
+-- w_lib: which part of a ped a screen point lands on (the creator's click-to-focus).
+--   The ray leaves the rendered camera through the screen point; the ped's bones are
+--   projected onto it and the closest one names the part. No shape test: a bone-distance
+--   pick is what a "click the head, zoom on the head" camera wants, and it works while the
+--   ped is frozen in a scripted scene where collision probes are unreliable.
+-- ════════════════════════════════════════════════════════════════════════════
+local glm = require 'glm'
+local glm_quatEulerAngleZYX = glm.quatEulerAngleZYX
+local glm_up = glm.up()
+local glm_forward = glm.forward()
+local glm_right = glm.right and glm.right() or vec3(1.0, 0.0, 0.0)
+
+-- bone id -> part, in the order the tie is broken (the head wins over the neck)
+local PED_PARTS = {
+    { part = 'eyes', bones = { 21030 } },                    -- SKEL_Head (tight radius, see below)
+    { part = 'head', bones = { 21030, 39317 } },             -- SKEL_Head, SKEL_Neck_1
+    { part = 'body', bones = { 23553, 24816, 24817, 11816 } }, -- SKEL_Spine3, SKEL_Spine2, SKEL_Spine1, SKEL_Pelvis
+    { part = 'pant', bones = { 58271, 51826, 63931, 36864 } }, -- thighs and calves
+    { part = 'boot', bones = { 14201, 52301 } },             -- SKEL_L_Foot, SKEL_R_Foot
+}
+local PART_RADIUS = { eyes = 0.09, head = 0.22, body = 0.42, pant = 0.32, boot = 0.22 }
+
+--- The part of `ped` under the screen point (x, y in 0..1 from the top-left corner, as a NUI
+--- click reports them). `aspect` is the frame's width / height when it is not the screen's.
+--- Returns 'eyes' | 'head' | 'body' | 'pant' | 'boot', or nil when the click misses the ped.
+---@param ped number
+---@param x number
+---@param y number
+---@param aspect? number
+---@return string? part
+---@return number? distance (metres between the ray and the bone that won)
+function lib.raycast.pedPartFromScreen(ped, x, y, aspect)
+    if not ped or ped == 0 or not DoesEntityExist(ped) then return nil end
+    x, y = tonumber(x) or 0.5, tonumber(y) or 0.5
+    if not aspect or aspect <= 0 then
+        local sw, sh = GetActiveScreenResolution()
+        aspect = (sw and sh and sh > 0) and (sw / sh) or (16 / 9)
+    end
+
+    local origin = GetFinalRenderedCamCoord()
+    local rot = glm_rad(GetFinalRenderedCamRot(2))
+    local q = glm_quatEulerAngleZYX(rot.z, rot.y, rot.x)
+    local forward, up = q * glm_forward, q * glm_up
+    local right = q * glm_right
+    local tanHalf = math.tan(glm_rad(GetFinalRenderedCamFov()) / 2)
+    -- screen (0..1, y down) -> camera plane offsets at unit distance
+    local dir = forward + right * ((x * 2 - 1) * tanHalf * aspect) - up * ((y * 2 - 1) * tanHalf)
+    local len = #dir
+    if len == 0 then return nil end
+    dir = dir / len
+
+    local bestPart, bestDist
+    for _, entry in ipairs(PED_PARTS) do
+        local radius = PART_RADIUS[entry.part]
+        for _, bone in ipairs(entry.bones) do
+            local at = GetPedBoneCoords(ped, bone, 0.0, 0.0, 0.0)
+            if at and (at.x ~= 0.0 or at.y ~= 0.0 or at.z ~= 0.0) then
+                local toBone = at - origin
+                local along = toBone.x * dir.x + toBone.y * dir.y + toBone.z * dir.z
+                if along > 0 then
+                    local closest = origin + dir * along
+                    local d = #(at - closest)
+                    -- the score is the miss relative to the part's size: a click just off a
+                    -- small part still means that part, not the big one behind it
+                    local score = d / radius
+                    if d <= radius and (not bestDist or score < bestDist) then
+                        bestPart, bestDist = entry.part, score
+                    end
+                end
+            end
+        end
+    end
+    return bestPart, bestDist
+end
+
 return lib.raycast

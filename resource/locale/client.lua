@@ -30,8 +30,17 @@ function lib.getLocaleKey() return settings.locale end
 
 exports('getLocaleKey', lib.getLocaleKey)
 
+--- The server keeps the player's language in Player(src).state['w_lib:locale'] for
+--- exports.w_lib:getPlayerLocaleKey(src); it is written server-side so that
+--- sv_stateBagStrictMode never rejects it.
+local function mirrorLocale(key)
+    if type(key) ~= 'string' or key == '' then return end
+    TriggerServerEvent('w_lib:playerLocale', key)
+end
+
 ---@param key string
 function lib.setLocale(key)
+    mirrorLocale(key)
     TriggerEvent('w_lib:setLocale', key)
     SendNUIMessage({
         action = 'setLocale',
@@ -49,3 +58,5 @@ RegisterNUICallback('init', function(_, cb)
 end)
 
 lib.locale(settings.locale)
+mirrorLocale(settings.locale)
+AddEventHandler('w_lib:setLocale', mirrorLocale)
