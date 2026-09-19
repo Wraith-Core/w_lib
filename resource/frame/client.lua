@@ -1,0 +1,238 @@
+-- ════════════════════════════════════════════════════════════════════════════
+-- w_lib · resource/frame/client.lua
+-- إطارٌ واحدٌ للاستوديو كلّه: حجبُ تحكُّمٍ وقراءةُ ضغطته.
+--
+-- ★ لماذا هنا لا في كلِّ مورد؟
+--   حجبُ مفتاحٍ في RAGE لا يدوم إلا إطارًا واحدًا، فمن أراد أن يأخذ مفتاحًا من
+--   اللعبة اضطُرَّ إلى ‎while true do Wait(0)‎ أبديّ. كلُّ مورد يفعلها يدفع نحو
+--   ‎0.01–0.04 ms‎ من كلِّ إطار، مفتوحةً كانت واجهته أو مغلقة — وهي وحدَها ما
+--   يمنع resmon من قراءة 0.00 عند السكون.
+--
+--   فصار الحلقةُ واحدةً هنا: يُسجّل المورد ما يريد حجبه، ولا يدفع إطارًا. ولا
+--   تُبعث إليه رسالةٌ كلَّ إطار — بل حدثٌ واحدٌ لحظةَ الضغط فقط.
+--
+-- ★ الاستعمال من أيّ مورد:
+--     AddEventHandler('w_map:key:map', function() ... end)
+--     exports.w_lib:blockControl(`INPUT_MAP`, 'w_map:key:map')
+--     exports.w_lib:unblockControl(`INPUT_MAP`, 'w_map:key:map')   -- عند الحاجة
+--
+--   والحلقة لا تعمل أصلًا ما لم يسجّل أحد، وتتوقّف حين يخلو السجلّ. والتسجيلُ
+--   يُطوى تلقائيًّا حين يتوقّف المورد الذي سجّله.
+-- ════════════════════════════════════════════════════════════════════════════
+
+local DisableControlAction = DisableControlAction
+local IsDisabledControlJustPressed = IsDisabledControlJustPressed
+local TriggerEvent = TriggerEvent
+local pairs = pairs
+
+---@type table<number, { n: integer, press: table<string, string> }>
+local blocked = {}
+local live = 0
+local running = false
+
+-- ---- the radar (below) shares this one frame thread --------------------------
+local DisplayRadar = DisplayRadar
+local radarOwners, radarOwnerCount = {}, 0   -- resources drawing their own minimap
+local radarVisible = true                    -- the HUD's wish for the native radar
+local radarMode    = 'map'                   -- 'map' | 'compass' | 'off'
+
+local function radarReplaced() return radarOwnerCount > 0 end
+
+--- What the native radar should show right now, and show it.
+local function applyRadar()
+    DisplayRadar(radarVisible and radarMode ~= 'off' and not radarReplaced())
+end
+
+local function pump()
+    if running or (live == 0 and not radarReplaced()) then return end
+    running = true
+
+    CreateThread(function()
+        while live > 0 or radarReplaced() do
+            Wait(0)
+            for control, e in pairs(blocked) do
+                DisableControlAction(0, control, true)
+                if IsDisabledControlJustPressed(0, control) then
+                    for event in pairs(e.press) do TriggerEvent(event, control) end
+                end
+            end
+            -- a custom minimap owns the screen: the native one stays down whatever
+            -- another script switched on this frame
+            if radarReplaced() then DisplayRadar(false) end
+        end
+        running = false
+    end)
+end
+
+--- احجب تحكُّمًا عن اللعبة، واسمع ضغطته.
+---@param control number هاش التحكُّم، مثل `INPUT_MAP`
+---@param pressEvent? string حدثٌ يُبعث لحظةَ الضغط (اختياريّ: بلا حدثٍ يكون حجبًا صرفًا)
+function lib.blockControl(control, pressEvent)
+    control = tonumber(control)
+    if not control then return false end
+
+    local e = blocked[control]
+    if not e then
+        e = { n = 0, press = {} }
+        blocked[control] = e
+        live = live + 1
+    end
+    e.n = e.n + 1
+    if pressEvent then e.press[pressEvent] = GetInvokingResource() or 'w_lib' end
+
+    pump()
+    return true
+end
+
+--- ارفع الحجب. يُرفع فعلًا حين لا يبقى طالبٌ له.
+---@param control number
+---@param pressEvent? string
+function lib.unblockControl(control, pressEvent)
+    control = tonumber(control)
+    local e = control and blocked[control]
+    if not e then return false end
+
+    if pressEvent then e.press[pressEvent] = nil end
+    e.n = e.n - 1
+    if e.n <= 0 then
+        blocked[control] = nil
+        live = live - 1
+    end
+    return true
+end
+
+--- هل التحكُّم محجوبٌ الآن؟ (للتشخيص)
+---@param control number
+function lib.isControlBlocked(control)
+    return blocked[tonumber(control) or 0] ~= nil
+end
+
+-- ★ المورد الذي سجّل قد يتوقّف دون أن يرفع حجبه — فيُطوى عنه هنا، وإلّا بقي
+--   المفتاح محجوبًا عن اللاعب إلى أن يعيد تشغيل اللعبة.
+-- ════════════════════════════════════════════════════════════════════════════
+-- The radar: one authority for the native minimap
+--
+-- ★ Three resources used to switch DisplayRadar on and off behind each other's back:
+--   w_hud (hide the HUD, mount = compass), w_map (draws its own minimap and wants the
+--   native one gone), the wheel (pins it visible while open). Whoever ran last in the
+--   frame won, and the map flickered or vanished. So the decision is made here once:
+--
+--     replaceRadar(on)      a resource takes / releases the radar (it draws its own).
+--                           While any owner holds it the native radar is kept down.
+--     setRadarVisible(v)    the HUD's wish (hidden HUD = false). Honoured only when
+--                           nobody replaced the radar and the mode is not 'off'.
+--     setRadarMode(m)       'map' | 'compass' | 'off' -- announced once per change as
+--                           the event w_lib:radarMode, so a custom minimap follows it.
+--     setMinimapVisible(v)  / setMinimapExpanded(v) / setMinimapRotation(r)
+--                           requests forwarded to the custom minimap as events
+--                           (w_lib:minimap:visibility | expanded | rotation).
+--
+--   Owners are counted per resource, so a second map cannot release the first, and a
+--   stopping owner releases itself. Stopping w_lib hands the native radar back.
+-- ════════════════════════════════════════════════════════════════════════════
+
+local function caller() return GetInvokingResource() or GetCurrentResourceName() end
+
+--- Take (true) or give back (false) the radar for the calling resource.
+---@param on boolean
+---@return boolean replaced -- whether any owner remains
+function lib.replaceRadar(on)
+    local owner = caller()
+    if on then
+        if not radarOwners[owner] then
+            radarOwners[owner] = true
+            radarOwnerCount = radarOwnerCount + 1
+        end
+    elseif radarOwners[owner] then
+        radarOwners[owner] = nil
+        radarOwnerCount = radarOwnerCount - 1
+    end
+    applyRadar()
+    pump()
+    return radarReplaced()
+end
+
+function lib.isRadarReplaced() return radarReplaced() end
+
+--- The HUD's wish for the native radar. false while the HUD is hidden.
+---@param visible boolean
+function lib.setRadarVisible(visible)
+    radarVisible = visible ~= false
+    applyRadar()
+    return radarVisible
+end
+
+function lib.getRadarMode() return radarMode end
+
+--- 'map' | 'compass' | 'off'. Unknown values are refused and change nothing.
+---@param mode string
+---@return boolean accepted
+function lib.setRadarMode(mode)
+    if mode ~= 'map' and mode ~= 'compass' and mode ~= 'off' then return false end
+    if radarMode ~= mode then
+        radarMode = mode
+        TriggerEvent('w_lib:radarMode', mode)
+    end
+    applyRadar()
+    return true
+end
+
+--- Ask the custom minimap to hide (false) / show (true) on behalf of the caller.
+function lib.setMinimapVisible(visible)
+    TriggerEvent('w_lib:minimap:visibility', caller(), visible ~= false)
+    return true
+end
+
+function lib.setMinimapExpanded(expanded)
+    TriggerEvent('w_lib:minimap:expanded', expanded == true)
+    return true
+end
+
+--- 'camera' | 'player' | 'north'
+function lib.setMinimapRotation(rotation)
+    if rotation ~= 'camera' and rotation ~= 'player' and rotation ~= 'north' then return false end
+    TriggerEvent('w_lib:minimap:rotation', rotation)
+    return true
+end
+
+AddEventHandler('onClientResourceStop', function(resource)
+    for control, e in pairs(blocked) do
+        for event, owner in pairs(e.press) do
+            if owner == resource then
+                e.press[event] = nil
+                e.n = e.n - 1
+            end
+        end
+        if e.n <= 0 then
+            blocked[control] = nil
+            live = live - 1
+        end
+    end
+
+    -- a stopping owner gives the radar back; the library stopping hands it to the game
+    if resource == GetCurrentResourceName() then
+        radarOwners, radarOwnerCount = {}, 0
+        DisplayRadar(true)
+    elseif radarOwners[resource] then
+        radarOwners[resource] = nil
+        radarOwnerCount = radarOwnerCount - 1
+        applyRadar()
+    end
+end)
+
+-- The three above, as exports: the header of this file documents them that way, and a
+-- resource that does not load @w_lib/init.lua has no `lib` to reach them through.
+exports('blockControl', function(control, pressEvent) return lib.blockControl(control, pressEvent) end)
+exports('unblockControl', function(control, pressEvent) return lib.unblockControl(control, pressEvent) end)
+exports('isControlBlocked', function(control) return lib.isControlBlocked(control) end)
+
+-- The radar API as exports too: a consumer's `w.setRadarVisible(...)` reaches w_lib through
+-- init.lua's export proxy, and an unregistered export throws "No such export".
+exports('replaceRadar',        function(on) return lib.replaceRadar(on) end)
+exports('isRadarReplaced',     function() return lib.isRadarReplaced() end)
+exports('setRadarVisible',     function(visible) return lib.setRadarVisible(visible) end)
+exports('getRadarMode',        function() return lib.getRadarMode() end)
+exports('setRadarMode',        function(mode) return lib.setRadarMode(mode) end)
+exports('setMinimapVisible',   function(visible) return lib.setMinimapVisible(visible) end)
+exports('setMinimapExpanded',  function(expanded) return lib.setMinimapExpanded(expanded) end)
+exports('setMinimapRotation',  function(rotation) return lib.setMinimapRotation(rotation) end)

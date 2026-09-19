@@ -1,0 +1,35 @@
+{
+  "language": "العربية",
+  "dir": "rtl",
+  "ui": {
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "move_select": "حرّك للاختيار",
+    "confirm": "تأكيد",
+    "more": "المزيد ...",
+    "settings": {
+      "locale": "تغيير اللغة",
+      "locale_description": "اللغة الحالية: ${language} (%s)",
+      "notification_audio": "صوت الإشعارات",
+      "notification_position": "موضع الإشعارات"
+    },
+    "position": {
+      "bottom": "أسفل",
+      "bottom-left": "أسفل اليسار",
+      "bottom-right": "أسفل اليمين",
+      "center-left": "الوسط يسارًا",
+      "center-right": "الوسط يمينًا",
+      "top": "أعلى",
+      "top-left": "أعلى اليسار",
+      "top-right": "أعلى اليمين"
+    }
+  },
+  "open_radial_menu": "فتح القائمة الدائرية",
+  "cancel_progress": "إلغاء العملية الجارية",
+  "txadmin_announcement": "إعلان من قبل %s",
+  "txadmin_dm": "رسالة من %s",
+  "txadmin_warn": "تم تحذيرك من قبل %s",
+  "txadmin_warn_content": "%s  \nأيدي: %s",
+  "txadmin_scheduledrestart": "تحديد ريستارت للسرفر"
+}
