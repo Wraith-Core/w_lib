@@ -1,0 +1,352 @@
+/* ============================================================================
+   The RDR floating notice — text and an icon over the world, no plate.
+
+   ★ The shadow does the work a background would. With `useBackground: false` the notice has
+     nothing behind it, so legibility over a bright sky or a pale road comes entirely from the
+     text shadow — which is why it is heavy and doubled rather than decorative.
+   ============================================================================ */
+
+/* ⚠️ direction: ltr is for GEOMETRY, not for text. Everything below places itself on the
+      screen -- which corner a stack sits in, which edge its notices hug, which side the icon
+      takes -- and every one of those was following the locale. Switching to Arabic mirrored
+      the whole notice. The text keeps its own direction: each notice's body carries a dir
+      attribute of its own (see index.tsx), which is the only thing here that SHOULD flip. */
+.wn-root {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  direction: ltr;
+  pointer-events: none;
+  font-family: var(--wc-font-display);
+}
+
+/* ── where a stack sits ───────────────────────────────────────────────── */
+
+.wn-stack {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(30vw, 460px);
+}
+
+.wn-at-top-left      { top: 4vh;  left: 2vw; align-items: flex-start; }
+.wn-at-top-center    { top: 4vh;  left: 50%; transform: translateX(-50%); align-items: center; }
+.wn-at-top-right     { top: 4vh;  right: 2vw; align-items: flex-end; }
+.wn-at-middle-left   { top: 50%;  left: 2vw; transform: translateY(-50%); align-items: flex-start; }
+.wn-at-middle-center { top: 50%;  left: 50%; transform: translate(-50%, -50%); align-items: center; }
+.wn-at-middle-right  { top: 50%;  right: 2vw; transform: translateY(-50%); align-items: flex-end; }
+.wn-at-bottom-left   { bottom: 6vh; left: 2vw; align-items: flex-start; }
+.wn-at-bottom-center { bottom: 6vh; left: 50%; transform: translateX(-50%); align-items: center; }
+.wn-at-bottom-right  { bottom: 6vh; right: 2vw; align-items: flex-end; }
+
+/* ── one notice ───────────────────────────────────────────────────────── */
+
+/* ★ The icon holds the right-hand side in both languages. It is LAST in the markup and the row
+   is physically left-to-right, so the body takes the space and the icon sits after it -- which
+   on screen is the right. It used to be first in a row that flipped with the notice's own
+   isRTL flag, so the icon crossed to the other side whenever the text did. */
+.wn-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 2px;
+  animation: wn-in-center 300ms ease-out both;
+}
+
+.wn-note.from-right { animation-name: wn-in-right; }
+.wn-note.from-left  { animation-name: wn-in-left; }
+
+/* ⚠️ Longer than the entry on purpose, and it must stay in step with the 260ms the component
+   waits before it drops the node -- see dismiss() in index.tsx. Lengthen one and the notice
+   either vanishes mid-animation or lingers as an invisible box. */
+.wn-note.is-out {
+  animation: wn-out-center 260ms ease-in both;
+}
+
+.wn-note.from-right.is-out { animation-name: wn-out-right; }
+.wn-note.from-left.is-out  { animation-name: wn-out-left; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   The plate variant -- the banner the game shows on ENTERING A PLACE.
+
+   ★ This is not the same object as the plain notice, and it should not be a bigger version of
+     it. RDR2 announces a town with a broad plate, the name set large, and a hairline under it;
+     the plate is the option precisely because this is the louder of the two.
+
+   ⚠️ It was a rounded CSS box with a radial gradient and a drop shadow -- a web card. The plate
+      is now the game's OWN art (toast_bg), masked, which is what gives it the soft edges that
+      let it sit over the world instead of being cut out of it.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.wn-note.has-plate {
+  position: relative;
+  isolation: isolate;
+  /* ⚠️ Wider and shallower than it was, to get near the brush's OWN proportion. toast_bg is
+        432x96 -- about 4.5:1 -- and the plate was being drawn nearer 3:1, which stretched the
+        stroke vertically and smeared its grain into mush. */
+  min-width: clamp(300px, 28vw, 440px);
+  padding: clamp(12px, 1.7vh, 20px) clamp(30px, 3vw, 56px);
+  gap: clamp(12px, 1.2vw, 20px);
+  background: none;
+  box-shadow: none;
+}
+
+/* ⚠️ 100% 100%, not contain: toast_bg is a plain plate with nothing drawn in it, so stretching
+   it to the banner's box distorts nothing -- and `contain` would letterbox it inside a box
+   whose proportion follows the town's name. */
+/* ★ A solid core UNDER the brush.
+
+   ⚠️ Measured, not guessed: the stroke's ink fades along its length -- mean alpha runs 215, 221,
+      223, 212 across the first four fifths and then drops to 169 in the last. So one end of the
+      plate was visibly thinner than the other, and centred text on it read as pushed to the
+      heavy side with the far end looking empty. This fills the middle without touching the
+      silhouette: inset well inside the ragged edge and blurred, so it has no edge of its own to
+      give away, and the brush still draws the whole outline. */
+.wn-note.has-plate:after {
+  content: "";
+  position: absolute;
+  inset: 16% 8%;
+  z-index: -2;
+  background: rgba(5, 5, 5, 0.92);
+  filter: blur(11px);
+}
+
+.wn-note.has-plate:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: rgba(6, 6, 6, 0.9);
+  -webkit-mask: var(--tex-toast_bg) center / 100% 100% no-repeat;
+  mask: var(--tex-toast_bg) center / 100% 100% no-repeat;
+}
+
+/* ★ The name carries the banner, and it has to be big enough to do that. The game sets a place
+   name several times the size of the region under it -- that contrast IS the design, and at
+   30px against 16px there was not enough of it for the plate to read as an announcement rather
+   than as a wide toast. */
+/* ★ The body takes the banner's full width so the rule under the name spans the plate rather
+   than stopping at the end of the word -- which is where the game draws it. */
+.wn-note.has-plate .wn-body {
+  flex: 1;
+}
+
+.wn-note.has-plate .wn-title {
+  position: relative;
+  padding-bottom: clamp(2px, 0.3vh, 4px);
+  font-size: clamp(27px, 4.4vh, 46px);
+  line-height: 1.05;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+/* ⚠️ Arabic has no upper case, and letter-spacing breaks its joined script apart. Both are
+   removed rather than left to do nothing -- text-transform is harmless but the spacing is not. */
+[dir="rtl"] .wn-note.has-plate .wn-title {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ⚠️ The rule sits under the REGION, not under the name -- look at the game and it is the last
+   thing before the clock, separating the place from the readings about it. It was under the
+   title, which split the name from its own region. */
+.wn-note.has-plate .wn-title:after { content: none; }
+
+/* ★ divider_line fades out at both ends on its own -- that taper is the RDR rule, and it is
+   why this is the game's texture rather than a border-bottom. */
+.wn-note.has-plate .wn-meta:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  opacity: 0.7;
+  background-color: var(--wc-accent, #ededed);
+  -webkit-mask: var(--tex-divider_line) center / 100% 100% no-repeat;
+  mask: var(--tex-divider_line) center / 100% 100% no-repeat;
+}
+
+/* The region line: small, wide, and quiet -- it exists to be dwarfed by the name. */
+.wn-note.has-plate .wn-desc {
+  font-family: var(--wc-font-display);
+  font-size: clamp(10px, 1.35vh, 14px);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+[dir="rtl"] .wn-note.has-plate .wn-desc {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ★ The clock and the temperature, the way the game closes a location banner. Set in the
+   numeral face because that is what it mostly is -- digits -- and brighter than the region
+   line above it, which is the quietest thing on the plate. */
+.wn-note.has-plate .wn-meta {
+  position: relative;
+  display: block;
+  margin-top: clamp(7px, 1vh, 12px);
+  padding-top: clamp(7px, 1vh, 12px);
+  color: #ffffff;
+  font-family: var(--wc-font-numeral);
+  font-size: clamp(13px, 2vh, 21px);
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.7);
+}
+
+.wn-note.has-plate .wn-icon {
+  width: clamp(30px, 4.2vh, 48px);
+  height: clamp(30px, 4.2vh, 48px);
+}
+
+.wn-icon {
+  flex: none;
+  animation: wn-pulse 500ms infinite alternate ease-in-out;
+  width: clamp(20px, 2.8vh, 28px);
+  height: clamp(20px, 2.8vh, 28px);
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.9));
+}
+
+/* The one place the locale still decides something: the text's own direction and alignment. */
+.wn-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wn-title {
+  color: #ffffff;
+  font-size: clamp(14px, 2.1vh, 19px);
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.7);
+}
+
+.wn-desc {
+  color: rgba(255, 255, 255, 0.8);
+  font-family: var(--wc-font-body);
+  font-size: clamp(11px, 1.6vh, 14px);
+  line-height: 1.4;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.7);
+}
+
+/* ── the screen and world text that share this frame ──────────────────── */
+
+.wn-text2d {
+  position: absolute;
+  top: 12vh;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: clamp(13px, 2vh, 18px);
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.7);
+}
+
+/* ⚠️ Positioned from coordinates the Lua already projected. Do not add world maths here. */
+.wn-text3d {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  white-space: nowrap;
+  font-size: clamp(11px, 1.7vh, 15px);
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.7);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Entry and exit, taken from rakan_notify -- the resource this notice is modelled on.
+
+   ★ The notice slides in from the EDGE IT SITS AGAINST and leaves the same way, so it reads as
+     having come from off-screen rather than having faded up out of nothing. A notice pinned to
+     the centre has no edge to come from, so it rises instead; sliding it sideways from the
+     middle of the screen would look like a mistake.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@keyframes wn-in-right {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes wn-in-left {
+  from { opacity: 0; transform: translateX(-100%); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ★ Scale, not a slide. A notice pinned to the middle has no edge to have come from, and
+   the game grows it into place -- which is what bln_notify's docs describe for centre
+   placements too ("center placements employ scale and fade effects"). */
+@keyframes wn-in-center {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes wn-out-right {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateX(100%); }
+}
+
+@keyframes wn-out-left {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateX(-100%); }
+}
+
+@keyframes wn-out-center {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: scale(0.96); }
+}
+
+/* ★ The icon breathes while the notice is up -- rakan_notify's pulseIcon, to the frame. */
+@keyframes wn-pulse {
+  from { opacity: 1; }
+  to   { opacity: 0.5; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   The law banner -- WANTED, WITNESS, and the rest of the sheriff's vocabulary.
+
+   ★ The same plate and the same structure as the town banner; only three things change, and
+     they are the three the game changes: the name goes red, the rule under it goes bright and
+     solid, and the line beneath is a readable sentence rather than a whisper of wide capitals.
+     A bounty or a charge is meant to be read, where a region name is only meant to be placed.
+
+   ⚠️ Used as `variant = 'law'`, not as a titleColor. Colour alone would leave the subtitle set
+      in the region's tiny letterspaced capitals, and 'Unarmed Assault' is not a region.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.wn-note.has-plate.is-law .wn-title {
+  /* RDR Catalogue is the heavy face of the three; the law banner is set in the heaviest. */
+  font-family: var(--wc-font-numeral);
+  color: var(--wc-red);
+  letter-spacing: 0.045em;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95), 0 0 14px rgba(0, 0, 0, 0.6);
+}
+
+.wn-note.has-plate.is-law .wn-title:after {
+  opacity: 0.92;
+  height: 2px;
+}
+
+.wn-note.has-plate.is-law .wn-desc {
+  font-family: var(--wc-font-display);
+  font-size: clamp(13px, 2vh, 21px);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  opacity: 1;
+}
+
+[dir="rtl"] .wn-note.has-plate.is-law .wn-title { letter-spacing: 0; }
+[dir="rtl"] .wn-note.has-plate.is-law .wn-desc { letter-spacing: 0; }
+
+/* The bars between the readings -- white and dimmer than the readings themselves, so they
+   separate without competing. */
+.wn-meta-sep {
+  margin: 0 0.55em;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 400;
+}

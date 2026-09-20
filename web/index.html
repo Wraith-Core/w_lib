@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" style="background: transparent !important; background-color: transparent !important;">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>w_lib UI</title>
+
+    <!-- ⚠️ An empty inline icon, not a file. With no <link rel="icon"> the browser asks for
+         /favicon.ico on every load and logs a 404 -- noise that reads like a real failure in a
+         console you are using to debug the interface. A NUI frame has no tab and needs no
+         icon, so the cheapest correct answer is to satisfy the request with nothing. -->
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="https://cfx-nui-w_lib/nui/assets/store-theme.css">
+    <link rel="stylesheet" href="https://cfx-nui-w_lib/nui/assets/store-adapters.css">
+    <link rel="stylesheet" href="https://cfx-nui-w_lib/nui/assets/store-responsive.css">
+    <script defer src="https://cfx-nui-w_lib/nui/assets/store-theme-bridge.js"></script>
+    <link rel="stylesheet" href="https://cfx-nui-w_lib/nui/assets/store-aux-responsive.css">
+    <style>
+      .wl-preview-bg, .wl-dev-key { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }
+    </style>
+  </head>
+  <body data-store-theme="library" style="background: transparent !important; background-color: transparent !important;">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,38 @@
+/* Auxiliary library surfaces scale with screen height; world/pointer coordinates stay unchanged. */
+body[data-store-theme=library],body[data-store-theme=notify]{--w-aux-px:clamp(1px,.0925925926vh,2px)}
+body[data-store-theme=library] .lb-textui-icon{width:clamp(calc(18 * var(--w-aux-px)),2.4vh,calc(22 * var(--w-aux-px)))}
+body[data-store-theme=library] .lb-textui{gap:calc(10 * var(--w-aux-px));padding:clamp(calc(8 * var(--w-aux-px)),1.2vh,calc(12 * var(--w-aux-px))) clamp(calc(12 * var(--w-aux-px)),1.2vw,calc(18 * var(--w-aux-px)));font-size:clamp(calc(12 * var(--w-aux-px)),1.8vh,calc(15 * var(--w-aux-px)))}
+body[data-store-theme=library] .lb-textui .wc-glyph{width:calc(15 * var(--w-aux-px));height:calc(15 * var(--w-aux-px))}
+body[data-store-theme=library] .lb-core{gap:calc(10 * var(--w-aux-px))}
+body[data-store-theme=library] .lb-core-ring{width:clamp(calc(84 * var(--w-aux-px)),12vh,calc(118 * var(--w-aux-px)))}
+body[data-store-theme=library] .lb-core-value{font-size:clamp(calc(14 * var(--w-aux-px)),2.1vh,calc(18 * var(--w-aux-px)))}
+body[data-store-theme=library] .lb-core-label{max-width:min(calc(420 * var(--w-aux-px)),40vw);font-size:clamp(calc(12 * var(--w-aux-px)),1.8vh,calc(15 * var(--w-aux-px)))}
+body[data-store-theme=library] .lb-notifications{gap:calc(10 * var(--w-aux-px));width:min(24vw,calc(340 * var(--w-aux-px)))}
+body[data-store-theme=library] .lb-toast{gap:calc(12 * var(--w-aux-px));padding:clamp(calc(9 * var(--w-aux-px)),1.3vh,calc(13 * var(--w-aux-px))) clamp(calc(11 * var(--w-aux-px)),1.1vw,calc(16 * var(--w-aux-px)))}
+body[data-store-theme=library] .lb-toast-icon{width:clamp(calc(28 * var(--w-aux-px)),3.8vh,calc(34 * var(--w-aux-px)))}
+body[data-store-theme=library] .lb-toast-title{font-size:clamp(calc(12 * var(--w-aux-px)),1.8vh,calc(14 * var(--w-aux-px)))}
+body[data-store-theme=library] .lb-toast-desc{margin-top:calc(2 * var(--w-aux-px));font-size:clamp(calc(10 * var(--w-aux-px)),1.5vh,calc(12 * var(--w-aux-px)))}
+body[data-store-theme=library] .wn-stack{gap:calc(8 * var(--w-aux-px));max-width:min(30vw,calc(460 * var(--w-aux-px)))}
+body[data-store-theme=library] .wn-note{gap:calc(10 * var(--w-aux-px));padding:calc(6 * var(--w-aux-px)) calc(2 * var(--w-aux-px))}
+body[data-store-theme=library] .wn-note.has-plate{min-width:clamp(calc(300 * var(--w-aux-px)),28vw,calc(440 * var(--w-aux-px)));padding:clamp(calc(12 * var(--w-aux-px)),1.7vh,calc(20 * var(--w-aux-px))) clamp(calc(30 * var(--w-aux-px)),3vw,calc(56 * var(--w-aux-px)));gap:clamp(calc(12 * var(--w-aux-px)),1.2vw,calc(20 * var(--w-aux-px)))}
+body[data-store-theme=library] .wn-note.has-plate .wn-title{padding-bottom:clamp(calc(2 * var(--w-aux-px)),.3vh,calc(4 * var(--w-aux-px)));font-size:clamp(calc(27 * var(--w-aux-px)),4.4vh,calc(46 * var(--w-aux-px)))}
+body[data-store-theme=library] .wn-note.has-plate .wn-meta:before{height:calc(2 * var(--w-aux-px))}
+body[data-store-theme=library] .wn-note.has-plate .wn-desc{font-size:clamp(calc(10 * var(--w-aux-px)),1.35vh,calc(14 * var(--w-aux-px)))}
+body[data-store-theme=library] .wn-note.has-plate .wn-meta{margin-top:clamp(calc(7 * var(--w-aux-px)),1vh,calc(12 * var(--w-aux-px)));padding-top:clamp(calc(7 * var(--w-aux-px)),1vh,calc(12 * var(--w-aux-px)));font-size:clamp(calc(13 * var(--w-aux-px)),2vh,calc(21 * var(--w-aux-px)))}
+body[data-store-theme=library] .wn-note.has-plate .wn-icon{width:clamp(calc(30 * var(--w-aux-px)),4.2vh,calc(48 * var(--w-aux-px)));height:clamp(calc(30 * var(--w-aux-px)),4.2vh,calc(48 * var(--w-aux-px)))}
+body[data-store-theme=library] .wn-icon{width:clamp(calc(20 * var(--w-aux-px)),2.8vh,calc(28 * var(--w-aux-px)));height:clamp(calc(20 * var(--w-aux-px)),2.8vh,calc(28 * var(--w-aux-px)))}
+body[data-store-theme=library] .wn-body{gap:calc(2 * var(--w-aux-px))}
+body[data-store-theme=library] .wn-title{font-size:clamp(calc(14 * var(--w-aux-px)),2.1vh,calc(19 * var(--w-aux-px)))}
+body[data-store-theme=library] .wn-desc{font-size:clamp(calc(11 * var(--w-aux-px)),1.6vh,calc(14 * var(--w-aux-px)))}
+body[data-store-theme=library] .wn-note.has-plate.is-law .wn-title:after{height:calc(2 * var(--w-aux-px))}
+body[data-store-theme=library] .wn-note.has-plate.is-law .wn-desc{font-size:clamp(calc(13 * var(--w-aux-px)),2vh,calc(21 * var(--w-aux-px)))}
+body:is([data-store-theme=library],[data-store-theme=notify]) .wst-toast{padding:calc(10 * var(--w-aux-px)) calc(22 * var(--w-aux-px))!important;font-size:clamp(calc(14 * var(--w-aux-px)),1.7vh,calc(18 * var(--w-aux-px)))!important;overflow-wrap:anywhere}
+body[data-store-theme=library] .lb-textui{overflow-wrap:anywhere}
+body[data-store-theme=notify] #notifications-container{right:2vw;gap:calc(10 * var(--w-aux-px));max-width:min(calc(460 * var(--w-aux-px)),96vw)}
+body[data-store-theme=notify] .notification{gap:calc(10 * var(--w-aux-px));min-width:0;max-width:100%}
+body[data-store-theme=notify] .notification .icon{width:calc(40 * var(--w-aux-px));height:calc(40 * var(--w-aux-px));flex:none}
+body[data-store-theme=notify] .notification .content{min-width:0;overflow-wrap:anywhere}
+body[data-store-theme=notify] .notification .content h1{font-size:calc(25 * var(--w-aux-px))}
+body[data-store-theme=notify] .notification .content p{font-size:calc(20 * var(--w-aux-px))}
+body[data-store-theme=notify] :is(.text2d,.text3d){font-size:calc(24 * var(--w-aux-px))}
+body[data-store-theme=notify] .text2d{max-width:96vw;overflow-wrap:anywhere;text-align:center}

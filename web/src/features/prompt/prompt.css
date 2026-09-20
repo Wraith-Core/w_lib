@@ -1,0 +1,153 @@
+/* ============================================================================
+   The prompt's stylesheet, taken VERBATIM from the build the Prompt project ships
+   (w_lib/nui/prompt/assets/index.css) -- not re-typed from its source.
+
+   ⚠️ FOUR structural changes, none cosmetic. The values are the shipped ones.
+
+     1. Vue's [data-v-*] attributes stripped -- that was its isolation, this root is ours.
+     2. Selectors prefixed with .wl-prompt-root; page-level rules (*, html, body, #app) dropped
+        rather than scoped, since `html { font-size: 2.5vh }` would resize every other
+        interface sharing this frame.
+     3. Its ids (#group, #dots, #line ...) become classes -- an id may appear once per document
+        and this document now holds every interface.
+     4. EVERY rem BECOMES calc(n * var(--wl-prompt-rem)).
+
+        This one is the difference between right and nearly-right. The shipped rem values were
+        measured against html { font-size: 2.5vh }. Moving that sizing onto .wl-prompt-root does
+        not move what rem MEANS -- rem is always the document root, still 16px. So the labels,
+        which inherit their em from the root class, scaled with the screen while every key badge
+        stayed 16px-relative: big text beside small keys. Reading it as em would not fix it
+        either, because em compounds through each nested element.
+
+   ⚠️ AND THE POSITION CLASS MUST COME FIRST in the group's className -- the shipped rules
+      select on [class^="top-"], which reads the START of the attribute. See index.tsx.
+   ============================================================================ */
+
+.wl-prompt-root {
+  /* What html carried in its own frame. Every length below is a multiple of it. */
+  --wl-prompt-rem: 2.5vh;
+
+  /* ⚠️ direction: ltr is for GEOMETRY, not for text.
+     
+     Every position rule below places itself with margin-left:auto, text-align, flex-end or
+     row-reverse -- and all four follow the inline direction. So in Arabic the entire prompt
+     mirrored: the key badges crossed to the left of their labels, the group swung to the other
+     margin, and the page dots went with it. A key badge is a picture of a physical button on
+     the player's keyboard; it is not part of the sentence and must not move when the sentence
+     does. The two text containers take the document's direction back below. */
+  direction: ltr;
+
+  font-size: var(--wl-prompt-rem);
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  display: flex;
+  padding: calc(1.65 * var(--wl-prompt-rem));
+  pointer-events: none;
+  z-index: 20;
+  box-sizing: border-box;
+}
+
+.wl-prompt-root *,
+.wl-prompt-root *::before,
+.wl-prompt-root *::after { box-sizing: border-box; }
+
+.wl-prompt-root .crock{font-family:Crock,sans-serif;text-shadow:calc(.1 * var(--wl-prompt-rem)) calc(.1 * var(--wl-prompt-rem)) rgba(0,0,0,.9)}
+.wl-prompt-root .bebas{font-family:BebasNeue,sans-serif;text-shadow:none}
+.wl-prompt-root .keyboardKey{--stroke: calc(.14 * var(--wl-prompt-rem));--fillColor: white;--strokeBgColor: rgba(255, 255, 255, .5);position:relative;color:#000;display:flex;align-items:center;justify-content:center;font-size:calc(.75 * var(--wl-prompt-rem));box-shadow:1px 1px #0000004d}
+.wl-prompt-root .keyboardKey .text{background:#fff;height:calc(1.23 * var(--wl-prompt-rem));min-width:calc(1.23 * var(--wl-prompt-rem));padding:0 calc(.49 * var(--wl-prompt-rem));display:flex;align-items:center;justify-content:center}
+.wl-prompt-root .keyboardKey .image{height:calc(1.23 * var(--wl-prompt-rem))}
+.wl-prompt-root .keyboardKey:not(:first-child){margin-left:calc(.205 * var(--wl-prompt-rem))}
+.wl-prompt-root .keyboardKey.holdable .progressContainer{background:linear-gradient(to right,var(--strokeBgColor) 0%,var(--strokeBgColor) calc(100% - var(--stroke)),transparent 0%),linear-gradient(to bottom,var(--strokeBgColor) 0%,var(--strokeBgColor) calc(100% - var(--stroke)),transparent 0%),linear-gradient(to left,var(--strokeBgColor) 0%,var(--strokeBgColor) calc(100% - var(--stroke)),transparent 0%),linear-gradient(to top,var(--strokeBgColor) 0%,var(--strokeBgColor) calc(100% - var(--stroke)),transparent 0%);background-size:100% var(--stroke),var(--stroke) 100%,100% var(--stroke),var(--stroke) 100%;background-position:top left,top right,bottom left,top left;background-repeat:no-repeat;width:calc(100% + calc(.6 * var(--wl-prompt-rem)));height:calc(1.8 * var(--wl-prompt-rem));position:absolute}
+.wl-prompt-root .keyboardKey.holdable .progressContainer .progress{width:100%;height:100%;position:relative;z-index:4;background:linear-gradient(to right,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-l-top) * 1%),transparent 0%,transparent 50%,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-r-top) * 1%),transparent 0%),linear-gradient(to bottom,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-right) * 1%),transparent 0%),linear-gradient(to left,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-bottom) * 1%),transparent 0%),linear-gradient(to top,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-left) * 1%),transparent 0%);background-size:100% var(--stroke),var(--stroke) 100%,100% var(--stroke),var(--stroke) 100%;background-position:top left,top right,bottom left,top left;background-repeat:no-repeat}
+.wl-prompt-root .keyboardKey .activeIndicator{width:calc(100% + calc(.6 * var(--wl-prompt-rem)));height:calc(1.8 * var(--wl-prompt-rem));position:absolute;background:#c0c0c0e6;z-index:3;display:none}
+.wl-prompt-root .keyboardKey.active .activeIndicator{display:block}
+.wl-prompt-root .priceDisplay{position:absolute;top:.46vh;right:.92vh;display:flex;align-items:center;font-family:Crock,sans-serif;font-size:inherit;height:100%;text-shadow:calc(.1 * var(--wl-prompt-rem)) calc(.1 * var(--wl-prompt-rem)) rgba(0,0,0,.9)}
+.wl-prompt-root .priceDisplay.priceRight{position:static;top:auto;right:auto;height:var(--price-height);white-space:nowrap}
+.wl-prompt-root .monetary{gap:.4em;display:flex;position:relative}
+.wl-prompt-root .monetary>:first-child:not(:last-child){font-size:.6em;margin-top:.93vh}
+.wl-prompt-root .monetary>:first-child:not(:last-child) img{width:1.85vh}
+.wl-prompt-root .centime{position:relative;font-size:.6em;margin-left:.185vh;margin-top:.52vh;height:fit-content}
+.wl-prompt-root .centime:after{content:"";position:absolute;display:block;background-image:url(/assets/images/money_line.png);height:.46vh;width:100%;left:0;bottom:0}
+.wl-prompt-root .gold{display:flex;align-items:center}
+.wl-prompt-root .gold img{height:1em;width:auto;margin-right:.46vh}
+.wl-prompt-root .dollar{display:flex}
+.wl-prompt-root .price-item{display:flex;flex-direction:row;align-items:center}
+.wl-prompt-root .plus{padding:0 .2em}
+.wl-prompt-root .quantity{font-size:.6em;margin-bottom:.2em;margin-right:.2em}
+.wl-prompt-root .circle-quantity{position:absolute;color:#000;background:#fff;border-radius:100%;aspect-ratio:1/1;min-width:1.6em;text-align:center;top:-1px;right:0;font-size:.4em;display:flex;align-items:center;justify-content:center;font-family:Crock,sans-serif;font-weight:700;text-shadow:none}
+.wl-prompt-root .item{display:flex;align-items:center;position:relative}
+.wl-prompt-root .item .icon{display:flex;flex-direction:column;align-items:center;max-width:2em;max-height:var(--price-height)}
+.wl-prompt-root .item .icon img{object-fit:cover;display:block;width:auto;height:1em}
+.wl-prompt-root .item .icon .label{font-size:.6em;font-family:Crock,sans-serif;overflow-wrap:break-word;text-align:center}
+.wl-prompt-root .item.with-label .icon img{height:calc(var(--price-height) * .6)}
+.wl-prompt-root .prompt{--price-height: calc(1.8 * var(--wl-prompt-rem));display:flex;flex-direction:row;align-items:center;margin-bottom:calc(.6 * var(--wl-prompt-rem));gap:calc(.5 * var(--wl-prompt-rem))}
+.wl-prompt-root .prompt.isLeft{flex-direction:row-reverse}
+.wl-prompt-root .prompt:last-child{margin-bottom:0}
+.wl-prompt-root .prompt .label span{display:flex;align-items:center;gap:calc(.5 * var(--wl-prompt-rem))}
+.wl-prompt-root .prompt .label span img{height:calc(.9 * var(--wl-prompt-rem))}
+.wl-prompt-root .prompt .keyboardKeys{display:flex;flex-direction:row;align-items:center}
+.wl-prompt-root .prompt.disabled{opacity:.6}
+.wl-prompt-root .promptSeparator{width:calc(8 * var(--wl-prompt-rem));margin:calc(.05 * var(--wl-prompt-rem)) 0 calc(.65 * var(--wl-prompt-rem));opacity:.5}
+.wl-prompt-root .promptSeparator.isLeft{align-self:flex-start}
+.wl-prompt-root .wl-prompt-group{color:#fff;position:relative;display:flex;flex-direction:column}
+.wl-prompt-root .wl-prompt-group .groupTitle{display:flex;gap:calc(.5 * var(--wl-prompt-rem))}
+.wl-prompt-root .wl-prompt-group .groupTitle span{display:flex;align-items:center;gap:calc(.5 * var(--wl-prompt-rem))}
+.wl-prompt-root .wl-prompt-group .groupTitle span img{height:calc(.9 * var(--wl-prompt-rem))}
+.wl-prompt-root .wl-prompt-group .dots{display:flex;flex-direction:row;gap:calc(.3 * var(--wl-prompt-rem));position:absolute}
+.wl-prompt-root .wl-prompt-group .dots .dot{height:calc(.215 * var(--wl-prompt-rem));width:calc(.215 * var(--wl-prompt-rem));background:#fff;border-radius:50%;opacity:.4;box-shadow:1px 1px #0000004d}
+.wl-prompt-root .wl-prompt-group .dots .dot.active{opacity:1}
+.wl-prompt-root .wl-prompt-group .prompts{display:flex;flex-direction:column;align-items:flex-start}
+.wl-prompt-root .wl-prompt-group .line{margin:calc(.33 * var(--wl-prompt-rem)) 0;width:calc(8 * var(--wl-prompt-rem))}
+.wl-prompt-root .wl-prompt-group[class^=top-]{flex-direction:column-reverse;align-self:flex-start}
+.wl-prompt-root .wl-prompt-group[class^=top-] .dots{top:calc(-.5 * var(--wl-prompt-rem))}
+.wl-prompt-root .wl-prompt-group[class^=bottom-]{align-self:flex-end}
+.wl-prompt-root .wl-prompt-group[class^=bottom-] .dots{bottom:calc(-.5 * var(--wl-prompt-rem))}
+.wl-prompt-root .wl-prompt-group.top-right,.wl-prompt-root .wl-prompt-group.bottom-right{margin-left:auto;text-align:right}
+.wl-prompt-root .wl-prompt-group.top-right .line,.wl-prompt-root .wl-prompt-group.bottom-right .line{margin-left:auto}
+.wl-prompt-root .wl-prompt-group.top-right .dots,.wl-prompt-root .wl-prompt-group.bottom-right .dots{right:calc(.25 * var(--wl-prompt-rem))}
+.wl-prompt-root .wl-prompt-group.top-right .prompts,.wl-prompt-root .wl-prompt-group.bottom-right .prompts{align-items:flex-end}
+.wl-prompt-root .wl-prompt-group.top-right .groupTitle,.wl-prompt-root .wl-prompt-group.bottom-right .groupTitle{justify-content:flex-end}
+.wl-prompt-root .wl-prompt-group.top-left,.wl-prompt-root .wl-prompt-group.bottom-left{margin-right:auto}
+.wl-prompt-root .wl-prompt-group.top-left .groupTitle,.wl-prompt-root .wl-prompt-group.bottom-left .groupTitle{flex-direction:row-reverse;justify-content:start}
+.wl-prompt-root .wl-prompt-group.top-left .dots,.wl-prompt-root .wl-prompt-group.bottom-left .dots{left:calc(.25 * var(--wl-prompt-rem))}
+.wl-prompt-root .wl-prompt-bg{z-index:-1;position:fixed;top:0;bottom:0;left:0;right:0;width:100%;height:100%;object-fit:cover;object-position:bottom;pointer-events:none}
+
+/* ============================================================================
+   The pointer path.
+
+   ⚠️ pointer-events stays `none` on the root and is turned back on for the pressable rows
+      ALONE. The overlay covers the whole screen, so making it clickable wholesale would eat
+      every click meant for the world or for a menu underneath it -- the prompt occupies a
+      corner but its container does not.
+
+   ★ Nothing here asks whether a cursor exists. Where the game shows one the row is clickable;
+     where it does not, the frame receives no mouse events and the rule costs nothing. That is a
+     more reliable answer than trying to detect the cursor, which the page cannot do honestly.
+   ============================================================================ */
+
+.wl-prompt-root .prompt.pressable {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* The same lift the keyboard gives, so a hovered row reads as reachable. */
+.wl-prompt-root .prompt.pressable:hover .keyboardKey .text {
+  background: #f2f2f2;
+}
+
+/* ★ The only two things here that SHOULD follow the language: the prompt's own label and the
+   group's title. Both are sentences; everything around them is furniture. Scoped to the text
+   span in the title so the next-page key beside it keeps its place. */
+[dir="rtl"] .wl-prompt-root .prompt .label,
+[dir="rtl"] .wl-prompt-root .wl-prompt-group .groupTitle > span {
+  direction: rtl;
+}
+
+/* ★ Why the cents sit where they do.
+
+   .dollar is a flex row and .centime has height: fit-content, so it takes its own height and
+   settles at the TOP of the line -- level with the cap of the dollars beside it, which reads as
+   a superscript pinned too high rather than as RDR's small change. margin-top is the only lever
+   that moves it: 0.185vh was barely two pixels at 1080p. It is set above rather than here so
+   the shipped rule stays the single place the value lives. */

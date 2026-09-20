@@ -1,0 +1,218 @@
+/* ══════════════════════════════════════════════════════════════════════════
+ * القائمة الدائريّة -- ported from w_wheel/web/src/wheel/wheel.css.
+ *
+ * ★ Circular bubbles on a thin ring, with the highlighted option named in the centre disc.
+ *   That is how the game draws a wheel, and how w_wheel draws one; the boxes-on-a-circle this
+ *   replaces were a web menu bent into a ring.
+ *
+ * ★ No dimming sheet. w_wheel deliberately drops it -- the game darkens the scene itself, and
+ *   a second black layer from the interface only muddies it.
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+.lb-radial {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  animation: lb-radial-enter 130ms ease-out both;
+}
+
+@keyframes lb-radial-enter {
+  from { opacity: 0; transform: scale(0.965); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ⚠️ Deliberately no `direction: ltr` here, unlike .ww-root. Every seat is placed with left/top
+   percentages, which are physical and never flip, so the geometry is safe -- and leaving the
+   document direction alone lets the centred Arabic label lay out as Arabic rather than as an
+   LTR paragraph that happens to contain Arabic. */
+.lb-radial-surface {
+  position: relative;
+  width: min(69vh, 46vw, 640px);
+  aspect-ratio: 1;
+  cursor: default;
+}
+
+.lb-radial-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* The thin ring passing through the bubble centres */
+.lb-radial-ring {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.16);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The bubbles draw over the centre disc -- as in the reference */
+.lb-radial-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.lb-radial-bubble {
+  position: absolute;
+  width: 14.7%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  transition: transform 110ms ease, opacity 110ms ease;
+}
+
+/* The bubble disc itself */
+.lb-radial-face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(120% 120% at 50% 12%, rgba(34, 34, 34, 0.97), rgba(8, 8, 8, 0.98) 70%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 6px 16px rgba(0, 0, 0, 0.75);
+  transition: box-shadow 110ms ease, background 110ms ease;
+}
+
+/* An option that opens another wheel wears the gold ring w_wheel gives a pinned weapon. */
+.lb-radial-bubble.is-menu .lb-radial-face {
+  box-shadow:
+    inset 0 0 0 2px var(--wc-gold, #c8a44d),
+    0 6px 16px rgba(0, 0, 0, 0.8);
+}
+
+/* ★ Selected: it grows and is ringed in bright white -- as in the reference */
+.lb-radial-bubble.is-selected {
+  transform: translate(-50%, -50%) scale(1.21);
+  z-index: 3;
+}
+
+.lb-radial-bubble.is-selected .lb-radial-face {
+  background: radial-gradient(120% 120% at 50% 12%, rgba(42, 42, 42, 0.98), rgba(10, 10, 10, 0.99) 70%);
+  box-shadow:
+    inset 0 0 0 2px #ffffff,
+    0 0 14px rgba(255, 255, 255, 0.28),
+    0 8px 22px rgba(0, 0, 0, 0.85);
+}
+
+.lb-radial-face .wc-glyph {
+  width: 46%;
+  height: 46%;
+  color: var(--wc-accent);
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
+}
+
+.lb-radial-face img {
+  width: 46%;
+  height: 46%;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
+}
+
+.lb-radial-bubble.is-selected .lb-radial-face .wc-glyph { color: #ffffff; }
+
+/* ════════════════ the centre disc ════════════════ */
+
+.lb-radial-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 58%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 0.7vh, 9px);
+  padding: 13% 12%;
+  border: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  text-align: center;
+  isolation: isolate;
+  cursor: pointer;
+  color: var(--wc-text);
+  font: inherit;
+  background:
+    radial-gradient(85% 40% at 50% 0%, var(--wc-glow), rgba(0, 0, 0, 0) 72%),
+    radial-gradient(130% 90% at 50% 0%, rgba(24, 24, 24, 0.97) 0%, rgba(14, 14, 14, 0.98) 42%, rgba(5, 5, 5, 0.99) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 14px 40px rgba(0, 0, 0, 0.8);
+}
+
+/* Paper grain -- the same plate as the inventory */
+.lb-radial-center:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+  background: var(--tex-swatch_bg_1a) center / 100% 100% no-repeat;
+}
+
+/* The highlighted option's name, the way the wheel names the weapon under the cursor */
+.lb-radial-title {
+  max-width: 100%;
+  color: #ffffff;
+  font-family: var(--wc-font-display);
+  font-size: clamp(15px, 2.3vh, 29px);
+  line-height: 1.1;
+  letter-spacing: 0.03em;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  text-shadow: 0 2px 7px #000000;
+}
+
+[dir="rtl"] .lb-radial-title { letter-spacing: 0; }
+
+/* The idle line -- 'Move to Select' in the reference */
+.lb-radial-hint {
+  color: var(--wc-text-faint);
+  font-family: var(--wc-font-display);
+  font-size: clamp(10px, 1.35vh, 15px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+[dir="rtl"] .lb-radial-hint { letter-spacing: 0; text-transform: none; }
+
+.lb-radial-rule {
+  width: 46%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--wc-line-strong), transparent);
+}
+
+/* The way out, drawn small under the name so the name keeps the disc */
+.lb-radial-exit {
+  width: clamp(15px, 2vh, 24px);
+  height: clamp(15px, 2vh, 24px);
+  color: var(--wc-text-faint);
+  transition: color 110ms ease;
+}
+
+.lb-radial-center:hover .lb-radial-exit { color: var(--wc-red); }
+
+/* ⚠️ Two classes, not one. Both .wc-glyph and .lb-back-arrow set their own width and height,
+   and a single-class rule here would only win by load order -- which the bundler decides. */
+.lb-radial-exit.wc-glyph,
+.lb-radial-exit.lb-back-arrow {
+  width: clamp(15px, 2vh, 24px);
+  height: clamp(15px, 2vh, 24px);
+}

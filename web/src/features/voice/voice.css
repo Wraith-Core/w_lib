@@ -1,0 +1,356 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Voice interaction.
+
+   ★ Everything here sits OVER the world with no plate of its own except where legibility
+     demands one -- the same rule the RDR floating notice follows. A speak-to-play system is on
+     screen while the player is walking around and talking; it cannot behave like a menu.
+
+   ⚠️ direction: ltr on the root, for the same reason wnotify has it: every position below is
+      geometry, and geometry must not follow the language. The spoken line takes the document
+      direction back, because that one IS a sentence.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.wv-root {
+  position: fixed;
+  inset: 0;
+  z-index: 24;
+  direction: ltr;
+  pointer-events: none;
+  font-family: var(--wc-font-display);
+}
+
+/* ── the plate above an NPC ────────────────────────────────────────────── */
+
+/* ★ translate(-50%, -100%) puts the balloon ABOVE the point Lua sent, so a script can project
+   the ped's head bone and let it sit clear of the face. The extra 14px is the tail's room. */
+.wv-bubble {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  margin-top: -14px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: clamp(8px, 1.1vh, 12px) clamp(12px, 1.1vw, 18px);
+  max-width: min(26vw, 320px);
+  background: linear-gradient(180deg, rgba(22, 22, 22, 0.94), rgba(6, 6, 6, 0.96));
+  box-shadow: inset 0 0 0 1px var(--wc-line-strong), 0 16px 38px -16px #000000e6;
+  animation: wv-rise 160ms ease-out both;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   The tail.
+
+   ★ A rotated square cut from the plate itself, not a CSS-border triangle. A border triangle is
+     a flat colour -- it cannot take the gradient or the hairline, so it reads as a wedge stuck
+     under the box rather than as part of the balloon. This one inherits both, and clip-path
+     hides the two edges that would otherwise cross back over the plate.
+
+   ⚠️ Square-cornered on purpose. Every plate in this library is square, and a rounded chat
+      bubble would be the one web-shaped thing on a screen full of RDR furniture. A balloon is
+      read by its TAIL, not by its corners.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.wv-tail {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 14px;
+  height: 14px;
+  transform: translateX(-50%) rotate(45deg);
+  background: rgba(6, 6, 6, 0.96);
+  box-shadow: inset 0 0 0 1px var(--wc-line-strong);
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+
+@keyframes wv-rise {
+  from { opacity: 0; transform: translate(-50%, calc(-100% + 8px)) scale(0.96); }
+  to   { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+}
+
+/* The speaker's name, ruled off from what they are saying -- the same divider every panel in
+   the library puts under a heading. */
+.wv-bubble-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--wc-line);
+  color: var(--wc-text);
+  font-size: clamp(12px, 1.8vh, 15px);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+/* ★ What the NPC is actually saying: the biggest thing in the balloon, in the reading face
+   rather than the display one, because it is speech and not a label. */
+.wv-says {
+  color: var(--wc-text);
+  font-family: var(--wc-font-body);
+  font-size: clamp(12px, 1.75vh, 15px);
+  line-height: 1.55;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+.wv-bubble-name .wc-glyph { width: 13px; height: 13px; color: var(--wc-accent); }
+
+/* ⚠️ A COLUMN, not a wrapped row. Side by side the phrases read as buttons to press; stacked,
+   each on its own line, they read as things to say -- which is what they are. */
+.wv-commands {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ★ Each phrase in quotation marks, because it is a thing to SAY, not a button to press. The
+   marks are the whole difference between a hint and a menu. */
+.wv-command {
+  padding: 2px 0;
+  color: var(--wc-text-dim);
+  font-family: var(--wc-font-body);
+  font-size: clamp(11px, 1.55vh, 13px);
+  line-height: 1.4;
+}
+
+.wv-command:before { content: "\201C"; }
+.wv-command:after  { content: "\201D"; }
+
+/* ── the dock along the bottom ─────────────────────────────────────────── */
+
+.wv-dock {
+  position: absolute;
+  left: 50%;
+  bottom: 9vh;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(7px, 1vh, 11px);
+  width: min(58vw, 760px);
+}
+
+/* ── the meter ─────────────────────────────────────────────────────────── */
+
+/* ⚠️ .wv-mic is gone. The meter now lives inside the panel's badge, where it is attached to the
+   commands being listened for; a second one floating at the bottom of the screen was the same
+   information twice, and the copy with nothing around it was the one carrying no meaning. */
+
+.wv-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: clamp(14px, 1.9vh, 20px);
+}
+
+.wv-bar {
+  width: 3px;
+  background: var(--wc-text-faint);
+  transition: background-color 90ms linear;
+}
+
+.wv-bar.is-lit { background: var(--wc-text); }
+
+/* ── what was heard ────────────────────────────────────────────────────── */
+
+/* ⚠️ direction: inherit, not ltr. The line above is furniture; this is a sentence somebody
+   said, and it has to lay out in its own language. */
+/* The player's own line, given the same balloon so a conversation reads as a conversation --
+   their words and the NPC's are the same kind of object, only in different places. */
+.wv-line {
+  position: relative;
+  direction: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 8px;
+  padding: clamp(9px, 1.2vh, 13px) clamp(16px, 1.5vw, 24px);
+  max-width: 100%;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(22, 22, 22, 0.9), rgba(6, 6, 6, 0.94));
+  box-shadow: inset 0 0 0 1px var(--wc-line-strong);
+  animation: wv-fade 140ms ease-out both;
+}
+
+@keyframes wv-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.wv-speaker {
+  color: var(--wc-text-faint);
+  font-size: clamp(9px, 1.35vh, 11px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+[dir="rtl"] .wv-speaker { letter-spacing: 0; text-transform: none; }
+
+.wv-said {
+  font-family: var(--wc-font-body);
+  font-size: clamp(13px, 2vh, 18px);
+  line-height: 1.45;
+  color: var(--wc-text);
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.9);
+}
+
+/* ★ The three states of a spoken line, and only the LINE changes colour -- not the plate. A
+   whole panel flashing red is an error message; a red sentence is the sentence not landing,
+   which is what actually happened. */
+.wv-line.is-listening .wv-said { color: var(--wc-text); }
+.wv-line.is-matched   .wv-said { color: #6fbf7f; }
+.wv-line.is-unknown   .wv-said { color: var(--wc-red); }
+
+.wv-line.is-matched { box-shadow: inset 0 0 0 1px rgba(111, 191, 127, 0.45); }
+.wv-line.is-unknown { box-shadow: inset 0 0 0 1px rgba(203, 1, 1, 0.45); }
+
+/* The tail carries the state's edge too, or it would be the one piece still outlined in grey. */
+.wv-line.is-matched .wv-tail { box-shadow: inset 0 0 0 1px rgba(111, 191, 127, 0.45); }
+.wv-line.is-unknown .wv-tail { box-shadow: inset 0 0 0 1px rgba(203, 1, 1, 0.45); }
+
+/* Still listening: the line breathes, so a half-heard sentence does not look frozen. */
+.wv-line.is-listening .wv-said { animation: wv-breathe 1.6s ease-in-out infinite alternate; }
+
+@keyframes wv-breathe {
+  from { opacity: 0.72; }
+  to   { opacity: 1; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   The 2D hints panel -- everything the player may say right now.
+
+   ★ The other half of the hints overlay. A balloon answers "what will THIS person respond to";
+     this answers "what may I say at all", which is the question a player has just after walking
+     into a shop and finding the whole command set has changed under them.
+
+   ⚠️ Quiet on purpose -- no plate, no border, only a rule down its leading edge. It is on screen
+      for as long as the player is in the room, and anything with a box around it that stays that
+      long stops being read and starts being furniture.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ⚠️ ROUNDED, and knowingly against the rest of the library.
+
+   Every other plate here is square-cornered because RDR2 is. These are not: the reference for
+   this panel is a column of pill-shaped phrases, and a phrase reads as something you SAY when it
+   is shaped like a spoken bubble rather than like a button. It is the one place the design earns
+   the exception, and it is confined to this file. */
+.wv-panel {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(6px, 0.8vh, 9px);
+  max-width: min(26vw, 360px);
+  animation: wv-fade 180ms ease-out both;
+}
+
+/* ★ Anchored to a person: to their RIGHT, and centred on the point Lua sent. The gap is what
+   keeps it off the ped's shoulder -- a list touching the model reads as part of the world
+   rather than as an overlay about it. */
+.wv-panel.is-anchored {
+  transform: translateY(-50%);
+  margin-inline-start: clamp(26px, 2.4vw, 48px);
+  max-width: min(20vw, 280px);
+}
+
+.wv-at-bottom-left  { left: 2.4vw;  bottom: 22vh; }
+.wv-at-bottom-right { right: 2.4vw; bottom: 22vh; }
+.wv-at-top-left     { left: 2.4vw;  top: 12vh; }
+.wv-at-top-right    { right: 2.4vw; top: 12vh; }
+.wv-at-middle-left  { left: 2.4vw;  top: 50%; transform: translateY(-50%); }
+.wv-at-middle-right { right: 2.4vw; top: 50%; transform: translateY(-50%); }
+
+/* ── the badge at the head of the column ──────────────────────────────── */
+
+.wv-badge {
+  display: grid;
+  place-items: center;
+  width: clamp(30px, 4vh, 40px);
+  aspect-ratio: 1;
+  margin-bottom: 2px;
+  border-radius: 50%;
+  background: rgba(10, 10, 10, 0.86);
+  box-shadow: inset 0 0 0 1px var(--wc-line-strong);
+  transition: box-shadow 160ms ease;
+}
+
+/* ★ It lights only while the microphone is open. A permanently lit indicator says nothing; one
+   that changes is the cheapest way to tell the player the difference between "these are the
+   commands" and "I am listening to you right now". */
+.wv-badge.is-live {
+  box-shadow: inset 0 0 0 1px #c2d84a, 0 0 14px rgba(194, 216, 74, 0.28);
+}
+
+/* A waveform, drawn rather than shipped -- three strokes of a mask would be a texture to load
+   for something CSS can say in five lines. */
+/* ★ The badge holds the live meter while listening, and falls back to a flat mark when it is
+   not -- so the one indicator answers both "these are the commands" and "I can hear you". */
+.wv-badge-wave {
+  width: 46%;
+  height: 2px;
+  background: var(--wc-text-faint);
+  transition: background-color 160ms ease;
+}
+
+.wv-badge .wv-meter { height: 52%; gap: 2px; }
+.wv-badge .wv-bar { width: 2px; }
+
+.wv-panel-title {
+  color: var(--wc-text-faint);
+  font-size: clamp(10px, 1.4vh, 12px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+[dir="rtl"] .wv-panel-title { letter-spacing: 0; text-transform: none; }
+
+.wv-panel-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(5px, 0.7vh, 8px);
+}
+
+/* The layer or the NPC these belong to -- 'Shop', 'Barkeep', 'Always'. */
+.wv-panel-group-name {
+  color: var(--wc-text-dim);
+  font-size: clamp(11px, 1.55vh, 13px);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+/* ── one phrase ───────────────────────────────────────────────────────── */
+
+.wv-phrase {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: clamp(6px, 0.9vh, 9px) clamp(11px, 1vw, 15px);
+  border-radius: 999px;
+  background: rgba(12, 12, 12, 0.82);
+  box-shadow: inset 0 0 0 1px var(--wc-line);
+  color: var(--wc-text);
+  font-family: var(--wc-font-body);
+  font-size: clamp(11px, 1.6vh, 14px);
+  line-height: 1.3;
+  animation: wv-phrase-in 180ms ease-out both;
+}
+
+@keyframes wv-phrase-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── a {variable} slot ────────────────────────────────────────────────── */
+
+/* ★ The colour is set per-slot as --wv-slot and used three times here, so the tint, the edge and
+   the text all come from ONE value. Naming a colour three times is how a palette drifts. */
+.wv-slot {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--wv-slot) 20%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--wv-slot) 55%, transparent);
+  color: var(--wv-slot);
+  font-family: var(--wc-font-numeral);
+  font-size: 0.92em;
+  white-space: nowrap;
+}

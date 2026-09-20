@@ -1,0 +1,80 @@
+/* Library forms and menus keep the 1080p proportions at higher pixel densities. */
+body[data-store-theme=library]{--w-lib-px:clamp(1px,.0925925926vh,2px)}
+body[data-store-theme=library] .lb-close-tab{width:clamp(calc(28 * var(--w-lib-px)),3.6vh,calc(34 * var(--w-lib-px)));padding:0}
+body[data-store-theme=library] .lb-close-tab .wc-glyph,body[data-store-theme=library] .lb-close-tab .lb-back-arrow{width:42%;height:42%}
+body[data-store-theme=library] .lb-values-prev,body[data-store-theme=library] .lb-values-next{width:calc(12 * var(--w-lib-px));height:calc(12 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-panel{padding:clamp(calc(12 * var(--w-lib-px)),1.8vh,calc(20 * var(--w-lib-px))) clamp(calc(14 * var(--w-lib-px)),1.6vw,calc(24 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-head{grid-template-columns:1fr auto 1fr;gap:clamp(calc(8 * var(--w-lib-px)),1vw,calc(14 * var(--w-lib-px)));min-height:clamp(calc(42 * var(--w-lib-px)),6vh,calc(58 * var(--w-lib-px)));padding:clamp(calc(6 * var(--w-lib-px)),.9vh,calc(10 * var(--w-lib-px))) clamp(calc(10 * var(--w-lib-px)),1vw,calc(16 * var(--w-lib-px)));margin-bottom:clamp(calc(6 * var(--w-lib-px)),1vh,calc(10 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-title{font-size:clamp(calc(15 * var(--w-lib-px)),2.4vh,calc(21 * var(--w-lib-px)));line-height:1.35;max-width:100%}
+body[data-store-theme=library] [dir=ltr] .lb-title{letter-spacing:.05em}
+body[data-store-theme=library] .lb-head .wc-close{width:clamp(calc(30 * var(--w-lib-px)),4vh,calc(38 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-back-arrow{width:40%;height:40%}
+body[data-store-theme=library] .lb-context{width:min(30vw,calc(420 * var(--w-lib-px)));max-height:76vh}
+body[data-store-theme=library] .lb-context-list{min-height:0;padding-inline-end:calc(4 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-item{grid-template-columns:auto minmax(0,1fr) auto;gap:calc(12 * var(--w-lib-px));padding:clamp(calc(7 * var(--w-lib-px)),1.2vh,calc(11 * var(--w-lib-px))) clamp(calc(8 * var(--w-lib-px)),.9vw,calc(12 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-item:after{height:calc(2 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-item-icon{width:clamp(calc(30 * var(--w-lib-px)),4.2vh,calc(38 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-item-icon img{width:72%;height:72%}
+body[data-store-theme=library] .lb-item-icon .wc-glyph{width:52%;height:52%}
+body[data-store-theme=library] .lb-label .lb-svg{width:calc(13 * var(--w-lib-px));height:calc(13 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-item-icon.is-empty .wc-glyph{width:46%;height:26%}
+body[data-store-theme=library] .lb-item-title{font-size:clamp(calc(12 * var(--w-lib-px)),1.8vh,calc(14 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-item-desc{margin-top:calc(2 * var(--w-lib-px));font-size:clamp(calc(10 * var(--w-lib-px)),1.45vh,calc(11.5 * var(--w-lib-px)));line-height:1.5}
+body[data-store-theme=library] .lb-item-arrow{width:calc(14 * var(--w-lib-px));height:calc(14 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-item .wc-bar{margin-top:calc(5 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-meta{gap:calc(4 * var(--w-lib-px)) calc(10 * var(--w-lib-px));margin-top:calc(4 * var(--w-lib-px));font-size:clamp(calc(9 * var(--w-lib-px)),1.35vh,calc(11 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-dialog{width:min(34vw,calc(480 * var(--w-lib-px)));max-height:82vh}
+body[data-store-theme=library] .lb-dialog.is-lg{width:min(46vw,calc(640 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-dialog.is-sm{width:min(26vw,calc(380 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-dialog-body{min-height:0;padding-inline-end:calc(4 * var(--w-lib-px));padding-block:clamp(calc(6 * var(--w-lib-px)),1vh,calc(10 * var(--w-lib-px)));font-size:clamp(calc(12 * var(--w-lib-px)),1.8vh,calc(14 * var(--w-lib-px)));line-height:1.8}
+body[data-store-theme=library] .lb-dialog-body.is-form{gap:clamp(calc(8 * var(--w-lib-px)),1.2vh,calc(14 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-actions{gap:calc(10 * var(--w-lib-px));padding-top:clamp(calc(8 * var(--w-lib-px)),1.2vh,calc(12 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-btn{font-size:clamp(calc(12 * var(--w-lib-px)),1.9vh,calc(15 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-btn>span{gap:calc(9 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-btn .wc-glyph{width:calc(14 * var(--w-lib-px));height:calc(14 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-btn-ghost{font-size:clamp(calc(12 * var(--w-lib-px)),1.9vh,calc(15 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-btn-ghost>span{gap:calc(8 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-btn-ghost .wc-glyph{width:calc(12 * var(--w-lib-px));height:calc(12 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-field{gap:calc(6 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-label{gap:calc(7 * var(--w-lib-px));font-size:clamp(calc(11 * var(--w-lib-px)),1.6vh,calc(13 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-label .wc-glyph{width:calc(12 * var(--w-lib-px));height:calc(12 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-desc{font-size:clamp(calc(10 * var(--w-lib-px)),1.4vh,calc(11.5 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-input:after{height:calc(2 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-input input,body[data-store-theme=library] .lb-input textarea,body[data-store-theme=library] .lb-input select{min-width:0;padding:calc(9 * var(--w-lib-px)) calc(12 * var(--w-lib-px));font-size:clamp(calc(12 * var(--w-lib-px)),1.8vh,calc(14 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-input textarea{min-height:calc(70 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-input input[type=color]{padding:calc(4 * var(--w-lib-px));height:calc(34 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-input input[type=number]::-webkit-outer-spin-button,body[data-store-theme=library] .lb-input input[type=number]::-webkit-inner-spin-button{margin:0}
+body[data-store-theme=library] .lb-spin{gap:calc(3 * var(--w-lib-px));padding-inline:calc(8 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-spin-btn{width:calc(16 * var(--w-lib-px));height:calc(11 * var(--w-lib-px));padding:0}
+body[data-store-theme=library] .lb-check{gap:calc(10 * var(--w-lib-px));font-size:clamp(calc(12 * var(--w-lib-px)),1.8vh,calc(14 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-check-box{width:calc(20 * var(--w-lib-px));height:calc(20 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-check-box .wc-glyph{width:62%;height:62%}
+body[data-store-theme=library] .lb-slider{gap:calc(12 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-slider b{font-size:clamp(calc(16 * var(--w-lib-px)),2.6vh,calc(20 * var(--w-lib-px)));line-height:1;min-width:calc(42 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-menu{width:min(30vw,calc(420 * var(--w-lib-px)));max-height:70vh}
+body[data-store-theme=library] .lb-menu-list{min-height:0;padding-inline-end:calc(4 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-menu-item{grid-template-columns:auto minmax(0,1fr) auto;gap:calc(10 * var(--w-lib-px));padding:clamp(calc(7 * var(--w-lib-px)),1.1vh,calc(10 * var(--w-lib-px))) clamp(calc(8 * var(--w-lib-px)),.9vw,calc(12 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-menu-item:after{height:calc(2 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-menu-values{gap:calc(8 * var(--w-lib-px));font-size:clamp(calc(10 * var(--w-lib-px)),1.5vh,calc(12 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-menu-values .wc-glyph{width:calc(9 * var(--w-lib-px));height:calc(9 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-input input[type=color]{min-width:calc(54 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-radial-exit.lb-back-arrow{width:clamp(calc(15 * var(--w-lib-px)),2vh,calc(24 * var(--w-lib-px)));height:clamp(calc(15 * var(--w-lib-px)),2vh,calc(24 * var(--w-lib-px)))}
+
+/* Apply the existing store adapter geometry after the bundle's dimensional rules. */
+body[data-store-theme=library] .lb-panel{font-size:calc(16 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-head{padding-inline:calc(54 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-close-tab{right:clamp(calc(14 * var(--w-lib-px)),1.6vw,calc(24 * var(--w-lib-px)))!important;top:clamp(calc(14 * var(--w-lib-px)),1.8vh,calc(24 * var(--w-lib-px)))!important}
+body[data-store-theme=library] :is(.lb-panel,.lb-dialog) .wst-frame{--wst-frame-px:clamp(calc(10 * var(--w-lib-px)),1.3vh,calc(16 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-check.wst-check{gap:calc(8 * var(--w-lib-px))!important;font-size:clamp(calc(13 * var(--w-lib-px)),1.6vh,calc(17 * var(--w-lib-px)))}
+body[data-store-theme=library] .lb-check.wst-check>input{width:calc(18 * var(--w-lib-px))!important;height:calc(18 * var(--w-lib-px))!important;min-width:calc(18 * var(--w-lib-px));min-height:calc(18 * var(--w-lib-px));border-width:calc(2 * var(--w-lib-px))!important}
+body[data-store-theme=library] .lb-check.wst-check>input:checked::after{width:calc(8 * var(--w-lib-px));height:calc(8 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-menu-item>.lb-check-box{width:calc(18 * var(--w-lib-px));height:calc(18 * var(--w-lib-px));border-width:calc(2 * var(--w-lib-px))}
+body[data-store-theme=library] .lb-menu-item>.lb-check-box.wst-checked::after{width:calc(8 * var(--w-lib-px));height:calc(8 * var(--w-lib-px))}
+/* The arrow artwork remains small inside a separate, usable button target. */
+body[data-store-theme=library] .lb-spin{gap:0}
+body[data-store-theme=library] .lb-spin-btn{position:relative;width:calc(24 * var(--w-lib-px));height:calc(24 * var(--w-lib-px));background:transparent!important;color:var(--wc-text-dim);-webkit-mask:none;mask:none;transform:none!important}
+body[data-store-theme=library] .lb-spin-btn:hover{color:var(--wc-text)}
+body[data-store-theme=library] .lb-spin-btn::before{content:'';position:absolute;left:50%;top:50%;width:calc(16 * var(--w-lib-px));height:calc(11 * var(--w-lib-px));transform:translate(-50%,-50%) rotate(90deg);background:currentColor;pointer-events:none;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+body[data-store-theme=library] .lb-spin-btn.is-up::before{-webkit-mask-image:var(--tex-selection_arrow_left);mask-image:var(--tex-selection_arrow_left)}
+body[data-store-theme=library] .lb-spin-btn.is-down::before{-webkit-mask-image:var(--tex-selection_arrow_right);mask-image:var(--tex-selection_arrow_right)}
+

@@ -1201,24 +1201,13 @@ end
 local VORP_CUR = { [0] = 'money', [1] = 'gold', [2] = 'rol' }
 local RSG_CUR  = { [0] = 'cash', [1] = 'bloodmoney', [2] = 'blkbank' }
 local function currencyOffline(identifier, currencyType, amount, action)
-    if WFW.Name == 'vorp' then
-        local col = VORP_CUR[currencyType]; if not col then return false, 'invalid_data' end
-        if action == 'add' then
-            MySQL.update.await("UPDATE characters SET " .. col .. " = " .. col .. " + ? WHERE identifier = ?", { amount, identifier })
-        else
-            MySQL.update.await("UPDATE characters SET " .. col .. " = GREATEST(" .. col .. " - ?, 0) WHERE identifier = ?", { amount, identifier })
-        end
-        return true
-    elseif WFW.Name == 'rsgcore' then
-        local key = RSG_CUR[currencyType]; if not key then return false, 'invalid_data' end
-        if action == 'add' then
-            MySQL.update.await("UPDATE players SET money = JSON_SET(money, '$." .. key .. "', CAST(JSON_EXTRACT(money, '$." .. key .. "') AS SIGNED) + ?) WHERE citizenid = ?", { amount, identifier })
-        else
-            MySQL.update.await("UPDATE players SET money = JSON_SET(money, '$." .. key .. "', GREATEST(CAST(JSON_EXTRACT(money, '$." .. key .. "') AS SIGNED) - ?, 0)) WHERE citizenid = ?", { amount, identifier })
-        end
-        return true
-    end
-    return false, 'unknown_framework'
+    amount = tonumber(amount)
+    local currency = ({ [0] = 'cash', [1] = 'gold' })[tonumber(currencyType)]
+    if not currency or not amount or amount ~= amount or amount <= 0 or amount == math.huge then return false, 'invalid_amount' end
+    if GetResourceState('w_centralbank') ~= 'started' then return false, 'economy_unavailable' end
+    if not exports.w_centralbank:IsReady() then return false, 'economy_unavailable' end
+    return exports.w_centralbank:AdjustPlayer(tostring(identifier), currency,
+        action == 'remove' and -amount or amount, 'offline-framework-currency')
 end
 exports('FwAddCurrencyOffline', function(identifier, t, amt) return currencyOffline(identifier, t, amt, 'add') end)
 exports('FwRemoveCurrencyOffline', function(identifier, t, amt) return currencyOffline(identifier, t, amt, 'remove') end)

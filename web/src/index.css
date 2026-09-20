@@ -1,0 +1,538 @@
+/* ============================================================================
+   The w_crafting design tokens -- the single source for every colour and face in this frame.
+
+   ★ Lifted verbatim from the design system the old vanilla UI shipped (build/assets/app.css),
+     so the merged interface and w_crafting stay the same UI rather than two that resemble
+     each other. Change a value here and the Mantine theme moves with it -- theme/index.ts
+     reads these, it does not restate them.
+   ============================================================================ */
+
+:root {
+  --wc-bg: #050505;
+  --wc-panel: #0b0b0b;
+  --wc-panel-2: #111111;
+  --wc-panel-3: #181818;
+  --wc-plate: #1f1f1f;
+
+  --wc-text: #ffffff;
+  --wc-text-dim: #a9a9a9;
+  --wc-text-faint: #6d6d6d;
+
+  --wc-line: rgba(255, 255, 255, 0.14);
+  --wc-line-strong: rgba(255, 255, 255, 0.3);
+  --wc-hover: rgba(255, 255, 255, 0.12);
+
+  --wc-red: #cb0101;
+  --wc-red-deep: #a50101;
+  --wc-red-soft: rgba(203, 1, 1, 0.16);
+  --wc-ok: #d2d2d2;
+
+  /* ⚠️ The accent MUST have a root value. It is otherwise declared only on .lb-panel and on
+     .wc-shell / .wc-theme-*, and the two progress readouts live inside neither -- so
+     `stroke: var(--wc-accent)` resolved to nothing and both rings drew invisibly: the disc and
+     the percentage appeared, the ring never did.
+
+     The panel and theme declarations still win where they apply; this is only the floor. */
+  --wc-accent: #ededed;
+  --wc-accent-soft: rgba(255, 255, 255, 0.08);
+  --wc-glow: rgba(255, 255, 255, 0.06);
+
+  --wc-font-display: 'RDR Lino', 'Tajawal', 'Noto Sans Arabic', Georgia, serif;
+  --wc-font-body: 'Hapna Slab', 'Tajawal', 'Noto Sans Arabic', Georgia, serif;
+  --wc-font-numeral: 'RDR Catalogue', 'Tajawal', 'Noto Sans Arabic', Georgia, serif;
+}
+
+/* Thin 100 */
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-Thin.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 100;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-ThinItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 100;
+  font-stretch: normal;
+}
+
+/* ExtraLight 200 */
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-ExtraLight.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 200;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-ExtraLightItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 200;
+  font-stretch: normal;
+}
+
+/* Light 300 */
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-Light.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 300;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-LightItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 300;
+  font-stretch: normal;
+}
+
+/* Regular 400 */
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-Regular.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-Italic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 400;
+  font-stretch: normal;
+}
+
+/* Medium 500 */
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-Medium.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-MediumItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 500;
+  font-stretch: normal;
+}
+
+/* SemiBold 600 */
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-SemiBold.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-SemiBoldItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 600;
+  font-stretch: normal;
+}
+
+/* Bold 700 */
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-Bold.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-BoldItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 700;
+  font-stretch: normal;
+}
+
+/* ExtraBold 800 */
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-ExtraBold.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 800;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-ExtraBoldItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 800;
+  font-stretch: normal;
+}
+
+/* Black 900 */
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-Black.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 900;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto';
+  src: url('/fonts/Roboto-BlackItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 900;
+  font-stretch: normal;
+}
+
+/* Roboto Mono */
+/* Thin 100 */
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-Thin.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 100;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-ThinItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 100;
+  font-stretch: normal;
+}
+
+/* ExtraLight 200 */
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-ExtraLight.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 200;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-ExtraLightItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 200;
+  font-stretch: normal;
+}
+
+/* Light 300 */
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-Light.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 300;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-LightItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 300;
+  font-stretch: normal;
+}
+
+/* Regular 400 */
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-Regular.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 400;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-Italic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 400;
+  font-stretch: normal;
+}
+
+/* Medium 500 */
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-Medium.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 500;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-MediumItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 500;
+  font-stretch: normal;
+}
+
+/* SemiBold 600 */
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-SemiBold.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 600;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-SemiBoldItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 600;
+  font-stretch: normal;
+}
+
+/* Bold 700 */
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-Bold.ttf') format('truetype');
+  font-display: auto;
+  font-style: normal;
+  font-weight: 700;
+  font-stretch: normal;
+}
+@font-face {
+  font-family: 'Roboto Mono';
+  src: url('/fonts/RobotoMono-BoldItalic.ttf') format('truetype');
+  font-display: auto;
+  font-style: italic;
+  font-weight: 700;
+  font-stretch: normal;
+}
+
+html,
+body,
+#root {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans',
+    'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100vh;
+  user-select: none;
+  overflow: hidden !important;
+}
+
+p {
+  margin: 0;
+}
+
+#root {
+  height: 100%;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+@keyframes progress-bar {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+::-webkit-scrollbar {
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
+  width: 0;
+  height: 0;
+}
+
+.toast-inform {
+  background-color: #2980b9;
+}
+
+.toast-success {
+  background-color: #27ae60;
+}
+
+.toast-error {
+  background-color: #c0392b;
+}
+
+/* ============================================================================
+   The RDR faces, declared once for the whole frame.
+
+   ★ They live in public/fonts and are referenced by absolute path, which Vite leaves alone --
+     the same files the old vanilla UI shipped, so nothing new is downloaded by the client.
+
+   ⚠️ Tajawal carries the Arabic: the RDR faces have no Arabic glyphs at all, and without a
+      fallback every Arabic label in a prompt renders as empty boxes. It is listed after the RDR
+      face in each stack so Latin still gets the game's lettering.
+   ============================================================================ */
+
+@font-face {
+  font-family: 'RDR Catalogue';
+  src: url('/fonts/RDRCatalogueBold-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'RDR Lino';
+  src: url('/fonts/RDRLino-Regular.woff2') format('woff2');
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Hapna Slab';
+  src: url('/fonts/HapnaSlabSerif-DemiBold.woff2') format('woff2');
+  font-display: block;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('/fonts/tajawal-arabic-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('/fonts/tajawal-arabic-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* The gizmo's canvas. It only exists while an entity is selected (features/gizmo/index.tsx),
+   and it must take the pointer -- dragging the handles IS the tool. */
+.wl-gizmo-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+/* ============================================================================
+   The page itself must never paint.
+
+   ⚠️ In game this frame sits over the world, so an opaque body blacks the game out entirely --
+      the single worst failure a NUI resource can have, and it happens silently because in a
+      browser it just looks like a background. Mantine's global styles do set one, hence the
+      override rather than a bare declaration.
+
+   ★ In the browser preview the backdrop is put on <html> (see main.tsx), so keeping <body>
+     transparent is what lets that scene show through here without changing behaviour in game.
+   ============================================================================ */
+
+body {
+  background: transparent !important;
+}
+
+#root {
+  background: transparent;
+}
+
+/* ============================================================================
+   The preview scene -- browser only, never in game.
+
+   ⚠️ A REAL ELEMENT, not a background and not a pseudo-element. wc-base.css (inherited from
+      the interface that shipped before this one) carries two rules that exist to keep the game
+      visible through the frame:
+
+        html, body, #root       { background: transparent !important;
+                                  background-image: none !important }
+        html:before, body:after { display: none !important; content: none !important }
+
+      The first kills a background on the page, the second kills a ::before on it. Both are
+      !important and both are correct -- an opaque frame blacks the game out. So the backdrop
+      cannot be either of those things, and is rendered as an ordinary div the app puts behind
+      itself instead. Two earlier attempts (inline style, then ::before) died on those rules.
+
+   ★ z-index 0 with the panels above it, rather than -1: a negative index would put it behind
+     the page background, which is where the last attempt went wrong.
+   ============================================================================ */
+
+body[data-store-theme] .wl-preview-bg,
+body[data-store-theme] .wl-dev-key,
+body:not([data-is-browser]) .wl-preview-bg,
+body:not([data-is-browser]) .wl-dev-key {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.wl-preview-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--wl-backdrop);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   The developer drawer's handle -- built from the prompt's key badge so the one control that
+   is always on screen in the preview belongs to the same design as everything it opens.
+
+   ⚠️ Browser only: <Dev /> is rendered behind isEnvBrowser(), so this never reaches a player.
+   ============================================================================ */
+
+.wl-dev-key {
+  position: fixed;
+  /* ★ Logical, not physical: the drawer opens from the reading side, so a fixed `right` would
+     put the handle underneath it the moment the panel flipped to Arabic. */
+  inset-inline-end: 24px;
+  bottom: 24px;
+  z-index: 40;
+
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+
+  border: 0;
+  cursor: pointer;
+  color: #000;
+  background: #fff;
+  font-family: 'BebasNeue', sans-serif;
+  box-shadow: 1px 1px rgba(0, 0, 0, 0.3);
+  transition: background-color 120ms ease;
+}
+
+.wl-dev-key:hover {
+  background: #c0c0c0;
+}

@@ -1,0 +1,308 @@
+/* ============================================================================
+   The w_crafting surface language, lifted into the library frame.
+
+   Everything here is the crafting bench's own CSS -- the 8-piece frame, the masked glyph, the
+   parchment plate, the RDR scrollbar -- so the two interfaces are one design rather than two
+   that resemble each other.
+
+   ⚠️ The --tex-* variables these rules read are registered at boot by wc/bootstrap.ts, as
+      ABSOLUTE urls. If a frame or a glyph ever renders blank, that is the first thing to check:
+      a relative url inside a CSS variable silently draws nothing.
+   ============================================================================ */
+
+/* ── the 8-piece border ───────────────────────────────────────────────── */
+
+.wc-frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --fr-px: 12px;
+  --fr-c: var(--wc-accent, #ededed);
+  opacity: var(--fr-o, 0.5);
+}
+
+.wc-frame > span {
+  position: absolute;
+  background-color: var(--fr-c);
+}
+
+/* The four runs tile between the corners; the corners are fixed sprites. */
+.wc-fr-t,
+.wc-fr-b {
+  left: var(--fr-px);
+  right: var(--fr-px);
+  height: var(--fr-px);
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  -webkit-mask-size: auto 100%;
+  mask-size: auto 100%;
+}
+
+.wc-fr-l,
+.wc-fr-r {
+  top: var(--fr-px);
+  bottom: var(--fr-px);
+  width: var(--fr-px);
+  -webkit-mask-repeat: repeat-y;
+  mask-repeat: repeat-y;
+  -webkit-mask-size: 100% auto;
+  mask-size: 100% auto;
+}
+
+.wc-fr-tl,
+.wc-fr-tr,
+.wc-fr-bl,
+.wc-fr-br {
+  width: var(--fr-px);
+  height: var(--fr-px);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
+.wc-fr-t { top: 0; -webkit-mask-image: var(--tex-crafting_highlight_t); mask-image: var(--tex-crafting_highlight_t); }
+.wc-fr-b { bottom: 0; -webkit-mask-image: var(--tex-crafting_highlight_b); mask-image: var(--tex-crafting_highlight_b); }
+.wc-fr-l { left: 0; -webkit-mask-image: var(--tex-crafting_highlight_l); mask-image: var(--tex-crafting_highlight_l); }
+.wc-fr-r { right: 0; -webkit-mask-image: var(--tex-crafting_highlight_r); mask-image: var(--tex-crafting_highlight_r); }
+
+.wc-fr-tl { top: 0; left: 0; -webkit-mask-image: var(--tex-crafting_highlight_tl); mask-image: var(--tex-crafting_highlight_tl); }
+.wc-fr-tr { top: 0; right: 0; -webkit-mask-image: var(--tex-crafting_highlight_tr); mask-image: var(--tex-crafting_highlight_tr); }
+.wc-fr-bl { bottom: 0; left: 0; -webkit-mask-image: var(--tex-crafting_highlight_bl); mask-image: var(--tex-crafting_highlight_bl); }
+.wc-fr-br { bottom: 0; right: 0; -webkit-mask-image: var(--tex-crafting_highlight_br); mask-image: var(--tex-crafting_highlight_br); }
+
+/* ── the masked glyph ─────────────────────────────────────────────────── */
+
+.wc-glyph {
+  display: inline-block;
+  flex: none;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+/* ── the plate every panel sits on ────────────────────────────────────── */
+
+/**
+ * ★ A radial gradient, not a flat fill. RDR's panels are lit from the top edge and fall away
+ *   into black at the corners; a solid colour reads as a web card no matter how dark it is.
+ */
+.wc-plate {
+  position: relative;
+  background: radial-gradient(140% 130% at 50% 0%, #1a1a1af0, #060606f2);
+  box-shadow: 0 22px 60px -18px #000000d9;
+  color: var(--wc-text);
+}
+
+/* The worn outline behind a plate, for the pieces that want a heavier edge. */
+.wc-outline::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-color: var(--wc-line);
+  -webkit-mask-image: var(--tex-crafting_outline);
+  mask-image: var(--tex-crafting_outline);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
+/* The header bar art, used above a title. */
+.wc-header-art {
+  height: 26px;
+  background-color: var(--wc-line);
+  -webkit-mask-image: var(--tex-menu_header_1a);
+  mask-image: var(--tex-menu_header_1a);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
+/* A drawn rule -- the game's divider art rather than a 1px line. */
+.wc-divider {
+  height: 8px;
+  background-color: var(--wc-line-strong);
+  -webkit-mask-image: var(--tex-divider_line);
+  mask-image: var(--tex-divider_line);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.wc-title-divider {
+  height: 10px;
+  background-color: var(--wc-line-strong);
+  -webkit-mask-image: var(--tex-title_divider);
+  mask-image: var(--tex-title_divider);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* The selection plate behind a hovered or active row. */
+.wc-selection {
+  background-color: var(--wc-hover);
+  -webkit-mask-image: var(--tex-selection_box_bg_1a);
+  mask-image: var(--tex-selection_box_bg_1a);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
+/* ── the RDR scrollbar ────────────────────────────────────────────────── */
+
+.wc-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.wc-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.wc-scroll::-webkit-scrollbar-thumb {
+  background: var(--wc-line-strong);
+}
+
+.wc-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--wc-text-faint);
+}
+
+/* ── type ─────────────────────────────────────────────────────────────── */
+
+.wc-display { font-family: var(--wc-font-display); }
+.wc-body { font-family: var(--wc-font-body); }
+.wc-numeral { font-family: var(--wc-font-numeral); font-variant-numeric: tabular-nums; }
+
+/* ⚠️ The TextUI icon slot: present in the live build's markup but styled in neither of its two
+   stylesheets, so the icon rendered unsized and unaligned. Sized here to match the toast icon,
+   which is the same kind of slot at the same scale. */
+.lb-textui-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: clamp(18px, 2.4vh, 22px);
+  aspect-ratio: 1;
+  color: var(--wc-accent, #ededed);
+}
+
+.lb-textui-icon .wc-glyph {
+  width: 100%;
+  height: 100%;
+}
+
+.lb-textui-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ============================================================================
+   The close button — a black disc floating just above the panel's top edge, arriving after it.
+
+   ★ It is LIFTED clear of the edge rather than centred on it. Sitting exactly on the rule made
+     it look welded to the panel; a small gap reads as a separate control hovering over it.
+
+   ⚠️ THE LIFT IS A VARIABLE FOR A REASON. `transform` replaces its whole value, so the
+      centring has to be restated in the keyframe and in :active — three places that must agree.
+      Written as three literals they drift the moment one is tuned, and the disc jumps on press
+      or lands in the wrong spot. Change --lb-close-lift and all three follow.
+
+   ★ It animates in AFTER the panel. The delay is the point: arriving together makes the panel
+     look like it grew a button; a beat later reads as the panel settling and then offering the
+     way out. `both` keeps it invisible during the delay, or it would flash at full opacity.
+
+   ★ Only the MARK reddens on hover — a filled disc would put a bright block over the title
+     every time the pointer passed.
+   ============================================================================ */
+
+.lb-close-tab {
+  --lb-close-lift: calc(-50% - 20px);
+
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, var(--lb-close-lift));
+  z-index: 3;
+
+  display: grid;
+  place-items: center;
+  width: clamp(28px, 3.6vh, 34px);
+  aspect-ratio: 1;
+  padding: 0;
+
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+
+  color: rgba(255, 255, 255, 0.92);
+  background: #070707;
+  box-shadow: 0 3px 10px -2px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+
+  transition: color 120ms ease;
+  animation: lb-close-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2) 180ms both;
+}
+
+.lb-close-tab .wc-glyph,
+.lb-close-tab .lb-back-arrow {
+  width: 42%;
+  height: 42%;
+}
+
+.lb-close-tab:hover {
+  color: var(--wc-red);
+}
+
+/* ★ Going back is not destructive, so the arrow brightens instead of turning red. Red is
+   reserved for the cross, where it says the panel is about to be dismissed. */
+.lb-close-tab.is-back:hover {
+  color: #ffffff;
+}
+
+.lb-close-tab:active {
+  color: var(--wc-red-deep);
+  transform: translate(-50%, var(--lb-close-lift)) scale(0.92);
+}
+
+/* Drops in from above and settles — the overshoot in the easing gives it the small bounce the
+   game's own panels have. */
+@keyframes lb-close-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(var(--lb-close-lift) - 90%)) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, var(--lb-close-lift)) scale(1);
+  }
+}
+
+/* ============================================================================
+   The value arrows on a list row, textured from the document direction.
+
+   ★ Same convention lib-ui.css already uses for .lb-item-arrow and .lb-back-arrow: the sheet
+     is written RTL-first, so the default is the RTL texture and [dir="ltr"] swaps it. The
+     component supplies no texture at all, which is why it now reads correctly in both.
+   ============================================================================ */
+
+.lb-values-prev,
+.lb-values-next {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+/* RTL: the pair points outwards when 'previous' is on the right. */
+.lb-values-prev { -webkit-mask-image: var(--tex-selection_arrow_right); mask-image: var(--tex-selection_arrow_right); }
+.lb-values-next { -webkit-mask-image: var(--tex-selection_arrow_left);  mask-image: var(--tex-selection_arrow_left); }
+
+[dir='ltr'] .lb-values-prev { -webkit-mask-image: var(--tex-selection_arrow_left);  mask-image: var(--tex-selection_arrow_left); }
+[dir='ltr'] .lb-values-next { -webkit-mask-image: var(--tex-selection_arrow_right); mask-image: var(--tex-selection_arrow_right); }

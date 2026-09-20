@@ -54,7 +54,8 @@ function w.framework.UserClass:canBuy(price, moneyType, removeIfCan)
   local money = self:getMoney(moneyType)
   local hasEnough = money >= price
   if removeIfCan == true and hasEnough then
-    self:removeMoney(price, moneyType)
+    if price == 0 then return true end
+    return self:removeMoney(price, moneyType) == true
   end
   return hasEnough
 end

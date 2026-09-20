@@ -28,6 +28,7 @@ files {
     'imports/**/shared.lua',
     'web/build/index.html',
     'web/build/**/*',
+    'nui/**/*',
     'locales/*.json',
     -- dialect host layer: loaded by init.lua inside the core that provides rsg-core / vorp_core / qbr-core / ox_lib
     'compat/*.lua',

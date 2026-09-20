@@ -1,0 +1,47 @@
+/* Preserve original geometry while removing the old decorative layer. */
+.wst-positioned{position:relative!important}
+.wst-panel>.wc-atmo,.wst-panel>.background,.wst-panel>.input-backdrop,.wst-panel>.input-smudge{display:none!important}
+.wst-panel .wst-header>.background{display:none!important}
+body[data-store-theme] .wst-panel::after{background:none!important;box-shadow:none!important;border:0!important}
+body[data-store-theme] :is(.wst-button,.wst-tab,.wst-card,.wst-field)::after{background:none!important;box-shadow:none!important;border:0!important;pointer-events:none!important}
+body[data-store-theme] :is(.wst-button,.wst-tab) :is(span,b,strong,small){color:inherit!important;text-shadow:none!important}
+body[data-store-theme] .wst-root{font-family:var(--wst-f-body)}
+body[data-store-theme=library] :is(.lb-panel,.lb-dialog,.wv-panel){overflow:visible}
+body[data-store-theme=library] .lb-menu-item.is-active,body[data-store-theme=library] .lb-item.is-hover,body[data-store-theme=library] .lb-menu-item.is-hover{color:#080808!important}
+body[data-store-theme=library] .lb-menu-item.is-active::before,body[data-store-theme=library] .lb-item.is-hover::before,body[data-store-theme=library] .lb-menu-item.is-hover::before{background:#ededed!important}
+body[data-store-theme=library] :is(.lb-item.is-hover,.lb-menu-item.is-hover,.lb-menu-item.is-active) :is(span,p,b,small){color:inherit!important}
+body[data-store-theme=library] .wn-note.has-plate::after{display:none!important}
+body[data-store-theme=library] .lb-btn:not(.is-danger)>span{color:inherit!important}
+body[data-store-theme=library] .lb-close-tab{position:absolute!important;left:auto!important;right:clamp(14px,1.6vw,24px)!important;top:clamp(14px,1.8vh,24px)!important;transform:none!important;animation:none!important;z-index:4!important}
+body[data-store-theme=library] .lb-close-tab:active{transform:scale(.95)!important}
+body[data-store-theme=library] .lb-head{padding-inline:54px}
+body[data-store-theme=library] :is(.wl-prompt-bg,.wl-prompt-group .line){background-color:var(--wst-ink)}
+body[data-store-theme=library] .wc-atmo{display:none!important}
+body[data-store-theme=menu] .menu .container{overflow:visible}
+body[data-store-theme=menu] .menu .container>header{position:relative}
+body[data-store-theme=menu] .list .item.selected,body[data-store-theme=menu] .list .item.active{color:#080808!important}
+body[data-store-theme=menu] .list .item.selected::before,body[data-store-theme=menu] .list .item.active::before{background:#ededed!important}
+body[data-store-theme=input] :is(.input-backdrop,.input-smudge){visibility:hidden!important}
+body[data-store-theme=input] .input-container{position:relative}
+body[data-store-theme=input] .input-header{position:relative}
+body[data-store-theme=chat] .chat-input-wrapper::after,body[data-store-theme=chat] .suggestions-box::after{display:none!important}
+body[data-store-theme=chat] .chat-message{position:relative}
+body[data-store-theme=chat] .suggestion-item.is-selected{color:#080808!important}
+body[data-store-theme=chat] .suggestion-item.is-selected::before{background:#ededed!important}
+body[data-store-theme=chat] .chat-time{font-family:var(--wst-f-num)!important}
+body[data-store-theme=level] .wl-plate::after{display:none!important}
+body[data-store-theme=level] .wl-plate-body{color:var(--wst-text)}
+body[data-store-theme=kingdom]{--wc-font-display:var(--wst-f-display);--wc-font-body:var(--wst-f-body)}
+body[data-store-theme=kingdom] .dock-title h1{font-family:var(--wst-f-display)!important}
+body[data-store-theme=kingdom] .dock>.wc-atmo{display:none!important}
+body[data-store-theme=baloot] #players .player>.strip,body[data-store-theme=baloot] #status .chip>.strip{display:none!important}
+body[data-store-theme=baloot] .player.is-turn{color:#080808!important}
+body[data-store-theme=baloot] .player.is-turn::before{background:#ededed!important}
+body[data-store-theme=baloot] .player.is-turn :is(span,b,div){color:inherit!important;text-shadow:none!important}
+body[data-store-theme=baloot] :is(#bid,#banner,#showcase,.chip){isolation:isolate}
+body[data-store-theme=cinema] .wcn-shell>.wc-atmo{display:none!important}
+body[data-store-theme=cinema] .wc-craft-btn>span{color:inherit!important;background:none!important}
+body[data-store-theme=cinema] .wcn-card{position:relative}
+body[data-store-theme=cinema] .wcn-tab.is-on{color:#111!important}
+body[data-store-theme=cinema] .wcn-tab.is-on::before{background:#ededed!important}
+body[data-store-theme] .wst-frame{max-width:none;max-height:none}

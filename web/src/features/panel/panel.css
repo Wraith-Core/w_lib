@@ -1,0 +1,379 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   The panel's own few rules.
+
+   ★ Deliberately short. The shell -- viewport, plate, header, the two columns, the divider, the
+     action row -- is all in wc-base.css already, and the list rows reuse .lb-item from the
+     context menu. What is left is the detail pane and the group headings, which nothing else in
+     the library draws.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── the browser list ──────────────────────────────────────────────────── */
+
+/* ⚠️ Only the gap. .wc-list already gives the column its height, its scrolling and its inline
+   padding -- this adds the one thing it does not, because crafting's cards carry their own
+   spacing and these rows do not. */
+.wl-panel-list {
+  gap: 2px;
+}
+
+/* ★ .lb-item is the context menu's row, reused rather than reinvented -- a list of things to
+   pick is a list of things to pick, and two stylings of it would drift apart. Only the selected
+   state is new: the context menu has no selection to hold, this does. */
+.wl-panel-list .lb-item.is-active {
+  background: linear-gradient(180deg, #1c1c1cf0, #0a0a0af2);
+  box-shadow: inset 0 0 0 1px var(--wc-line-strong);
+}
+
+.wl-panel-group {
+  padding: clamp(8px, 1.2vh, 12px) 4px clamp(3px, 0.5vh, 5px);
+  color: var(--wc-text-faint);
+  font-family: var(--wc-font-display);
+  font-size: clamp(10px, 1.3vh, 12px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+[dir="rtl"] .wl-panel-group {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ⚠️ A two-column grid, not a flex row with space-between. The labels must line up down the
+   column whatever their length -- with space-between every bar started at a different place and
+   the block read as scattered. */
+.wl-panel-row {
+  display: grid;
+  grid-template-columns: clamp(84px, 20%, 140px) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(8px, 1vw, 16px);
+  font-size: clamp(11px, 1.6vh, 13px);
+}
+
+.wl-panel-row-label {
+  color: var(--wc-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wl-panel-aside {
+  color: var(--wc-text-dim);
+  font-family: var(--wc-font-numeral);
+  font-size: clamp(12px, 1.8vh, 16px);
+}
+
+/* ── actions ───────────────────────────────────────────────────────────── */
+
+/* ★ The secondary action is the crafting button at less weight, not a different control. */
+.wc-craft-btn.is-ghost {
+  opacity: 0.82;
+}
+
+.wc-craft-btn.is-ghost:hover:not(:disabled) {
+  opacity: 1;
+}
+
+/* ⚠️ Only the image. wc-base.css already sizes .wc-craft-btn .wc-glyph at 15px and gives the
+   inner span its own 9px gap, so repeating either here would only start a fight over which
+   file owns the button. An <img> icon is the one case it does not cover. */
+.wc-craft-btn img {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+/* ── the amount an action asks for ─────────────────────────────────────── */
+
+/* ⚠️ Narrow, and it must NOT stretch. .wc-actions is a flex row and .lb-input's own rule sets
+   flex:1 on the field inside it, so dropped in unbounded the bid box swallowed the row and
+   pushed the buttons off the end. */
+.wl-panel-amount {
+  flex: none;
+  width: clamp(110px, 11vw, 160px);
+}
+
+.wl-panel-amount input {
+  font-family: var(--wc-font-numeral);
+  text-align: center;
+}
+
+/* ★ The last half-minute of a lot, in the colour the library already uses for trouble. Only the
+   clock changes -- the row is still readable, it is the time that has become the news. */
+.wl-panel-urgent {
+  color: var(--wc-red);
+  font-family: var(--wc-font-numeral);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Blocks -- the composition layer.
+
+   ★ A twelve-column grid, and that is nearly the whole of it. The blocks themselves are drawn
+     with the crafting classes (.wc-card, .wc-manage-row, .wc-meta-tile, .wc-ing, .lb-input);
+     what is here is how they SIT together, which is the one thing wc-base.css has no opinion on
+     because crafting only ever had one arrangement.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.wl-panel-blocks {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-content: start;
+  gap: clamp(10px, 1.6vh, 18px) clamp(12px, 1.4vw, 22px);
+  padding-inline-end: 4px;
+}
+
+.wl-panel-block {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1vh, 10px);
+}
+
+/* ⚠️ min-height: 0 all the way down. A block holding a scrolling list is a grid item inside a
+   flex column, and both of those default to min-height:auto -- so without this the inner list
+   refuses to shrink, grows to its content, and the whole pane scrolls instead of the list. */
+.wl-panel-block > * {
+  min-height: 0;
+}
+
+.wl-panel-text {
+  margin: 0;
+  color: var(--wc-text-dim);
+  font-size: clamp(12px, 1.7vh, 14px);
+  line-height: 1.7;
+}
+
+/* ── tables ────────────────────────────────────────────────────────────── */
+
+/* ★ Built on the same grid the rows use, NOT on <table>. A real table brings its own spacing
+   and lands half a millimetre off every list beside it -- the sort of thing nobody can name and
+   everybody sees. */
+.wl-panel-table {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-inline-end: 4px;
+}
+
+.wl-panel-thead,
+.wl-panel-trow {
+  display: grid;
+  align-items: center;
+  gap: clamp(8px, 1vw, 16px);
+  padding: clamp(6px, 0.9vh, 9px) clamp(8px, 0.8vw, 12px);
+}
+
+.wl-panel-thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--wc-panel-2);
+  color: var(--wc-text-faint);
+  font-family: var(--wc-font-display);
+  font-size: clamp(10px, 1.4vh, 12px);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+[dir="rtl"] .wl-panel-thead { letter-spacing: 0; text-transform: none; }
+
+.wl-panel-trow {
+  position: relative;
+  flex: none;
+  color: var(--wc-text-dim);
+  font-size: clamp(11px, 1.6vh, 13px);
+}
+
+.wl-panel-trow:after {
+  content: "";
+  position: absolute;
+  inset-inline: 6px;
+  bottom: 0;
+  height: 2px;
+  background-color: var(--wc-line);
+  -webkit-mask: var(--tex-list_item_h_line_narrow) center / 100% 100% no-repeat;
+  mask: var(--tex-list_item_h_line_narrow) center / 100% 100% no-repeat;
+}
+
+.wl-panel-trow:hover { background-color: var(--wc-accent-soft); }
+
+/* ── card grid ─────────────────────────────────────────────────────────── */
+
+.wl-panel-cards {
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(180px, 17vw, 260px), 1fr));
+  gap: 6px;
+  padding-inline-end: 4px;
+}
+
+.wl-panel-cards .wc-card { width: 100%; }
+
+.wl-panel-cards .wc-card.is-active {
+  background-color: var(--wc-accent-soft);
+  box-shadow: inset 0 0 0 1px var(--wc-line-strong);
+}
+
+/* ── forms ─────────────────────────────────────────────────────────────── */
+
+.wl-panel-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(180px, 18vw, 280px), 1fr));
+  gap: clamp(8px, 1.2vh, 14px) clamp(10px, 1.2vw, 18px);
+}
+
+.wl-panel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+/* A checkbox sits BESIDE its label, not under it -- it is a word with a box, not a field. */
+.wl-panel-field:has(.wl-panel-check) {
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.wl-panel-check {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--wc-red);
+  cursor: pointer;
+}
+
+/* ── loose buttons, and the ones that ride on a row ────────────────────── */
+
+.wl-panel-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(8px, 0.9vw, 14px);
+}
+
+.wl-panel-row-end {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 0.9vw, 14px);
+}
+
+/* A quantity box small enough to sit on the row without taking it over. */
+.wl-panel-row-input {
+  flex: none;
+  width: clamp(58px, 5vw, 86px);
+  padding: clamp(5px, 0.8vh, 8px) 8px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 0 0 1px var(--wc-line);
+  color: var(--wc-text);
+  font-family: var(--wc-font-numeral);
+  font-size: clamp(11px, 1.6vh, 14px);
+  text-align: center;
+}
+
+.wl-panel-row-input:focus {
+  outline: 0;
+  box-shadow: inset 0 0 0 1px var(--wc-line-strong);
+}
+
+/* ── the action footer ─────────────────────────────────────────────────── */
+
+/*  ⚠️ IT WRAPS, AND IT HAD TO.
+ *
+ *  .wc-actions is a flex row and .wc-craft-btn is 230-320px wide with flex:none -- fine for the
+ *  crafting menu, which has ONE button. A panel describing six (save, disable, delete, new,
+ *  categories, stations) laid 1900px of buttons in a 900px pane, and the overflow ran off the
+ *  side of the frame and out of the window: buttons visibly outside the panel, unreachable.
+ *
+ *  Wrapping alone would stack them three rows deep, so past three actions they also narrow.
+ *  Narrowing is applied by the panel (is-compact), not by a media query, because it is the
+ *  NUMBER of buttons that decides it, not the size of the screen. */
+.wc-actions {
+  flex-wrap: wrap;
+}
+
+.wc-craft-btn.is-compact {
+  width: clamp(148px, 12vw, 216px);
+  font-size: clamp(11px, 1.7vh, 15px);
+}
+
+/* ── chips ─────────────────────────────────────────────────────────────── */
+
+.wl-panel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ★ .wc-category is crafting's own chip -- borrowed for its plate and its border so a tag here
+   and a category there are visibly the same object. Only the layout differs: that one stacks a
+   name over a count, this one is a single line. */
+.wl-panel-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border: 1px solid var(--wc-line);
+  background: var(--wc-panel-2);
+  color: var(--wc-text-dim);
+  font-family: var(--wc-font-body);
+  font-size: clamp(11px, 1.6vh, 13px);
+  cursor: pointer;
+}
+
+.wl-panel-chip:disabled { cursor: default; }
+.wl-panel-chip:not(:disabled):hover { background: var(--wc-hover); color: var(--wc-text); }
+
+.wl-panel-chip.is-active {
+  border-color: var(--wc-red);
+  background: var(--wc-red-soft);
+  color: var(--wc-text);
+}
+
+.wl-panel-chip .wc-glyph { width: 12px; height: 12px; }
+.wl-panel-chip b { font-family: var(--wc-font-numeral); color: var(--wc-text); }
+
+/* ── the status light ──────────────────────────────────────────────────── */
+
+/* ⚠️ inline-block with a margin, NOT a flex gap. It is dropped inside .wc-card-name and
+   .wc-manage-row-name, and both of those are text blocks with ellipsis overflow -- turning
+   either into a flex container would break the truncation they rely on. */
+.wl-panel-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-inline-end: 7px;
+  border-radius: 50%;
+  vertical-align: 0.05em;
+  background: var(--wc-text-faint);
+}
+
+.wl-panel-dot[data-state="ok"] { background: #4f9d69; }
+.wl-panel-dot[data-state="warn"] { background: #c8a44d; }
+.wl-panel-dot[data-state="bad"] { background: var(--wc-red); }
+
+/* ── the subject of the panel ──────────────────────────────────────────── */
+
+.wl-panel-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(14px, 1.6vw, 24px);
+}
+
+.wl-panel-hero .wc-slot { width: clamp(72px, 11vh, 104px); }
+
+/* The crest colour tints the plate behind the emblem, not the emblem itself -- a house colour
+   is the field it is painted on. */
+.wl-panel-crest:before { background-color: var(--wl-crest, var(--wc-accent)); }
+
+/* ── the colour swatch ─────────────────────────────────────────────────── */
+
+.lb-input input[type="color"] { min-width: 54px; }

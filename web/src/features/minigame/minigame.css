@@ -1,0 +1,272 @@
+/* ============================================================================
+   The two minigames -- the Minigame project's stylesheets, ported from Vue's scoped CSS.
+
+   ⚠️ Scoped by class, not by element. Vue's `scoped` gave every rule a hash so `.track` and
+      `.indicator` could not touch anything else; there is no such fence here, and this frame
+      also hosts the ox_lib components. So every selector is prefixed and none of them is bare.
+
+   ★ The 'Crock' face the source asks for ships with neither project. RDR Catalogue is the same
+     RDR lettering and is already in this bundle, so it stands in -- see index.css.
+   ============================================================================ */
+
+@import './animations.css';
+
+/* ── lockpick ─────────────────────────────────────────────────────────── */
+
+.wl-lockpick {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  cursor: none;
+  user-select: none;
+}
+
+.wl-lockpick-stage {
+  position: relative;
+  width: 287.5px;
+  height: 287.5px;
+  margin-top: 30px;
+  overflow: visible;
+}
+
+.wl-lockpick-pins {
+  position: absolute;
+  bottom: -38px;
+  left: 50%;
+  z-index: 5;
+  min-width: 54px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  transform: translateX(-50%);
+  color: rgb(255 255 255 / 94%);
+  background: url('/img/ui/tile.webp') no-repeat;
+  background-size: 100% 100%;
+  font-family: 'RDR Catalogue', 'Tajawal', serif;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
+}
+
+.wl-lockpick-collar {
+  position: relative;
+  display: block;
+  width: 287.5px;
+  height: 287.5px;
+  pointer-events: none;
+}
+
+.wl-lockpick-cylinder {
+  position: absolute;
+  top: 43px;
+  left: 43px;
+  width: 201px;
+  height: 201px;
+  background: url('/img/lockpick/cylinder.webp') center / cover;
+  pointer-events: none;
+}
+
+.wl-lockpick-driver {
+  position: absolute;
+  top: 164px;
+  left: 132px;
+  width: 495px;
+  height: 241.5px;
+  background: url('/img/lockpick/driver.webp') center / cover;
+  pointer-events: none;
+  /* The driver pivots about the cylinder's centre, which sits outside its own box. */
+  transform-origin: 3% -3%;
+}
+
+.wl-lockpick-pin {
+  position: absolute;
+  top: -282px;
+  left: 136px;
+  width: 20.5px;
+  height: 421px;
+  transform-origin: 50% 99%;
+  pointer-events: none;
+}
+
+.wl-lockpick-pin.damaged {
+  animation: wl-pin-jiggle 150ms ease-in-out;
+}
+
+.wl-lockpick-pin-top,
+.wl-lockpick-pin-bottom {
+  position: absolute;
+  left: 0;
+  width: 20.5px;
+  height: 210.5px;
+  background-position: center;
+  background-size: cover;
+}
+
+.wl-lockpick-pin-top {
+  top: 0;
+  background-image: url('/img/lockpick/pinTop.webp');
+}
+
+.wl-lockpick-pin-bottom {
+  top: 210.5px;
+  background-image: url('/img/lockpick/pinBott.webp');
+}
+
+.wl-lockpick-pin.broken .wl-lockpick-pin-top {
+  animation: wl-break-pin-top 700ms ease-in forwards;
+}
+
+.wl-lockpick-pin.broken .wl-lockpick-pin-bottom {
+  animation: wl-break-pin-bottom 700ms ease-in forwards;
+}
+
+@keyframes wl-pin-jiggle {
+  0%,
+  100% {
+    margin-left: 0;
+  }
+  35% {
+    margin-left: -4px;
+  }
+  70% {
+    margin-left: 3px;
+  }
+}
+
+@keyframes wl-break-pin-top {
+  to {
+    opacity: 0;
+    transform: translate(-200px, -100px) rotate(-400deg);
+  }
+}
+
+@keyframes wl-break-pin-bottom {
+  to {
+    opacity: 0;
+    transform: translate(200px, 100px) rotate(400deg);
+  }
+}
+
+/* ── QTE ──────────────────────────────────────────────────────────────── */
+
+.wl-qte {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  color: #f7f3ea;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.wl-qte-panel {
+  display: grid;
+  gap: 12px;
+  place-items: center;
+}
+
+.wl-qte-counter {
+  min-width: 54px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: rgb(255 255 255 / 94%);
+  background: url('/img/ui/tile.webp') no-repeat;
+  background-size: 100% 100%;
+  font-family: 'RDR Catalogue', 'Tajawal', serif;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 0 6px rgb(255 255 255 / 38%);
+}
+
+.wl-qte-entry {
+  position: relative;
+}
+
+.wl-qte-circle {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  border: 3px solid rgb(255 255 255 / 20%);
+  border-radius: 50%;
+  background: url('/img/qte/black_circle.webp') center / cover no-repeat;
+  box-shadow: 0 16px 42px rgb(0 0 0 / 35%);
+}
+
+/* The outer ring that fills as the round runs out. Masked to a hairline annulus. */
+.wl-qte-circle .wl-qte-progress {
+  position: absolute;
+  inset: -3px;
+  z-index: 2;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 7px rgb(255 255 255 / 45%));
+  mask-image: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  -webkit-mask-image: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  pointer-events: none;
+}
+
+/* The target arc: hatching, clipped to the wedge by the conic mask the component sets inline. */
+.wl-qte-track {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 50%;
+  background: transparent;
+  overflow: hidden;
+}
+
+.wl-qte-track::before {
+  position: absolute;
+  inset: 0;
+  content: '';
+  background: repeating-linear-gradient(45deg, rgb(255 255 255 / 76%) 0 2px, transparent 3px 6px);
+  mask-image: radial-gradient(circle, transparent 0 32%, rgb(0 0 0 / 28%) 36%, #000 44% 100%);
+  -webkit-mask-image: radial-gradient(circle, transparent 0 32%, rgb(0 0 0 / 28%) 36%, #000 44% 100%);
+  overflow: hidden;
+}
+
+.wl-qte-inner {
+  position: absolute;
+  inset: 56px;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #222;
+  background: url('/img/qte/white_circle.webp') center / cover no-repeat;
+  font-family: 'RDR Catalogue', 'Tajawal', serif;
+  font-size: 54px;
+}
+
+.wl-qte-halo,
+.wl-qte-ripple {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.wl-qte-ripple {
+  inset: 56px;
+  z-index: 6;
+}
+
+/* ⚠️ transform-origin is the full height: the needle pivots on the circle's centre, which is
+   at its far end, not inside it. */
+.wl-qte-indicator {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  z-index: 3;
+  width: 4px;
+  height: 138px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 0 7px rgb(255 255 255 / 45%);
+  transform-origin: 50% 138px;
+}

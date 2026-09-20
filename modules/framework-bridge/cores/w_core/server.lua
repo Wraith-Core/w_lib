@@ -12,7 +12,8 @@ local moneyTypes = { [0] = "cash", [1] = "gold", [2] = "rol" }
 
 local function moneyType(kind)
   if type(kind) == "string" then return kind end
-  return moneyTypes[tonumber(kind) or 0] or "cash"
+  if kind == nil then return 'cash' end
+  return moneyTypes[tonumber(kind)]
 end
 
 -------------
@@ -43,19 +44,19 @@ end
 
 function w.framework.UserClass:getMoney(kind)
   local name = moneyType(kind)
-  if name == "rol" then return 0 end
+  if not name or name == "rol" then return 0 end
   return self.data.Functions.GetMoney(name) or 0
 end
 
 function w.framework.UserClass:removeMoney(amount, kind)
   local name = moneyType(kind)
-  if name == "rol" then return false end
+  if not name or name == "rol" then return false end
   return self.data.Functions.RemoveMoney(name, amount, "w_lib") and true or false
 end
 
 function w.framework.UserClass:addMoney(amount, kind)
   local name = moneyType(kind)
-  if name == "rol" then return false end
+  if not name or name == "rol" then return false end
   return self.data.Functions.AddMoney(name, amount, "w_lib") and true or false
 end
 
@@ -63,7 +64,7 @@ function w.framework.UserClass:getIdentifiers()
   local pd = self.data.PlayerData
   return {
     identifier = pd.citizenid,
-    charid = pd.cid or 0,
+    charid = pd.citizenid,
     license = pd.license,
   }
 end
