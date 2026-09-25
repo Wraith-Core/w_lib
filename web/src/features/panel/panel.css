@@ -244,7 +244,7 @@ body[data-store-theme] .wl-panel-list .lb-item.wst-card.is-active::before,
   background-color: var(--wc-line);
 }
 
-.wl-panel-trow:hover { background-color: rgba(237, 230, 214, 0.05); }
+.wl-panel-trow:hover { background-color: rgba(242, 242, 242, 0.05); }
 
 /* ── card grid ─────────────────────────────────────────────────────────── */
 

@@ -97,11 +97,11 @@ local MARKER_SPHERE = 0x50638AB9   -- sphere (modules/debugger drawSphere)
 --   and out of reach the theme's one red -- the mark for a refusal. (They were white, red, gold and
 --   green.)
 local COLOR = {
-  active  = { 237, 230, 214, 150 },
+  active  = { 242, 242, 242, 150 },
   far     = { 203, 1, 1, 170 },
-  current = { 125, 116, 102, 110 },
-  placed  = { 185, 175, 156, 120 },
-  ring    = { 237, 230, 214, 60 },
+  current = { 122, 122, 122, 110 },
+  placed  = { 180, 180, 180, 120 },
+  ring    = { 242, 242, 242, 60 },
 }
 
 local SET_ANIMAL_IS_WILD     = 0xAEB97D84CDF3C00B   -- (Ped, BOOL)

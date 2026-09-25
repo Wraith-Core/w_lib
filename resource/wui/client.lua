@@ -286,7 +286,7 @@ end)
 local NotifyIcons  = { success = 'tick', error = 'cross', info = 'warning' }
 -- ⚠️ Monochrome, matching resource/wnotify/client.lua STYLE_COLOR — both doors must agree or the
 --    same news changes colour depending on which export the caller happened to use.
-local NotifyColors = { success = '#ede6d6', error = '#ede6d6', info = '#ede6d6' }
+local NotifyColors = { success = '#f2f2f2', error = '#f2f2f2', info = '#f2f2f2' }
 
 --- @param title string
 --- @param message string
@@ -302,8 +302,8 @@ local function Notify(title, message, style, duration)
         useBackground    = false,
         contentAlignment = 'center',
         isRTL            = true,
-        titleColor       = NotifyColors[style] or '#ede6d6',
-        descriptionColor = '#ede6d6',
+        titleColor       = NotifyColors[style] or '#f2f2f2',
+        descriptionColor = '#f2f2f2',
     })
 end
 

@@ -4,9 +4,11 @@
    never change a page by itself. Served as nui://w_lib/nui/theme/tokens.css
    (https://cfx-nui-w_lib/nui/theme/tokens.css inside CEF).
 
-   One palette for every interface: warm ink, aged paper, one red. The values are the
-   loading screen's (w_loading/html/tokens.css) and the pause menu's (w_pausemenu
-   web/src/menu.css). "White" is always paper, never #fff.
+   One palette for every interface: black and white, one red. The values are the Wraith
+   launcher's (launcher/renderer/styles.css): NEUTRAL greys, r = g = b in every ink and
+   paper step. Never a cream, sepia or warm tint here or in a copy of these values (the old
+   warm set 0B0A08 / EDE6D6 / B9AF9C / E3D9C4 read as "milky" in game and was retired
+   2026-09-26). Text "white" is paper #F2F2F2; only --w-paper-lit is #FFFFFF.
 
    Every name is prefixed --w- so it cannot collide with a resource's own --ink / --paper.
    Names a resource already uses and that this file must never take: --w-ui-scale,
@@ -16,28 +18,28 @@
 
 :root, [dir=ltr] {
   /* ── palette ─────────────────────────────────────────────────────────────── */
-  --w-ink: #0B0A08;            /* page, sheets, text on the paper band */
-  --w-ink-2: #15130F;          /* cards, fields at rest */
-  --w-ink-3: #1D1A15;          /* plates, a focused card */
-  --w-ink-4: #27231C;          /* a pressed plate, a field with focus */
-  --w-ink-5: #38322A;          /* a plate under the cursor where a band would be too loud */
-  --w-paper: #EDE6D6;          /* primary text, the selection band, fills */
-  --w-paper-lit: #F6F1E6;      /* the band under the cursor when it is already a band (primary) */
-  --w-paper-dim: #B9AF9C;      /* secondary text, labels, controls at rest */
-  --w-paper-faint: #7D7466;    /* placeholders, captions >= 14px, legal lines */
-  --w-rule: rgba(237, 230, 214, .16);    /* hairlines between rows */
-  --w-rule-2: rgba(237, 230, 214, .32);  /* stronger dividers, brushed rules */
-  --w-rule-3: rgba(237, 230, 214, .5);   /* the store's divider brush */
+  --w-ink: #0A0A0A;            /* page, sheets, text on the paper band */
+  --w-ink-2: #111111;          /* cards, fields at rest */
+  --w-ink-3: #191919;          /* plates, a focused card */
+  --w-ink-4: #222222;          /* a pressed plate, a field with focus */
+  --w-ink-5: #333333;          /* a plate under the cursor where a band would be too loud */
+  --w-paper: #F2F2F2;          /* primary text, the selection band, fills */
+  --w-paper-lit: #FFFFFF;      /* the band under the cursor when it is already a band (primary) */
+  --w-paper-dim: #B4B4B4;      /* secondary text, labels, controls at rest */
+  --w-paper-faint: #7A7A7A;    /* placeholders, captions >= 14px, legal lines */
+  --w-rule: rgba(242, 242, 242, .16);    /* hairlines between rows */
+  --w-rule-2: rgba(242, 242, 242, .32);  /* stronger dividers, brushed rules */
+  --w-rule-3: rgba(242, 242, 242, .5);   /* the store's divider brush */
   --w-red: #CB0101;            /* a MARK only: where the player is, destructive confirm, critical, progress tick */
   --w-red-deep: #CB0101;       /* ONE red: the old deeper step is the mark itself now (kept as a name, many sheets read it) */
-  --w-red-soft: rgba(237, 230, 214, .06); /* was a red wash; red is never a fill, so the plate behind an error is a paper lift and the red stays on its rule */
-  --w-note: #E3D9C4;           /* the paper note (confirm dialogs, help notes): the only light surface */
-  --w-note-ink: #1C1712;
-  --w-note-dim: #5E5344;
-  --w-note-rule: rgba(28, 23, 18, .18);
-  --w-note-glow: rgba(90, 70, 40, .28);  /* the note's inner burn (inset box-shadow), the pause menu's value */
-  --w-strip: #CFC4AE;          /* the pinned paper strip beside a board (pause menu) */
-  --w-scrim: rgba(6, 5, 4, .72);
+  --w-red-soft: rgba(242, 242, 242, .06); /* was a red wash; red is never a fill, so the plate behind an error is a paper lift and the red stays on its rule */
+  --w-note: #E9E9E9;           /* the paper note (confirm dialogs, help notes): the only light surface */
+  --w-note-ink: #111111;
+  --w-note-dim: #555555;
+  --w-note-rule: rgba(17, 17, 17, .18);
+  --w-note-glow: rgba(0, 0, 0, .28);  /* the note's inner shade (inset box-shadow): a neutral shadow, no brown burn */
+  --w-strip: #CFCFCF;          /* the pinned paper strip beside a board (pause menu) */
+  --w-scrim: rgba(5, 5, 5, .72);
   --w-shadow: 0 .55em .9em rgba(0, 0, 0, .55);
   --w-text-shadow: 0 1px .4em rgba(0, 0, 0, .6);
 

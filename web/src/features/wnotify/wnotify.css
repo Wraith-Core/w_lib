@@ -119,7 +119,7 @@
   position: absolute;
   inset: 16% 8%;
   z-index: -2;
-  background: rgba(11, 10, 8, 0.92);
+  background: rgba(10, 10, 10, 0.92);
   filter: blur(11px);
 }
 
@@ -128,7 +128,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background-color: rgba(11, 10, 8, 0.92);
+  background-color: rgba(10, 10, 10, 0.92);
   -webkit-mask: var(--tex-toast_bg) center / 100% 100% no-repeat;
   mask: var(--tex-toast_bg) center / 100% 100% no-repeat;
 }
@@ -186,7 +186,7 @@
   top: 0;
   height: 2px;
   opacity: 0.7;
-  background-color: var(--w-paper, #ede6d6);
+  background-color: var(--w-paper, #f2f2f2);
   -webkit-mask: var(--tex-divider_line) center / 100% 100% no-repeat;
   mask: var(--tex-divider_line) center / 100% 100% no-repeat;
 }
@@ -398,7 +398,7 @@
    separate without competing. */
 .wn-meta-sep {
   margin: 0 0.55em;
-  color: rgba(237, 230, 214, 0.55);
+  color: rgba(242, 242, 242, 0.55);
   font-weight: 400;
 }
 

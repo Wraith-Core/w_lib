@@ -68,13 +68,13 @@
    declared over a weight range (never synthesised), and a Latin name inside an Arabic title then
    keeps EB Garamond's semibold instead of dropping to its book weight. */
 .wl-prompt-root .wl-prompt-group .groupTitle.crock{font-family:var(--w-f-title);font-weight:600;font-size:calc(1em * var(--w-k-title));line-height:var(--w-lh-title);letter-spacing:var(--w-track-title);text-transform:none;padding-block:.06em}
-.wl-prompt-root .keyboardKey{--stroke: calc(.14 * var(--wl-prompt-rem));--fillColor: var(--w-paper);--strokeBgColor: rgba(237, 230, 214, .5);position:relative;color:var(--w-ink);display:flex;align-items:center;justify-content:center;font-size:calc(.75 * var(--wl-prompt-rem));box-shadow:1px 1px #0000004d}
+.wl-prompt-root .keyboardKey{--stroke: calc(.14 * var(--wl-prompt-rem));--fillColor: var(--w-paper);--strokeBgColor: rgba(242, 242, 242, .5);position:relative;color:var(--w-ink);display:flex;align-items:center;justify-content:center;font-size:calc(.75 * var(--wl-prompt-rem));box-shadow:1px 1px #0000004d}
 .wl-prompt-root .keyboardKey .text{background:var(--w-paper);letter-spacing:.04em;text-transform:uppercase;line-height:1;padding-top:.08em;height:calc(1.23 * var(--wl-prompt-rem));min-width:calc(1.23 * var(--wl-prompt-rem));padding:0 calc(.49 * var(--wl-prompt-rem));display:flex;align-items:center;justify-content:center}
 .wl-prompt-root .keyboardKey .image{height:calc(1.23 * var(--wl-prompt-rem))}
 .wl-prompt-root .keyboardKey:not(:first-child){margin-left:calc(.205 * var(--wl-prompt-rem))}
 .wl-prompt-root .keyboardKey.holdable .progressContainer{background:linear-gradient(to right,var(--strokeBgColor) 0%,var(--strokeBgColor) calc(100% - var(--stroke)),transparent 0%),linear-gradient(to bottom,var(--strokeBgColor) 0%,var(--strokeBgColor) calc(100% - var(--stroke)),transparent 0%),linear-gradient(to left,var(--strokeBgColor) 0%,var(--strokeBgColor) calc(100% - var(--stroke)),transparent 0%),linear-gradient(to top,var(--strokeBgColor) 0%,var(--strokeBgColor) calc(100% - var(--stroke)),transparent 0%);background-size:100% var(--stroke),var(--stroke) 100%,100% var(--stroke),var(--stroke) 100%;background-position:top left,top right,bottom left,top left;background-repeat:no-repeat;width:calc(100% + calc(.6 * var(--wl-prompt-rem)));height:calc(1.8 * var(--wl-prompt-rem));position:absolute}
 .wl-prompt-root .keyboardKey.holdable .progressContainer .progress{width:100%;height:100%;position:relative;z-index:4;background:linear-gradient(to right,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-l-top) * 1%),transparent 0%,transparent 50%,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-r-top) * 1%),transparent 0%),linear-gradient(to bottom,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-right) * 1%),transparent 0%),linear-gradient(to left,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-bottom) * 1%),transparent 0%),linear-gradient(to top,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-left) * 1%),transparent 0%);background-size:100% var(--stroke),var(--stroke) 100%,100% var(--stroke),var(--stroke) 100%;background-position:top left,top right,bottom left,top left;background-repeat:no-repeat}
-.wl-prompt-root .keyboardKey .activeIndicator{width:calc(100% + calc(.6 * var(--wl-prompt-rem)));height:calc(1.8 * var(--wl-prompt-rem));position:absolute;background:rgba(185,175,156,.9);z-index:3;display:none}
+.wl-prompt-root .keyboardKey .activeIndicator{width:calc(100% + calc(.6 * var(--wl-prompt-rem)));height:calc(1.8 * var(--wl-prompt-rem));position:absolute;background:rgba(180,180,180,.9);z-index:3;display:none}
 /* ★ The picture keys (enter, space, the arrows) are white caps with a black glyph. A multiply
    layer of paper over them turns the white into the theme's paper and leaves the glyph ink. */
 .wl-prompt-root .keyboardKey.is-image::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:var(--w-paper);mix-blend-mode:multiply}
@@ -88,8 +88,8 @@
 .wl-prompt-root .centime:after{content:"";position:absolute;display:block;background-image:url(/assets/images/money_line.png);height:.46vh;width:100%;left:0;bottom:0}
 .wl-prompt-root .gold{display:flex;align-items:center}
 .wl-prompt-root .gold img{height:1em;width:auto;margin-right:.46vh}
-/* ★ The gold bar is told by its shape, not its hue: the theme has ink, paper and one red, so the icon is drawn in paper tones (a warm grey, like the figures beside it). */
-.wl-prompt-root .gold img{filter:grayscale(1) sepia(.12) brightness(1.18) contrast(.95)}
+/* ★ The gold bar is told by its shape, not its hue: the theme has ink, paper and one red, so the icon is drawn in paper tones (a neutral grey, like the figures beside it: no sepia). */
+.wl-prompt-root .gold img{filter:grayscale(1) brightness(1.18) contrast(.95)}
 .wl-prompt-root .dollar{display:flex}
 .wl-prompt-root .price-item{display:flex;flex-direction:row;align-items:center}
 .wl-prompt-root .plus{padding:0 .2em}

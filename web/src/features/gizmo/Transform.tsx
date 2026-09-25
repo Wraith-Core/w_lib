@@ -19,9 +19,9 @@ import { GizmoEntity, GizmoMode, GizmoVector } from './types';
  * ⚠️ The control caches each material's first colour in `tempColor` on its first frame and resets
  *    to it every frame after. Both are written, so the tone holds whichever of the two ran first.
  */
-const PAPER = '#EDE6D6';
-const PAPER_DIM = '#B9AF9C';
-const PAPER_FAINT = '#7D7466';
+const PAPER = '#F2F2F2';
+const PAPER_DIM = '#B4B4B4';
+const PAPER_FAINT = '#7A7A7A';
 
 const toneFor = (c: Color): string => {
   const { r, g, b } = c;

@@ -8,7 +8,7 @@
  * ★ No dimming sheet. w_wheel deliberately drops it -- the game darkens the scene itself, and
  *   a second black layer from the interface only muddies it.
  *
- * ★ The Wraith theme: warm ink discs on a paper hairline ring; the option under the cursor is
+ * ★ The Wraith theme: ink discs (neutral grey) on a paper hairline ring; the option under the cursor is
  *   ringed in paper (no glow); an option that opens another wheel wears a second, dimmer paper
  *   ring (it was gold); the name in the centre is the title role (EB Garamond / Lalezar).
  * ══════════════════════════════════════════════════════════════════════════ */
@@ -49,7 +49,7 @@
 /* The thin ring passing through the bubble centres */
 .lb-radial-ring {
   fill: none;
-  stroke: var(--w-rule, rgba(237, 230, 214, 0.16));
+  stroke: var(--w-rule, rgba(242, 242, 242, 0.16));
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
 }
@@ -80,9 +80,9 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: radial-gradient(120% 120% at 50% 12%, rgba(39, 35, 28, 0.97), rgba(11, 10, 8, 0.98) 70%);
+  background: radial-gradient(120% 120% at 50% 12%, rgba(34, 34, 34, 0.97), rgba(10, 10, 10, 0.98) 70%);
   box-shadow:
-    inset 0 0 0 1px rgba(237, 230, 214, 0.18),
+    inset 0 0 0 1px rgba(242, 242, 242, 0.18),
     0 6px 16px rgba(0, 0, 0, 0.75);
   transition: box-shadow 110ms ease, background 110ms ease;
 }
@@ -91,9 +91,9 @@
    its shape, not by a colour the palette does not have. */
 .lb-radial-bubble.is-menu .lb-radial-face {
   box-shadow:
-    inset 0 0 0 1px rgba(237, 230, 214, 0.18),
-    inset 0 0 0 4px rgba(11, 10, 8, 0.9),
-    inset 0 0 0 5px var(--w-paper-dim, #b9af9c),
+    inset 0 0 0 1px rgba(242, 242, 242, 0.18),
+    inset 0 0 0 4px rgba(10, 10, 10, 0.9),
+    inset 0 0 0 5px var(--w-paper-dim, #b4b4b4),
     0 6px 16px rgba(0, 0, 0, 0.8);
 }
 
@@ -104,9 +104,9 @@
 }
 
 .lb-radial-bubble.is-selected .lb-radial-face {
-  background: radial-gradient(120% 120% at 50% 12%, rgba(56, 50, 42, 0.98), rgba(11, 10, 8, 0.99) 70%);
+  background: radial-gradient(120% 120% at 50% 12%, rgba(51, 51, 51, 0.98), rgba(10, 10, 10, 0.99) 70%);
   box-shadow:
-    inset 0 0 0 2px var(--w-paper, #ede6d6),
+    inset 0 0 0 2px var(--w-paper, #f2f2f2),
     0 8px 22px rgba(0, 0, 0, 0.85);
 }
 
@@ -124,7 +124,7 @@
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
 }
 
-.lb-radial-bubble.is-selected .lb-radial-face .wc-glyph { color: var(--w-paper-lit, #f6f1e6); }
+.lb-radial-bubble.is-selected .lb-radial-face .wc-glyph { color: var(--w-paper-lit, #ffffff); }
 
 /* ════════════════ the centre disc ════════════════ */
 
@@ -151,11 +151,11 @@
   color: var(--wc-text);
   font: inherit;
   background:
-    radial-gradient(85% 40% at 50% 0%, var(--wc-glow), rgba(11, 10, 8, 0) 72%),
-    radial-gradient(130% 90% at 50% 0%, rgba(29, 26, 21, 0.97) 0%, rgba(21, 19, 15, 0.98) 42%, rgba(11, 10, 8, 0.99) 100%);
+    radial-gradient(85% 40% at 50% 0%, var(--wc-glow), rgba(10, 10, 10, 0) 72%),
+    radial-gradient(130% 90% at 50% 0%, rgba(25, 25, 25, 0.97) 0%, rgba(17, 17, 17, 0.98) 42%, rgba(10, 10, 10, 0.99) 100%);
   box-shadow:
-    inset 0 0 1.25rem rgba(237, 230, 214, 0.08),
-    0 0 0 1px rgba(237, 230, 214, 0.18),
+    inset 0 0 1.25rem rgba(242, 242, 242, 0.08),
+    0 0 0 1px rgba(242, 242, 242, 0.18),
     0 14px 40px rgba(0, 0, 0, 0.8);
 }
 
@@ -175,7 +175,7 @@
    EB Garamond's descenders must not be cut at the last one. */
 .lb-radial-title {
   max-width: 100%;
-  color: var(--w-paper, #ede6d6);
+  color: var(--w-paper, #f2f2f2);
   font-family: var(--w-f-title);
   font-weight: var(--w-wt-title);
   font-size: calc(clamp(16px, 2.4vh, 30px) * var(--w-k-title));
@@ -219,7 +219,7 @@
   transition: color 110ms ease;
 }
 
-.lb-radial-center:hover .lb-radial-exit { color: var(--w-paper, #ede6d6); }
+.lb-radial-center:hover .lb-radial-exit { color: var(--w-paper, #f2f2f2); }
 
 /* ⚠️ Two classes, not one. Both .wc-glyph and .lb-back-arrow set their own width and height,
    and a single-class rule here would only win by load order -- which the bundler decides. */

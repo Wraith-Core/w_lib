@@ -783,7 +783,7 @@ export const debugPanelKingdom = () =>
         value: 'House Beaumont',
         subtitle: 'Founded 1892 · Lemoyne',
         icon: 'menu_icon_rank',
-        color: '#7D7466',
+        color: '#7A7A7A',
       },
       {
         type: 'stats',
@@ -817,7 +817,7 @@ export const debugPanelKingdom = () =>
         span: 5,
         fields: [
           { id: 'name', label: 'House name', type: 'text', value: 'House Beaumont' },
-          { id: 'colour', label: 'Colour', type: 'color', value: '#7D7466' },
+          { id: 'colour', label: 'Colour', type: 'color', value: '#7A7A7A' },
           { id: 'motto', label: 'Motto', type: 'textarea', value: 'Iron before gold' },
         ],
       },

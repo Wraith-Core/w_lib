@@ -42,7 +42,7 @@
   display: grid;
   place-items: center;
   transform: translateX(-50%);
-  color: rgb(237 230 214 / 94%);
+  color: rgb(242 242 242 / 94%);
   background: url('/img/ui/tile.webp') no-repeat;
   background-size: 100% 100%;
   font-family: var(--w-f-num);
@@ -175,14 +175,14 @@
   height: 28px;
   display: grid;
   place-items: center;
-  color: rgb(237 230 214 / 94%);
+  color: rgb(242 242 242 / 94%);
   background: url('/img/ui/tile.webp') no-repeat;
   background-size: 100% 100%;
   font-family: var(--w-f-num);
   font-size: 16px;
   line-height: 1;
   text-align: center;
-  text-shadow: 0 0 6px rgb(237 230 214 / 38%);
+  text-shadow: 0 0 6px rgb(242 242 242 / 38%);
   /* figures read left to right in every language ("1/4", not "4/1" in Arabic) */
   direction: ltr;
   unicode-bidi: isolate;
@@ -196,7 +196,7 @@
   position: relative;
   width: 220px;
   height: 220px;
-  border: 3px solid rgb(237 230 214 / 20%);
+  border: 3px solid rgb(242 242 242 / 20%);
   border-radius: 50%;
   background: url('/img/qte/black_circle.webp') center / cover no-repeat;
   box-shadow: 0 16px 42px rgb(0 0 0 / 35%);
@@ -208,7 +208,7 @@
   inset: -3px;
   z-index: 2;
   border-radius: 50%;
-  filter: drop-shadow(0 0 7px rgb(237 230 214 / 45%));
+  filter: drop-shadow(0 0 7px rgb(242 242 242 / 45%));
   mask-image: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
   -webkit-mask-image: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
   pointer-events: none;
@@ -228,7 +228,7 @@
   position: absolute;
   inset: 0;
   content: '';
-  background: repeating-linear-gradient(45deg, rgb(237 230 214 / 76%) 0 2px, transparent 3px 6px);
+  background: repeating-linear-gradient(45deg, rgb(242 242 242 / 76%) 0 2px, transparent 3px 6px);
   mask-image: radial-gradient(circle, transparent 0 32%, rgb(0 0 0 / 28%) 36%, #000 44% 100%);
   -webkit-mask-image: radial-gradient(circle, transparent 0 32%, rgb(0 0 0 / 28%) 36%, #000 44% 100%);
   overflow: hidden;
@@ -242,10 +242,10 @@
   place-items: center;
   border-radius: 50%;
   color: var(--w-ink);
-  /* the game's white brushed disc, warmed toward paper ("white" is paper in the theme); the
-     ink letter on it is unaffected by so small a shift */
+  /* the game's white brushed disc, dimmed to paper (#F2F2F2, a neutral grey: no sepia, no tint);
+     the ink letter on it is unaffected by so small a shift */
   background: url('/img/qte/white_circle.webp') center / cover no-repeat;
-  filter: sepia(0.22) brightness(0.97);
+  filter: brightness(0.95);
   font-family: var(--w-f-num);
   font-size: 54px;
 }
@@ -274,7 +274,7 @@
   width: 4px;
   height: 138px;
   border-radius: 999px;
-  background: rgb(237 230 214 / 92%);
-  box-shadow: 0 0 7px rgb(237 230 214 / 45%);
+  background: rgb(242 242 242 / 92%);
+  box-shadow: 0 0 7px rgb(242 242 242 / 45%);
   transform-origin: 50% 138px;
 }

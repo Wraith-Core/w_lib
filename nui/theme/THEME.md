@@ -1,6 +1,6 @@
 # Wraith Core theme (`w_lib/nui/theme`)
 
-One look for every interface on the server: the loading screen and the pause menu, the original Red Dead menus in white and black. Warm ink, aged paper and one red. The package holds the values and the parts. Each resource keeps its own layout and behaviour.
+One look for every interface on the server: the loading screen and the pause menu, the original Red Dead menus in white and black. Neutral ink, neutral paper and one red: the Wraith launcher's palette (`launcher/renderer/styles.css`). The package holds the values and the parts. Each resource keeps its own layout and behaviour.
 
 | File | What it holds |
 |---|---|
@@ -32,13 +32,14 @@ Order: the page's own CSS, then `store-theme.css` (its `!important` primitives m
 ## Tokens
 
 - **Palette**
-  - Ink: `--w-ink #0B0A08`, `--w-ink-2 #15130F`, `--w-ink-3 #1D1A15`, `--w-ink-4 #27231C`, `--w-ink-5 #38322A`.
-  - Paper: `--w-paper #EDE6D6`, `--w-paper-lit #F6F1E6`, `--w-paper-dim #B9AF9C`, `--w-paper-faint #7D7466`.
-  - Rules: `--w-rule` (.16), `--w-rule-2` (.32), `--w-rule-3` (.5).
-  - Red, a mark only: `--w-red #CB0101`. `--w-red-deep` is the same `#CB0101` (one red, no second step). `--w-red-soft` is a paper lift (`rgba(237,230,214,.06)`), not a red wash: the plate behind an error stays ink and the red stays on its rule, tick or underline.
-  - The paper note: `--w-note #E3D9C4`, `--w-note-ink`, `--w-note-dim`, `--w-note-rule`, `--w-note-glow` (its inset burn, `rgba(90,70,40,.28)`).
-  - Other: `--w-strip`, `--w-scrim` (`rgba(6,5,4,.72)`), `--w-shadow`, `--w-text-shadow`.
-  - "White" is always paper. Never use `#fff` or a neutral grey.
+  - Ink: `--w-ink #0A0A0A`, `--w-ink-2 #111111`, `--w-ink-3 #191919`, `--w-ink-4 #222222`, `--w-ink-5 #333333`.
+  - Paper: `--w-paper #F2F2F2`, `--w-paper-lit #FFFFFF`, `--w-paper-dim #B4B4B4`, `--w-paper-faint #7A7A7A`.
+  - Rules: `--w-rule` (.16), `--w-rule-2` (.32), `--w-rule-3` (.5), all `rgba(242,242,242,…)`.
+  - Red, a mark only: `--w-red #CB0101`. `--w-red-deep` is the same `#CB0101` (one red, no second step). `--w-red-soft` is a paper lift (`rgba(242,242,242,.06)`), not a red wash: the plate behind an error stays ink and the red stays on its rule, tick or underline.
+  - The paper note: `--w-note #E9E9E9`, `--w-note-ink #111111`, `--w-note-dim #555555`, `--w-note-rule` (`rgba(17,17,17,.18)`), `--w-note-glow` (its inset shade, `rgba(0,0,0,.28)`).
+  - Other: `--w-strip #CFCFCF`, `--w-scrim` (`rgba(5,5,5,.72)`), `--w-shadow`, `--w-text-shadow`.
+  - **Black and white, never a tint.** Every ink and paper step is a neutral grey (r = g = b), the same values as the Wraith launcher. Do not bring back the retired warm set (`#0B0A08`, `#15130F`, `#1D1A15`, `#27231C`, `#38322A`, `#EDE6D6`, `#F6F1E6`, `#B9AF9C`, `#7D7466`, `#E3D9C4`, `#CFC4AE`, `rgba(237,230,214,…)`, the `rgba(90,70,40,…)` burn): in game it read as a milky cream. No `sepia()`, `hue-rotate()` or warm-tinted texture either; a texture is white-on-alpha (a mask) or a neutral grey.
+  - Text "white" is paper `#F2F2F2`; `#FFFFFF` only as `--w-paper-lit`.
 - **Faces:** `--w-f-display`, `-title`, `-text`, `-action`, `-label`, `-input`, `-num`, `-figure`, `-hand`, `-book`, `-mono`.
   - Each is declared on `:root` / `[dir=ltr]` (Latin face first) and again on `[dir=rtl]` / `html[lang=ar]:not([dir=ltr])` (Arabic face first).
   - A `dir` on an inner element switches that subtree.
@@ -184,5 +185,5 @@ node .tools/theme_shots.cjs <resource ...|all|theme> [--lang ar,en] [--res 1280x
 | `RDRLino-Regular`, `RDRCatalogueBold-Bold`, `HapnaSlabSerif-DemiBold` | The game's faces, already shipped by the server | Not verified. See `w_loading/CREDITS.md` |
 
 - The OFL subsets are the unmodified Google Fonts subsets.
-- The files in `tex/` are the game's UI art (the same files as `w_lib/web/build/tex/ui`), recoloured only in `tex/paper`, `tex/ink` and `tex/ink-3`.
+- The files in `tex/` are the game's UI art (the same files as `w_lib/web/build/tex/ui`), recoloured only in `tex/paper` (`#F2F2F2`), `tex/ink` (`#0A0A0A`) and `tex/ink-3` (`#191919`), all neutral.
 - `tear.png` and `grain.png` are w_pausemenu's own procedural textures.

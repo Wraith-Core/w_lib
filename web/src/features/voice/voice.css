@@ -25,7 +25,7 @@
   --wv-ink-2: var(--w-ink-2);
   --wv-paper: var(--w-paper);
   --wv-paper-dim: var(--w-paper-dim);
-  --wv-paper-faint: rgba(237, 230, 214, 0.5);
+  --wv-paper-faint: rgba(242, 242, 242, 0.5);
   --wv-rule: var(--w-rule);
   --wv-rule-strong: var(--w-rule-2);
   --wv-red: var(--w-red);
@@ -74,9 +74,9 @@
 .wv-card-in {
   position: relative;
   padding: clamp(10px, 1.3vh, 15px) clamp(13px, 1.05vw, 18px) clamp(8px, 1vh, 12px);
-  background: linear-gradient(180deg, rgba(21, 19, 15, 0.95) 0%, rgba(11, 10, 8, 0.94) 100%);
+  background: linear-gradient(180deg, rgba(17, 17, 17, 0.95) 0%, rgba(10, 10, 10, 0.94) 100%);
   /* the pause menu's card inset glow: the paper catching light at the edge of the ink */
-  box-shadow: inset 0 0 18px rgba(237, 230, 214, 0.06), 0 18px 42px -24px rgba(0, 0, 0, 0.9);
+  box-shadow: inset 0 0 18px rgba(242, 242, 242, 0.06), 0 18px 42px -24px rgba(0, 0, 0, 0.9);
   animation: wv-in 200ms var(--w-ease) both;
 }
 
@@ -217,7 +217,7 @@
   height: 1.9em;
   padding: 0 0.4em;
   box-sizing: border-box;
-  border: 1px solid rgba(237, 230, 214, 0.4);
+  border: 1px solid rgba(242, 242, 242, 0.4);
   border-bottom-width: 2px;
   border-radius: 2px;
   font-family: var(--w-f-num);
@@ -293,7 +293,7 @@
 
 .wv-line:hover,
 .wv-line:focus-within {
-  background: rgba(237, 230, 214, 0.07);
+  background: rgba(242, 242, 242, 0.07);
 }
 
 .wv-line:hover .wv-num,
@@ -336,7 +336,7 @@
 /* ★ A {slot} is a blank to fill: its name, dimmed, on a dotted rule. */
 .wv-slot {
   color: var(--wv-paper-dim);
-  text-decoration: underline dotted rgba(237, 230, 214, 0.5);
+  text-decoration: underline dotted rgba(242, 242, 242, 0.5);
   text-underline-offset: 0.22em;
 }
 
@@ -364,13 +364,13 @@
      edge without them), the last three are the soft ink the line sits in. Measured over a noon
      sky; with only the wide layers the letters washed out there. */
   --wv-halo:
-    0 0 1px rgba(11, 10, 8, 1),
-    0 0 1px rgba(11, 10, 8, 1),
-    0 0 2px rgba(11, 10, 8, 0.95),
-    0 1px 3px rgba(11, 10, 8, 0.9),
-    0 0 8px rgba(11, 10, 8, 0.75),
-    0 0 18px rgba(11, 10, 8, 0.55),
-    0 0 32px rgba(11, 10, 8, 0.35);
+    0 0 1px rgba(10, 10, 10, 1),
+    0 0 1px rgba(10, 10, 10, 1),
+    0 0 2px rgba(10, 10, 10, 0.95),
+    0 1px 3px rgba(10, 10, 10, 0.9),
+    0 0 8px rgba(10, 10, 10, 0.75),
+    0 0 18px rgba(10, 10, 10, 0.55),
+    0 0 32px rgba(10, 10, 10, 0.35);
 
   position: absolute;
   left: 0;
@@ -432,9 +432,9 @@
   border-radius: 2px;
   background: var(--wv-paper);
   box-shadow:
-    inset 0 -2px 0 rgba(11, 10, 8, 0.2),
-    0 0 0 1px rgba(11, 10, 8, 0.35),
-    0 1px 6px rgba(11, 10, 8, 0.55);
+    inset 0 -2px 0 rgba(10, 10, 10, 0.2),
+    0 0 0 1px rgba(10, 10, 10, 0.35),
+    0 1px 6px rgba(10, 10, 10, 0.55);
   font-family: var(--w-f-num);
   font-size: 0.8em;
   font-style: normal;
@@ -461,7 +461,7 @@
 }
 
 .wv-hail .wv-bar {
-  box-shadow: 0 0 1px rgba(11, 10, 8, 0.9), 0 0 4px rgba(11, 10, 8, 0.6);
+  box-shadow: 0 0 1px rgba(10, 10, 10, 0.9), 0 0 4px rgba(10, 10, 10, 0.6);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -505,7 +505,7 @@
   align-items: center;
   gap: 10px;
   padding: clamp(5px, 0.7vh, 8px) clamp(12px, 1vw, 16px);
-  background: rgba(11, 10, 8, 0.9);
+  background: rgba(10, 10, 10, 0.9);
   animation: wv-fade 180ms ease-out both;
 }
 
@@ -539,7 +539,7 @@
   gap: clamp(3px, 0.45vh, 5px);
   max-width: 100%;
   padding: clamp(10px, 1.3vh, 14px) clamp(16px, 1.6vw, 28px) clamp(10px, 1.3vh, 14px);
-  background: rgba(11, 10, 8, 0.9);
+  background: rgba(10, 10, 10, 0.9);
   text-align: center;
   animation: wv-in 200ms var(--w-ease) both;
 }

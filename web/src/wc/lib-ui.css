@@ -69,7 +69,7 @@ body {
 .lb-scrim {
   position: fixed;
   inset: 0;
-  background: var(--w-scrim, rgba(6, 5, 4, 0.72));
+  background: var(--w-scrim, rgba(5, 5, 5, 0.72));
 }
 
 /* لوح عامّ بنفس قشرة الكرافتنج (خلفيّة + هالة + إطار مقنّع) */
@@ -77,13 +77,13 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(130% 90% at 50% 0%, rgba(29, 26, 21, 0.96) 0%, rgba(21, 19, 15, 0.97) 42%, rgba(11, 10, 8, 0.98) 100%);
+  background: radial-gradient(130% 90% at 50% 0%, rgba(25, 25, 25, 0.96) 0%, rgba(17, 17, 17, 0.97) 42%, rgba(10, 10, 10, 0.98) 100%);
   box-shadow: 0 44px 130px -32px rgba(0, 0, 0, 0.92);
   padding: clamp(12px, 1.8vh, 20px) clamp(14px, 1.6vw, 24px);
   color: var(--wc-text);
   --wc-accent: var(--w-paper);
-  --wc-accent-soft: rgba(237, 230, 214, 0.08);
-  --wc-glow: rgba(237, 230, 214, 0.05);
+  --wc-accent-soft: rgba(242, 242, 242, 0.08);
+  --wc-glow: rgba(242, 242, 242, 0.05);
 }
 
 .lb-panel .wc-frame {
@@ -472,9 +472,9 @@ body {
   min-width: 1.7em;
   margin: 0 0.12em;
   padding: 0.24em 0.42em 0.12em;
-  border: 1px solid rgba(237, 230, 214, 0.55);
+  border: 1px solid rgba(242, 242, 242, 0.55);
   border-radius: 2px;
-  background: rgba(11, 10, 8, 0.55);
+  background: rgba(10, 10, 10, 0.55);
   color: var(--w-paper);
   font-family: var(--w-f-num);
   font-weight: 400;
@@ -512,7 +512,7 @@ body {
   align-items: center;
   gap: clamp(10px, 1.2vw, 16px);
   padding: clamp(10px, 1.4vh, 14px) clamp(14px, 1.4vw, 20px);
-  background: radial-gradient(140% 130% at 50% 0%, rgba(29, 26, 21, 0.95), rgba(11, 10, 8, 0.96));
+  background: radial-gradient(140% 130% at 50% 0%, rgba(25, 25, 25, 0.95), rgba(10, 10, 10, 0.96));
   box-shadow: 0 22px 60px -18px rgba(0, 0, 0, 0.85);
 }
 
@@ -605,7 +605,7 @@ body {
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.85));
 }
 
-.lb-core-track { fill: none; stroke: rgba(11, 10, 8, 0.78); stroke-width: 8; }
+.lb-core-track { fill: none; stroke: rgba(10, 10, 10, 0.78); stroke-width: 8; }
 
 .lb-core-fill {
   fill: none;
@@ -1146,7 +1146,7 @@ body {
 
 .lb-slider input[type="range"]::-webkit-slider-runnable-track {
   height: 2px;
-  background: linear-gradient(to var(--w-to-end), var(--w-paper) var(--lb-fill, 50%), rgba(237, 230, 214, 0.18) var(--lb-fill, 50%));
+  background: linear-gradient(to var(--w-to-end), var(--w-paper) var(--lb-fill, 50%), rgba(242, 242, 242, 0.18) var(--lb-fill, 50%));
 }
 
 .lb-slider input[type="range"]::-webkit-slider-thumb {
@@ -1486,7 +1486,7 @@ body[data-store-theme] .lb-menu-item.is-active .lb-menu-values {
 /* the bars inside a row follow it onto the band */
 .lb-item:hover:not(:disabled) .wc-bar,
 .lb-menu-item.is-active .wc-bar {
-  background: rgba(11, 10, 8, 0.16);
+  background: rgba(10, 10, 10, 0.16);
 }
 
 .lb-item:hover:not(:disabled) .wc-bar-fill,
@@ -1616,9 +1616,9 @@ body[data-store-theme] .lb-input.wst-field:focus-within::before {
   background-color: var(--w-paper);
 }
 
-/* the stepper arrows and the picker icons in paper */
+/* the stepper arrows and the picker icons in paper (black -> #F2F2F2, neutral: no sepia) */
 .lb-input input::-webkit-calendar-picker-indicator {
-  filter: invert(92%) sepia(12%) saturate(250%) brightness(96%);
+  filter: invert(95%);
   opacity: 0.7;
   cursor: pointer;
 }
@@ -1672,7 +1672,7 @@ body[data-store-theme] .lb-dialog.is-note.wst-panel,
 .lb-dialog.is-note {
   color: var(--w-note-ink) !important;
   background: radial-gradient(120% 110% at 50% 0%, var(--w-note) 0%, var(--w-note) 58%, var(--w-strip) 100%) !important;
-  box-shadow: inset 0 0 calc(48 * var(--lb-px)) rgba(94, 83, 68, 0.28) !important;
+  box-shadow: inset 0 0 calc(48 * var(--lb-px)) rgba(85, 85, 85, 0.28) !important;
   -webkit-mask-box-image: var(--w-tex-tear) 64 fill / calc(26 * var(--lb-px)) round;
   padding: calc(30 * var(--lb-px)) calc(38 * var(--lb-px)) calc(34 * var(--lb-px)) !important;
   overflow: hidden !important;
@@ -1706,7 +1706,7 @@ body[data-store-theme] .lb-dialog.is-note.wst-panel::after,
 
 body[data-store-theme] .lb-dialog.is-note .wst-header::before,
 .lb-dialog.is-note .lb-head::before {
-  background: rgba(28, 23, 18, 0.1) !important;
+  background: rgba(17, 17, 17, 0.1) !important;
   opacity: 1;
 }
 
@@ -1763,7 +1763,7 @@ body[data-store-theme] .lb-dialog.is-note :is(.lb-btn, .lb-btn-ghost),
   aspect-ratio: auto;
   min-width: 6.5em;
   padding: calc(6 * var(--lb-px)) calc(14 * var(--lb-px)) calc(9 * var(--lb-px));
-  color: rgba(28, 23, 18, 0.6) !important;
+  color: rgba(17, 17, 17, 0.6) !important;
   font-size: calc(19 * var(--lb-px) * var(--w-k-action)) !important;
   letter-spacing: calc(var(--w-label-track) * 1.1);
   text-decoration: none !important;
@@ -1805,7 +1805,7 @@ body[data-store-theme] .lb-dialog.is-note :is(.lb-btn, .lb-btn-ghost):focus-visi
 }
 
 body[data-store-theme] .lb-dialog.is-note .lb-actions:hover .lb-btn:not(:hover) {
-  color: rgba(28, 23, 18, 0.6) !important;
+  color: rgba(17, 17, 17, 0.6) !important;
 }
 
 .lb-dialog.is-note .lb-actions:hover .lb-btn:not(:hover)::after {

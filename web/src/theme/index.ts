@@ -4,8 +4,8 @@ import { MantineThemeOverride, Tuple } from '@mantine/core';
  * ============================================================================
  * The w_crafting look, expressed as a Mantine theme.
  *
- * ★ RDR2's interface is near-black plates, hairline white rules, square corners and cream
- *   lettering. Mantine's defaults are the opposite of all four -- rounded, blue-accented and
+ * ★ RDR2's interface is near-black plates, hairline white rules, square corners and white
+ *   lettering (neutral greys: the theme has no cream). Mantine's defaults are the opposite of all four -- rounded, blue-accented and
  *   grey-on-grey -- so this file is mostly subtraction: take the radius off, take the colour
  *   out of the accent, and put the game's own faces back on the text.
  *
@@ -23,16 +23,16 @@ import { MantineThemeOverride, Tuple } from '@mantine/core';
  * values written out; everything else below reads the tokens through var().
  */
 const wraith: Tuple<string, 10> = [
-  '#F6F1E6', // paper-lit
-  '#EDE6D6', // paper
-  '#B9AF9C', // paper-dim
-  '#9B9281', // between paper-dim and paper-faint
-  '#7D7466', // paper-faint
-  '#5E5344', // note-dim
-  '#38322A', // ink-5
-  '#27231C', // ink-4
-  '#15130F', // ink-2
-  '#0B0A08', // ink
+  '#FFFFFF', // paper-lit
+  '#F2F2F2', // paper
+  '#B4B4B4', // paper-dim
+  '#939393', // between paper-dim and paper-faint
+  '#7A7A7A', // paper-faint
+  '#555555', // note-dim
+  '#333333', // ink-5
+  '#222222', // ink-4
+  '#111111', // ink-2
+  '#0A0A0A', // ink
 ];
 
 /**
@@ -52,16 +52,16 @@ const blood: Tuple<string, 10> = [
  * blue-grey ramp by default. Here it is the theme's: paper for text, the ink steps for surfaces.
  */
 const dark: Tuple<string, 10> = [
-  '#EDE6D6', // paper: text
-  '#B9AF9C', // paper-dim
-  '#9B9281', // between paper-dim and paper-faint
-  '#7D7466', // paper-faint: placeholders
-  '#38322A', // ink-5: borders
-  '#27231C', // ink-4: hover
-  '#1D1A15', // ink-3: fields
-  '#15130F', // ink-2: body
-  '#0B0A08', // ink
-  '#0B0A08', // ink
+  '#F2F2F2', // paper: text
+  '#B4B4B4', // paper-dim
+  '#939393', // between paper-dim and paper-faint
+  '#7A7A7A', // paper-faint: placeholders
+  '#333333', // ink-5: borders
+  '#222222', // ink-4: hover
+  '#191919', // ink-3: fields
+  '#111111', // ink-2: body
+  '#0A0A0A', // ink
+  '#0A0A0A', // ink
 ];
 
 /**
@@ -81,8 +81,8 @@ export const theme: MantineThemeOverride = {
   //   ramp. Picking a mid grey would make every primary control disappear into its own panel.
   primaryShade: 1,
 
-  black: '#0B0A08', // ink
-  white: '#EDE6D6', // paper: "white" is always paper in this theme
+  black: '#0A0A0A', // ink
+  white: '#F2F2F2', // paper: "white" is always paper in this theme
 
   fontFamily: 'var(--w-f-label)',
   fontFamilyMonospace: 'var(--w-f-num)',
@@ -111,7 +111,7 @@ export const theme: MantineThemeOverride = {
         root: {
           // ★ The plate, not a flat panel: RDR lights its surfaces from the top edge and lets
           //   them fall to black at the corners. Identical to .wc-plate in wc.css.
-          background: 'radial-gradient(140% 130% at 50% 0%, rgba(29, 26, 21, 0.95), rgba(11, 10, 8, 0.96))',
+          background: 'radial-gradient(140% 130% at 50% 0%, rgba(25, 25, 25, 0.95), rgba(10, 10, 10, 0.96))',
           border: '1px solid var(--wc-line)',
           color: 'var(--wc-text)',
         },
@@ -121,7 +121,7 @@ export const theme: MantineThemeOverride = {
     Modal: {
       styles: {
         modal: {
-          background: 'radial-gradient(140% 130% at 50% 0%, rgba(29, 26, 21, 0.95), rgba(11, 10, 8, 0.96))',
+          background: 'radial-gradient(140% 130% at 50% 0%, rgba(25, 25, 25, 0.95), rgba(10, 10, 10, 0.96))',
           border: '1px solid var(--wc-line)',
           boxShadow: '0 22px 60px -18px rgba(0, 0, 0, 0.85)',
         },

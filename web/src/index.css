@@ -1,11 +1,11 @@
 /* ============================================================================
    The frame's tokens -- ALIASES of the Wraith theme (w_lib/nui/theme/tokens.css).
 
-   ★ One palette for every interface on the server: warm ink, aged paper, one red. The values
+   ★ One palette for every interface on the server: black and white, one red. The values
      live in the theme package, linked at runtime from index.html (wraith-theme.css), and are
-     the loading screen's and the pause menu's. The --wc-* names stay because every rule in the
+     the Wraith launcher's neutral greys (r = g = b; no cream, no warm tint). The --wc-* names stay because every rule in the
      frame (and theme/index.ts for Mantine) already reads them; each now points at a --w-* token.
-     "White" is paper, never #fff; a grey is an ink or a paper step, never a neutral.
+     "White" is paper (#F2F2F2), never #fff; a grey is an ink or a paper step (r = g = b).
 
    ⚠️ The fallbacks after each var() are the token values themselves. They matter only in the
       Vite dev server, where the https://cfx-nui-w_lib stylesheet cannot load.
@@ -16,32 +16,32 @@
    ============================================================================ */
 
 :root {
-  --wc-bg: var(--w-ink, #0b0a08);
-  --wc-panel: var(--w-ink, #0b0a08);
-  --wc-panel-2: var(--w-ink-2, #15130f);
-  --wc-panel-3: var(--w-ink-3, #1d1a15);
-  --wc-plate: var(--w-ink-3, #1d1a15);
+  --wc-bg: var(--w-ink, #0a0a0a);
+  --wc-panel: var(--w-ink, #0a0a0a);
+  --wc-panel-2: var(--w-ink-2, #111111);
+  --wc-panel-3: var(--w-ink-3, #191919);
+  --wc-plate: var(--w-ink-3, #191919);
 
-  --wc-text: var(--w-paper, #ede6d6);
-  --wc-text-dim: var(--w-paper-dim, #b9af9c);
-  --wc-text-faint: var(--w-paper-faint, #7d7466);
+  --wc-text: var(--w-paper, #f2f2f2);
+  --wc-text-dim: var(--w-paper-dim, #b4b4b4);
+  --wc-text-faint: var(--w-paper-faint, #7a7a7a);
 
-  --wc-line: var(--w-rule, rgba(237, 230, 214, 0.16));
-  --wc-line-strong: var(--w-rule-2, rgba(237, 230, 214, 0.32));
-  --wc-hover: rgba(237, 230, 214, 0.12);
+  --wc-line: var(--w-rule, rgba(242, 242, 242, 0.16));
+  --wc-line-strong: var(--w-rule-2, rgba(242, 242, 242, 0.32));
+  --wc-hover: rgba(242, 242, 242, 0.12);
 
   --wc-red: var(--w-red, #cb0101);
   --wc-red-deep: var(--w-red-deep, #cb0101); /* one red: the deep alias is the mark itself */
-  --wc-red-soft: var(--w-red-soft, rgba(237, 230, 214, 0.06)); /* a paper lift: red is never a wash */
-  --wc-ok: var(--w-paper, #ede6d6);
+  --wc-red-soft: var(--w-red-soft, rgba(242, 242, 242, 0.06)); /* a paper lift: red is never a wash */
+  --wc-ok: var(--w-paper, #f2f2f2);
 
   /* ⚠️ The accent MUST have a root value. It is otherwise declared only on .lb-panel and on
      .wc-shell / .wc-theme-*, and the two progress readouts live inside neither -- so
      `stroke: var(--wc-accent)` resolved to nothing and both rings drew invisibly: the disc and
      the percentage appeared, the ring never did. */
-  --wc-accent: var(--w-paper, #ede6d6);
-  --wc-accent-soft: rgba(237, 230, 214, 0.08);
-  --wc-glow: rgba(237, 230, 214, 0.05);
+  --wc-accent: var(--w-paper, #f2f2f2);
+  --wc-accent-soft: rgba(242, 242, 242, 0.08);
+  --wc-glow: rgba(242, 242, 242, 0.05);
 
   /* ★ The library's own px: 1px at 1080p, never below 1px (a 720p window keeps the 1080p sizes,
      as the store-responsive sheets do), 2px at 2160p. Text in the frame is sized in it, so a
@@ -90,8 +90,8 @@ code {
       <mark> inside a notice or a text UI; highlighted words take the paper band with ink text,
       the theme's own highlight, never a hue. `body` outranks the injected normalize rule. */
 body mark {
-  color: var(--w-ink, #0b0a08);
-  background-color: var(--w-paper, #ede6d6);
+  color: var(--w-ink, #0a0a0a);
+  background-color: var(--w-paper, #f2f2f2);
 }
 
 @keyframes progress-bar {
@@ -221,13 +221,13 @@ body:not([data-is-browser]) .wl-dev-key {
 
   border: 0;
   cursor: pointer;
-  color: var(--w-ink, #0b0a08);
-  background: var(--w-paper, #ede6d6);
+  color: var(--w-ink, #0a0a0a);
+  background: var(--w-paper, #f2f2f2);
   font-family: var(--w-f-num, 'RDR Catalogue', sans-serif);
   box-shadow: 1px 1px rgba(0, 0, 0, 0.3);
   transition: background-color 120ms ease;
 }
 
 .wl-dev-key:hover {
-  background: var(--w-paper-dim, #b9af9c);
+  background: var(--w-paper-dim, #b4b4b4);
 }

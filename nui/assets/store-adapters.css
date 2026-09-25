@@ -2,7 +2,7 @@
 /* Temporary bridge until w_lib's own frame (web/src) is rebuilt on the theme: its --wc-* greys
    and whites become the theme's ink and paper at runtime. html:root (0,1,1) beats the build's :root.
    Fonts are left to that rebuild (--wc-font-display also sets small labels and buttons). */
-html:root{--wc-bg:var(--w-ink);--wc-panel:var(--w-ink);--wc-panel-2:var(--w-ink-2);--wc-panel-3:var(--w-ink-2);--wc-plate:var(--w-ink-3);--wc-text:var(--w-paper);--wc-text-dim:var(--w-paper-dim);--wc-text-faint:var(--w-paper-faint);--wc-line:var(--w-rule);--wc-line-strong:var(--w-rule-2);--wc-hover:rgba(237,230,214,.12);--wc-red:var(--w-red);--wc-red-deep:var(--w-red-deep);--wc-red-soft:var(--w-red-soft);--wc-ok:var(--w-paper);--wc-accent:var(--w-paper);--wc-accent-soft:rgba(237,230,214,.08);--wc-glow:rgba(237,230,214,.06)}
+html:root{--wc-bg:var(--w-ink);--wc-panel:var(--w-ink);--wc-panel-2:var(--w-ink-2);--wc-panel-3:var(--w-ink-2);--wc-plate:var(--w-ink-3);--wc-text:var(--w-paper);--wc-text-dim:var(--w-paper-dim);--wc-text-faint:var(--w-paper-faint);--wc-line:var(--w-rule);--wc-line-strong:var(--w-rule-2);--wc-hover:rgba(242,242,242,.12);--wc-red:var(--w-red);--wc-red-deep:var(--w-red-deep);--wc-red-soft:var(--w-red-soft);--wc-ok:var(--w-paper);--wc-accent:var(--w-paper);--wc-accent-soft:rgba(242,242,242,.08);--wc-glow:rgba(242,242,242,.06)}
 .wst-positioned{position:relative!important}
 .wst-panel>.wc-atmo,.wst-panel>.background,.wst-panel>.input-backdrop,.wst-panel>.input-smudge{display:none!important}
 .wst-panel .wst-header>.background{display:none!important}

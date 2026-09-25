@@ -1,6 +1,6 @@
 /* ============================================================================
    The w_crafting design-system classes, extracted from the live build's app.css -- now drawn in
-   the Wraith theme (w_lib/nui/theme): warm ink sheets, paper text, hairlines, the paper band
+   the Wraith theme (w_lib/nui/theme): neutral ink sheets, paper text, hairlines, the paper band
    for "the cursor is here", red only as a mark.
 
    ★ Only the .wc-* / .lb-* rules. The file this came from also carried a full element reset
@@ -9,7 +9,7 @@
      the library renders. So the furniture is taken and the reset is left behind.
 
    ★ The tokens are NOT restated here any more (index.css aliases --wc-* to the theme's --w-*).
-     This file used to redeclare :root with the old neutral greys after index.css, which is
+     This file used to redeclare :root with its own greys after index.css, which is
      why a token edit there never reached the dashboard.
 
    ★ A one-line clipped name (white-space:nowrap + ellipsis) takes line-height
@@ -23,20 +23,20 @@
      screen and the pause menu do; the --w-label-* switches keep Arabic untracked and uncased.
    ============================================================================ */
 
-/* ── accents: the station tints, now steps of paper (no neutral greys) ─────── */
-.wc-shell{--wc-accent: var(--w-paper);--wc-accent-soft: rgba(237, 230, 214, .08);--wc-glow: rgba(237, 230, 214, .05)}
-.wc-theme-campfire{--wc-accent: var(--w-paper-lit);--wc-accent-soft: rgba(237, 230, 214, .09);--wc-glow: rgba(237, 230, 214, .07)}
-.wc-theme-field{--wc-accent: var(--w-paper);--wc-accent-soft: rgba(237, 230, 214, .07);--wc-glow: rgba(237, 230, 214, .04)}
-.wc-theme-personal{--wc-accent: var(--w-paper-lit);--wc-accent-soft: rgba(237, 230, 214, .1);--wc-glow: rgba(237, 230, 214, .06)}
-.wc-theme-ammo{--wc-accent: var(--w-paper-dim);--wc-accent-soft: rgba(237, 230, 214, .07);--wc-glow: rgba(237, 230, 214, .03)}
-.wc-theme-shop{--wc-accent: var(--w-paper);--wc-accent-soft: rgba(237, 230, 214, .08);--wc-glow: rgba(237, 230, 214, .05)}
+/* ── accents: the station tints, now steps of paper (neutral: no hue) ─────── */
+.wc-shell{--wc-accent: var(--w-paper);--wc-accent-soft: rgba(242, 242, 242, .08);--wc-glow: rgba(242, 242, 242, .05)}
+.wc-theme-campfire{--wc-accent: var(--w-paper-lit);--wc-accent-soft: rgba(242, 242, 242, .09);--wc-glow: rgba(242, 242, 242, .07)}
+.wc-theme-field{--wc-accent: var(--w-paper);--wc-accent-soft: rgba(242, 242, 242, .07);--wc-glow: rgba(242, 242, 242, .04)}
+.wc-theme-personal{--wc-accent: var(--w-paper-lit);--wc-accent-soft: rgba(242, 242, 242, .1);--wc-glow: rgba(242, 242, 242, .06)}
+.wc-theme-ammo{--wc-accent: var(--w-paper-dim);--wc-accent-soft: rgba(242, 242, 242, .07);--wc-glow: rgba(242, 242, 242, .03)}
+.wc-theme-shop{--wc-accent: var(--w-paper);--wc-accent-soft: rgba(242, 242, 242, .08);--wc-glow: rgba(242, 242, 242, .05)}
 
 /* ── the sheet ──────────────────────────────────────────────────────────── */
 .wc-viewport{height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:var(--w-f-label);color:var(--wc-text)}
-.wc-shell{position:relative;isolation:isolate;display:flex;flex-direction:column;width:min(93vw,1540px);height:min(88vh,940px);padding:clamp(14px,2.2vh,24px) clamp(16px,2vw,30px);background:radial-gradient(130% 90% at 50% 0%,rgba(29,26,21,.96) 0%,rgba(21,19,15,.97) 42%,rgba(11,10,8,.98) 100%);box-shadow:0 44px 130px -32px rgba(0,0,0,.92),0 0 0 1px rgba(237,230,214,.08)}
+.wc-shell{position:relative;isolation:isolate;display:flex;flex-direction:column;width:min(93vw,1540px);height:min(88vh,940px);padding:clamp(14px,2.2vh,24px) clamp(16px,2vw,30px);background:radial-gradient(130% 90% at 50% 0%,rgba(25,25,25,.96) 0%,rgba(17,17,17,.97) 42%,rgba(10,10,10,.98) 100%);box-shadow:0 44px 130px -32px rgba(0,0,0,.92),0 0 0 1px rgba(242,242,242,.08)}
 /* the game's brushed edge (help_text_bg) behind the sheet, as the store sheets have it */
-.wc-shell::before{content:"";position:absolute;inset:-4px -6px;z-index:-1;pointer-events:none;background:rgba(11,10,8,.91);-webkit-mask:var(--w-tex-sheet) center / 100% 100% no-repeat;mask:var(--w-tex-sheet) center / 100% 100% no-repeat}
-.wc-atmo{position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;background:radial-gradient(85% 34% at 50% 0%,var(--wc-glow),rgba(11,10,8,0) 72%)}
+.wc-shell::before{content:"";position:absolute;inset:-4px -6px;z-index:-1;pointer-events:none;background:rgba(10,10,10,.91);-webkit-mask:var(--w-tex-sheet) center / 100% 100% no-repeat;mask:var(--w-tex-sheet) center / 100% 100% no-repeat}
+.wc-atmo{position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;background:radial-gradient(85% 34% at 50% 0%,var(--wc-glow),rgba(10,10,10,0) 72%)}
 .wc-frame{position:absolute;top:0;right:0;bottom:0;left:0;pointer-events:none;--fr-px: 12px;--fr-c: var(--wc-accent);opacity:var(--fr-o, .5)}
 .wc-frame>span{position:absolute;background-color:var(--fr-c)}
 .wc-fr-t,.wc-fr-b{left:var(--fr-px);right:var(--fr-px);height:var(--fr-px);-webkit-mask-repeat:repeat-x;mask-repeat:repeat-x;-webkit-mask-size:auto 100%;mask-size:auto 100%}
@@ -77,7 +77,7 @@
 .wc-xp-max .wc-glyph{width:15px;height:15px}
 
 /* ── bars: a hairline track and a paper fill, square (no pills) ─────────── */
-.wc-bar{position:relative;display:block;width:100%;height:clamp(3px,.4vh,5px);border-radius:0;overflow:hidden;background:rgba(237,230,214,.14);box-shadow:none}
+.wc-bar{position:relative;display:block;width:100%;height:clamp(3px,.4vh,5px);border-radius:0;overflow:hidden;background:rgba(242,242,242,.14);box-shadow:none}
 .wc-bar-track{display:none}
 .wc-bar-mask{position:absolute;top:0;right:0;bottom:0;left:0;overflow:hidden;-webkit-mask:none;mask:none}
 .wc-bar-fill{position:absolute;inset-block:0;inset-inline-start:0;width:0%;border-radius:0;background:var(--w-paper-dim);transition:width .25s linear}
@@ -120,7 +120,7 @@
 .wc-grouped-list{flex:1;min-height:0;overflow-y:auto;padding-inline-end:4px;display:flex;flex-direction:column;gap:2px}
 .wc-category-group{display:flex;flex-direction:column;gap:0;border:0;border-bottom:1px solid var(--wc-line);background:transparent}
 .wc-category-toggle{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;min-height:clamp(32px,3.8vh,40px);padding:6px 10px;cursor:pointer;background:transparent;border:0;color:var(--wc-text-dim);font-family:var(--w-f-label);font-weight:var(--w-wt-label);font-size:calc(clamp(11px,1.5vh,13px) * var(--w-k-label));line-height:var(--w-lh-label);text-transform:var(--w-label-case);letter-spacing:var(--w-label-track);text-align:start;transition:background-color .12s ease,color .12s ease}
-.wc-category-toggle:hover,.wc-category-toggle:focus-visible{color:var(--wc-text);background:rgba(237,230,214,.05);outline:none}
+.wc-category-toggle:hover,.wc-category-toggle:focus-visible{color:var(--wc-text);background:rgba(242,242,242,.05);outline:none}
 .wc-category-toggle.is-open{color:var(--wc-text);border-bottom:1px solid var(--wc-line);background:transparent}
 .wc-category-toggle.is-private{box-shadow:inset 2px 0 0 var(--w-red)}
 [dir=rtl] .wc-category-toggle.is-private{box-shadow:inset -2px 0 0 var(--w-red)}
@@ -144,7 +144,7 @@
 .wc-category-meta{display:flex;align-items:center;gap:8px;font-size:calc(clamp(10px,1.3vh,12px) * var(--w-k-label));color:var(--wc-text-faint)}
 .wc-category.is-selected .wc-category-meta{color:inherit;opacity:.75}
 .wc-category-count{display:inline-flex;align-items:center;justify-content:center;min-width:18px;padding:0 5px;height:16px;border-radius:0;background:transparent;box-shadow:inset 0 0 0 1px var(--wc-line-strong);color:var(--wc-text);font-family:var(--w-f-figure);font-variant-numeric:lining-nums tabular-nums;direction:ltr;unicode-bidi:isolate}
-.wc-category.is-selected .wc-category-count{box-shadow:inset 0 0 0 1px rgba(11,10,8,.4);color:inherit}
+.wc-category.is-selected .wc-category-count{box-shadow:inset 0 0 0 1px rgba(10,10,10,.4);color:inherit}
 
 /* ── the list: rows on hairlines; the cursor and the selection are the paper band ── */
 .wc-list{flex:1;min-height:0;overflow-y:auto;padding-inline-end:4px;display:flex;flex-direction:column}
@@ -223,7 +223,7 @@
 .wc-hints{display:flex;align-items:center;gap:clamp(10px,1.4vw,20px);margin-inline-start:auto;color:var(--wc-text-faint);font-family:var(--w-f-label);font-weight:var(--w-wt-label);font-size:calc(clamp(10px,1.3vh,12px) * var(--w-k-label));white-space:nowrap}
 .wc-hints>span{display:inline-flex;align-items:center;gap:6px}
 /* a key cap, the loading screen's kbd: paper outline, figures face, always left to right */
-.wc-key{display:inline-flex;align-items:center;justify-content:center;min-width:1.75em;padding:.2em .4em .1em;border:1px solid rgba(237,230,214,.4);border-radius:2px;font-family:var(--w-f-num);font-size:.95em;line-height:1;letter-spacing:.06em;color:var(--wc-text);background:transparent;direction:ltr;unicode-bidi:isolate;white-space:nowrap}
+.wc-key{display:inline-flex;align-items:center;justify-content:center;min-width:1.75em;padding:.2em .4em .1em;border:1px solid rgba(242,242,242,.4);border-radius:2px;font-family:var(--w-f-num);font-size:.95em;line-height:1;letter-spacing:.06em;color:var(--wc-text);background:transparent;direction:ltr;unicode-bidi:isolate;white-space:nowrap}
 .wc-progress{position:relative;flex:1;min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(12px,1.4vw,20px);padding:clamp(8px,1.2vh,12px) clamp(12px,1.2vw,18px);background:transparent;border-top:1px solid var(--wc-line)}
 .wc-progress .wc-slot{width:clamp(40px,6vh,54px)}
 .wc-progress-name{display:block;font-family:var(--w-f-action);font-weight:var(--w-wt-action);font-size:calc(clamp(15px,2vh,19px) * var(--w-k-action));line-height:calc(var(--w-lh-action) + .15 * var(--w-rtl));color:var(--wc-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -235,7 +235,7 @@
 .wc-cancel-btn:hover,.wc-cancel-btn:focus-visible{color:var(--w-ink);outline:none}
 .wc-cancel-btn:hover:before,.wc-cancel-btn:focus-visible:before{opacity:1}
 .wc-cancel-btn .wc-glyph{width:11px;height:11px}
-.wc-progress-hud{position:fixed;bottom:5.5vh;left:50%;transform:translate(-50%);width:min(560px,46vw);min-width:340px;box-shadow:0 22px 60px -18px rgba(0,0,0,.85);background:radial-gradient(140% 130% at 50% 0%,rgba(29,26,21,.95),rgba(11,10,8,.96))}
+.wc-progress-hud{position:fixed;bottom:5.5vh;left:50%;transform:translate(-50%);width:min(560px,46vw);min-width:340px;box-shadow:0 22px 60px -18px rgba(0,0,0,.85);background:radial-gradient(140% 130% at 50% 0%,rgba(25,25,25,.95),rgba(10,10,10,.96))}
 .wc-empty{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px}
 .wc-empty .wc-glyph{width:clamp(40px,7vh,60px);height:clamp(40px,7vh,60px);color:var(--wc-text-faint);opacity:.7}
 .wc-empty p{max-width:420px;color:var(--wc-text-dim);font-family:var(--w-f-text);font-size:calc(clamp(15px,1.9vh,17px) * var(--w-k-text));line-height:var(--w-lh-text)}
@@ -243,7 +243,7 @@
 .wc-shell{animation:wc-enter .26s cubic-bezier(.2,.7,.2,1)}
 @keyframes wc-detail-swap{0%{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .wc-detail-anim{animation:wc-detail-swap .16s cubic-bezier(.2,.7,.2,1)}
-.wc-dev{position:fixed;bottom:10px;inset-inline-start:10px;z-index:50;display:flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:46vw;padding:8px 10px;background:rgba(11,10,8,.92);font-size:11px;color:var(--wc-text-faint)}
+.wc-dev{position:fixed;bottom:10px;inset-inline-start:10px;z-index:50;display:flex;flex-wrap:wrap;align-items:center;gap:6px;max-width:46vw;padding:8px 10px;background:rgba(10,10,10,.92);font-size:11px;color:var(--wc-text-faint)}
 .wc-dev button{padding:4px 9px;border:0;cursor:pointer;background:var(--w-ink-3);color:var(--wc-text-dim);font:inherit}
 .wc-dev button:hover,.wc-dev button.is-on{color:var(--w-ink);background:var(--w-paper)}
 

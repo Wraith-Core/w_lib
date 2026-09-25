@@ -22,14 +22,14 @@
 
 /** The palette's tones, light to dark (tokens.css). */
 export const TONES = {
-  paper: '#EDE6D6',
-  paperDim: '#B9AF9C',
-  paperFaint: '#7D7466',
-  ink5: '#38322A',
-  ink4: '#27231C',
-  ink3: '#1D1A15',
-  ink2: '#15130F',
-  ink: '#0B0A08',
+  paper: '#F2F2F2',
+  paperDim: '#B4B4B4',
+  paperFaint: '#7A7A7A',
+  ink5: '#333333',
+  ink4: '#222222',
+  ink3: '#191919',
+  ink2: '#111111',
+  ink: '#0A0A0A',
 } as const;
 
 export const RED = '#CB0101';
@@ -157,7 +157,7 @@ export function textStyle(input: unknown, tones: readonly string[] = TEXT_TONES)
 
 /* ⚠️ url(...) and quoted strings come first and pass through whole: a picture's path is not a
       colour, and 'items/gold.png' or 'tan_saddle.webp' must not have a word inside it read as one
-      ('gold' -> '#B9AF9C.png' would break the picture). */
+      ('gold' -> '#B4B4B4.png' would break the picture). */
 const COLOR_TOKEN = /url\([^)]*\)|"[^"]*"|'[^']*'|#[0-9a-f]{3,8}\b|(?:rgb|hsl)a?\([^)]*\)|\b[a-z]{3,20}\b/gi;
 const TEXT_PROPS = /^(color|-webkit-text-fill-color|caret-color)$/i;
 const PAINT_PROPS = /color|background|border|outline|shadow|fill|stroke|decoration/i;

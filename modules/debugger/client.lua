@@ -12,7 +12,7 @@ end
 ---@param y? number (The y-coordinate position on screen - if not provided, uses and increments the global offset)
 function w.debugger.drawText(text, x, y)
   SetTextScale(0.35, 0.35)
-  SetTextColor(237, 230, 214, 255) -- paper, never #fff (w_lib/nui/theme/tokens.css)
+  SetTextColor(242, 242, 242, 255) -- paper, never #fff (w_lib/nui/theme/tokens.css)
   SetTextCentre(false)
   SetTextDropshadow(1, 1, 1, 0, 200)
   SetTextFontForCurrentCommand(0)
@@ -33,7 +33,7 @@ end
 function w.debugger.drawSphere(coords, size, color)
   if not coords then return end
   size = size or vec3(0.5, 0.5, 0.5)
-  color = color or { r = 237, g = 230, b = 214, a = 100 } -- paper (tokens.css)
+  color = color or { r = 242, g = 242, b = 242, a = 100 } -- paper (tokens.css)
   DrawMarker(0x50638AB9, coords.x, coords.y, coords.z, .0, .0, .0, .0, .0, .0, size.x, size.y, size.z, color.r, color.g,
     color.b, color.a)
 end

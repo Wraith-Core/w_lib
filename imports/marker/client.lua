@@ -77,7 +77,7 @@ local vector3_zero = vector3(0, 0, 0)
 -- ★ Ink, paper and one red on every interface (w_lib/nui/theme/tokens.css): a marker is drawn in the
 --   paper step nearest in lightness to the colour it was given, its alpha kept. The caller's table
 --   is not touched; the marker keeps its own copy.
-local PAPER_STEPS = { { 237, 230, 214 }, { 185, 175, 156 }, { 125, 116, 102 } }
+local PAPER_STEPS = { { 242, 242, 242 }, { 180, 180, 180 }, { 122, 122, 122 } }
 
 local function toPaper(c)
   local r, g, b = tonumber(c.r) or 237, tonumber(c.g) or 230, tonumber(c.b) or 214
@@ -95,7 +95,7 @@ local marker_mt = {
   type = 0,
   width = 2.,
   height = 1.,
-  color = {r = 237, g = 230, b = 214, a = 100}, -- paper (tokens.css), was orange
+  color = {r = 242, g = 242, b = 242, a = 100}, -- paper (tokens.css), was orange
   rotation = vector3_zero,
   direction = vector3_zero,
   bobUpAndDown = false,

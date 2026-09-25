@@ -39,7 +39,7 @@ export const debugMenu = () => {
             icon: 'blip_campfire',
             description: 'Condition: 80%',
             colorScheme: 'blue',
-            iconColor: '#B9AF9C',
+            iconColor: '#B4B4B4',
           },
           { label: 'Option 1' },
           { label: 'Option 2' },

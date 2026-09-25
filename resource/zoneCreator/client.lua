@@ -116,10 +116,10 @@ end
 --   is paper (its walls a paper wash, its edges paper lines), the axes paper-dim, the camera-aligned
 --   guides paper-faint. It was a red-orange zone with green and blue guides.
 local function drawRectangle(rec)
-    DrawPoly(rec[1].x, rec[1].y, rec[1].z, rec[2].x, rec[2].y, rec[2].z, rec[3].x, rec[3].y, rec[3].z, 237, 230, 214, 70)
-    DrawPoly(rec[2].x, rec[2].y, rec[2].z, rec[1].x, rec[1].y, rec[1].z, rec[3].x, rec[3].y, rec[3].z, 237, 230, 214, 70)
-    DrawPoly(rec[1].x, rec[1].y, rec[1].z, rec[4].x, rec[4].y, rec[4].z, rec[3].x, rec[3].y, rec[3].z, 237, 230, 214, 70)
-    DrawPoly(rec[4].x, rec[4].y, rec[4].z, rec[1].x, rec[1].y, rec[1].z, rec[3].x, rec[3].y, rec[3].z, 237, 230, 214, 70)
+    DrawPoly(rec[1].x, rec[1].y, rec[1].z, rec[2].x, rec[2].y, rec[2].z, rec[3].x, rec[3].y, rec[3].z, 242, 242, 242, 70)
+    DrawPoly(rec[2].x, rec[2].y, rec[2].z, rec[1].x, rec[1].y, rec[1].z, rec[3].x, rec[3].y, rec[3].z, 242, 242, 242, 70)
+    DrawPoly(rec[1].x, rec[1].y, rec[1].z, rec[4].x, rec[4].y, rec[4].z, rec[3].x, rec[3].y, rec[3].z, 242, 242, 242, 70)
+    DrawPoly(rec[4].x, rec[4].y, rec[4].z, rec[1].x, rec[1].y, rec[1].z, rec[3].x, rec[3].y, rec[3].z, 242, 242, 242, 70)
 end
 
 local function drawLines()
@@ -127,7 +127,7 @@ local function drawLines()
     local activeA, activeB = vec(xCoord, yCoord, zCoord) + thickness, vec(xCoord, yCoord, zCoord) - thickness
 
     if zoneType == 'poly' then
-        DrawLine(activeA.x, activeA.y, activeA.z, activeB.x, activeB.y, activeB.z, 237, 230, 214, 225)
+        DrawLine(activeA.x, activeA.y, activeA.z, activeB.x, activeB.y, activeB.z, 242, 242, 242, 225)
     end
 
 	for i = 1, #points do
@@ -140,18 +140,18 @@ local function drawLines()
 		local f = (points[i + 1] and vec(points[i + 1].x, points[i + 1].y, zCoord) or points[1])
 
         if i == #points and zoneType == 'poly' then
-            DrawLine(a.x, a.y, a.z, b.x, b.y, b.z, 237, 230, 214, 225)
-            DrawLine(activeA.x, activeA.y, activeA.z, c.x, c.y, c.z, 237, 230, 214, 225)
-            DrawLine(activeB.x, activeB.y, activeB.z, d.x, d.y, d.z, 237, 230, 214, 225)
-            DrawLine(a.x, a.y, a.z, activeA.x, activeA.y, activeA.z, 237, 230, 214, 225)
-            DrawLine(b.x, b.y, b.z, activeB.x, activeB.y, activeB.z, 237, 230, 214, 225)
-            DrawLine(xCoord, yCoord, zCoord, f.x, f.y, f.z, 237, 230, 214, 225)
-            DrawLine(e.x, e.y, e.z, xCoord, yCoord, zCoord, 237, 230, 214, 225)
+            DrawLine(a.x, a.y, a.z, b.x, b.y, b.z, 242, 242, 242, 225)
+            DrawLine(activeA.x, activeA.y, activeA.z, c.x, c.y, c.z, 242, 242, 242, 225)
+            DrawLine(activeB.x, activeB.y, activeB.z, d.x, d.y, d.z, 242, 242, 242, 225)
+            DrawLine(a.x, a.y, a.z, activeA.x, activeA.y, activeA.z, 242, 242, 242, 225)
+            DrawLine(b.x, b.y, b.z, activeB.x, activeB.y, activeB.z, 242, 242, 242, 225)
+            DrawLine(xCoord, yCoord, zCoord, f.x, f.y, f.z, 242, 242, 242, 225)
+            DrawLine(e.x, e.y, e.z, xCoord, yCoord, zCoord, 242, 242, 242, 225)
         else
-            DrawLine(a.x, a.y, a.z, b.x, b.y, b.z, 237, 230, 214, 225)
-            DrawLine(a.x, a.y, a.z, c.x, c.y, c.z, 237, 230, 214, 225)
-            DrawLine(b.x, b.y, b.z, d.x, d.y, d.z, 237, 230, 214, 225)
-            DrawLine(e.x, e.y, e.z, f.x, f.y, f.z, 237, 230, 214, 225)
+            DrawLine(a.x, a.y, a.z, b.x, b.y, b.z, 242, 242, 242, 225)
+            DrawLine(a.x, a.y, a.z, c.x, c.y, c.z, 242, 242, 242, 225)
+            DrawLine(b.x, b.y, b.z, d.x, d.y, d.z, 242, 242, 242, 225)
+            DrawLine(e.x, e.y, e.z, f.x, f.y, f.z, 242, 242, 242, 225)
         end
 
         if displayMode == 2 or displayMode == 4 then
@@ -214,12 +214,12 @@ local function startCreator(arg, useLast)
                 local rightX, rightY = getRelativePos(vec2(xCoord, yCoord), vec2(xCoord + 2, yCoord), GetGameplayCamRot(2).z)
                 local forwardX, forwardY = getRelativePos(vec2(xCoord, yCoord), vec2(xCoord, yCoord + 2), GetGameplayCamRot(2).z)
 
-                DrawLine(xCoord, yCoord, zCoord, rightX, rightY or 0, zCoord, 125, 116, 102, 225)
-                DrawLine(xCoord, yCoord, zCoord, forwardX, forwardY or 0, zCoord, 125, 116, 102, 225)
+                DrawLine(xCoord, yCoord, zCoord, rightX, rightY or 0, zCoord, 122, 122, 122, 225)
+                DrawLine(xCoord, yCoord, zCoord, forwardX, forwardY or 0, zCoord, 122, 122, 122, 225)
             end
 
-            DrawLine(xCoord, yCoord, zCoord, xCoord + 2, yCoord, zCoord, 185, 175, 156, 225)
-            DrawLine(xCoord, yCoord, zCoord, xCoord, yCoord + 2, zCoord, 185, 175, 156, 225)
+            DrawLine(xCoord, yCoord, zCoord, xCoord + 2, yCoord, zCoord, 180, 180, 180, 225)
+            DrawLine(xCoord, yCoord, zCoord, xCoord, yCoord + 2, zCoord, 180, 180, 180, 225)
             DrawLine(xCoord, yCoord, zCoord, xCoord, yCoord, zCoord + 2, 185, 175, 156, 225)
         end
 
@@ -241,7 +241,7 @@ local function startCreator(arg, useLast)
             drawLines()
         elseif zoneType == 'sphere' then
             ---@diagnostic disable-next-line: param-type-mismatch
-            DrawMarker(28, xCoord, yCoord, zCoord, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, height, height, height, 237, 230, 214, 70, false, false, 0, false, false, false, false)
+            DrawMarker(28, xCoord, yCoord, zCoord, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, height, height, height, 242, 242, 242, 70, false, false, 0, false, false, false, false)
         end
 
         if controlsActive then

@@ -1,6 +1,6 @@
 # Wraith store UI theme (wst-*)
 
-`store-theme.css` provides the reusable `wst-*` primitives. They began as a copy of `w_store/web/src/store.css` and are now drawn in the Wraith theme: warm ink, aged paper, one red. The theme package in `../theme/` is described in `../theme/THEME.md`.
+`store-theme.css` provides the reusable `wst-*` primitives. They began as a copy of `w_store/web/src/store.css` and are now drawn in the Wraith theme: black and white (neutral ink and paper, r = g = b, the Wraith launcher's values; never a cream or warm tint), one red. The theme package in `../theme/` is described in `../theme/THEME.md`.
 
 The file starts with `@import`s of `../theme/tokens.css` and `../theme/fonts.css`, and every colour in it is a `--w-*` token. So the 21 resources that link this sheet take the theme with no markup change and no rebuild. Asset hashes are recorded in `.reports/store-theme-assets.json` at the resources root.
 

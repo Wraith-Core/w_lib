@@ -6,7 +6,7 @@
    nui/assets/wraith-theme.css which pulls all three). Chromium 87 safe: no :has(), :is(),
    :where(), container queries or aspect-ratio.
 
-   The look is the original game menus in white and black: warm ink sheets with brushed or
+   The look is the original game menus in white and black: neutral ink sheets with brushed or
    torn edges, paper text, hairlines instead of boxes, and ONE state for "the cursor is here"
    (mouse hover, keyboard or pad focus, the active tab, the selected row): the brushed paper
    band with ink text. Red is a mark only (w-tick, w-pin, a destructive button, the progress
@@ -107,13 +107,13 @@
 }
 
 /* ══════════════════ Surfaces ══════════════════ */
-/* A side sheet or menu: warm top-lit ink with the game's brushed help_text_bg edge. One per side. */
+/* A side sheet or menu: top-lit ink (neutral grey) with the game's brushed help_text_bg edge. One per side. */
 .w-sheet {
   position: relative;
   isolation: isolate;
   color: var(--w-paper);
-  background: radial-gradient(130% 90% at 50% 0%, rgba(29, 26, 21, .96) 0%, rgba(21, 19, 15, .97) 42%, rgba(11, 10, 8, .98) 100%);
-  box-shadow: 0 18px 55px -18px rgba(0, 0, 0, .85), 0 0 0 1px rgba(237, 230, 214, .08);
+  background: radial-gradient(130% 90% at 50% 0%, rgba(25, 25, 25, .96) 0%, rgba(17, 17, 17, .97) 42%, rgba(10, 10, 10, .98) 100%);
+  box-shadow: 0 18px 55px -18px rgba(0, 0, 0, .85), 0 0 0 1px rgba(242, 242, 242, .08);
 }
 .w-sheet::before {
   content: '';
@@ -121,7 +121,7 @@
   inset: -4px -6px;
   z-index: -1;
   pointer-events: none;
-  background: rgba(11, 10, 8, .91);
+  background: rgba(10, 10, 10, .91);
   -webkit-mask: var(--w-tex-sheet) center / 100% 100% no-repeat;
   mask: var(--w-tex-sheet) center / 100% 100% no-repeat;
 }
@@ -160,7 +160,7 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: rgba(237, 230, 214, .06);
+  background: rgba(242, 242, 242, .06);
   -webkit-mask: var(--w-tex-header) center / 100% 100% no-repeat;
   mask: var(--w-tex-header) center / 100% 100% no-repeat;
 }
@@ -179,8 +179,8 @@
   overflow: hidden;
   color: var(--w-paper);
   background-color: var(--w-ink-2);
-  background-image: linear-gradient(160deg, rgba(237, 230, 214, .035), rgba(237, 230, 214, 0) 55%);
-  box-shadow: inset 0 0 calc(var(--w-rem) * 1.25) rgba(237, 230, 214, .11), inset 0 0 calc(var(--w-rem) * .45) rgba(237, 230, 214, .1);
+  background-image: linear-gradient(160deg, rgba(242, 242, 242, .035), rgba(242, 242, 242, 0) 55%);
+  box-shadow: inset 0 0 calc(var(--w-rem) * 1.25) rgba(242, 242, 242, .11), inset 0 0 calc(var(--w-rem) * .45) rgba(242, 242, 242, .1);
   -webkit-mask-box-image: var(--w-tex-tear) 64 fill / var(--w-edge) round;
   transition: background-color var(--w-t-med) var(--w-ease), box-shadow var(--w-t-med) var(--w-ease);
 }
@@ -200,7 +200,7 @@
 .w-card-wrap.is-focus .w-card,
 .w-card.is-focus {
   background-color: var(--w-ink-3);
-  box-shadow: inset 0 0 0 calc(var(--w-rem) * .45) rgba(237, 230, 214, .16), inset 0 0 calc(var(--w-rem) * 1.7) rgba(237, 230, 214, .3);
+  box-shadow: inset 0 0 0 calc(var(--w-rem) * .45) rgba(242, 242, 242, .16), inset 0 0 calc(var(--w-rem) * 1.7) rgba(242, 242, 242, .3);
 }
 /* A thin torn strip (the camera help bar, a key-hint row) */
 .w-card.is-strip { -webkit-mask-box-image: var(--w-tex-tear) 64 fill / calc(var(--w-edge) * .5) round; }
@@ -252,7 +252,7 @@
   border: 0;
   background: none;
   cursor: pointer;
-  color: rgba(21, 19, 15, .6);
+  color: rgba(17, 17, 17, .6);
   font-family: var(--w-f-action);
   font-weight: var(--w-wt-action);
   font-size: calc(var(--w-fs-action) * var(--w-k-action) * 1.2);
@@ -278,11 +278,11 @@
   inset: 0;
   pointer-events: none;
   background: linear-gradient(var(--w-deg-end),
-    rgba(11, 10, 8, .8) 0%, rgba(11, 10, 8, .62) 26%, rgba(11, 10, 8, .3) 46%, rgba(11, 10, 8, .08) 60%, rgba(11, 10, 8, 0) 70%);
+    rgba(10, 10, 10, .8) 0%, rgba(10, 10, 10, .62) 26%, rgba(10, 10, 10, .3) 46%, rgba(10, 10, 10, .08) 60%, rgba(10, 10, 10, 0) 70%);
 }
 .w-scrim-side.is-end {
   background: linear-gradient(calc(var(--w-deg-end) + 180deg),
-    rgba(11, 10, 8, .8) 0%, rgba(11, 10, 8, .62) 26%, rgba(11, 10, 8, .3) 46%, rgba(11, 10, 8, .08) 60%, rgba(11, 10, 8, 0) 70%);
+    rgba(10, 10, 10, .8) 0%, rgba(10, 10, 10, .62) 26%, rgba(10, 10, 10, .3) 46%, rgba(10, 10, 10, .08) 60%, rgba(10, 10, 10, 0) 70%);
 }
 
 /* The full-screen grain of a scene (loading screen, curtain) */
@@ -582,7 +582,7 @@
   transition: background-color var(--w-t-fast) var(--w-ease), box-shadow var(--w-t-fast) var(--w-ease);
 }
 .w-input::placeholder { color: var(--w-paper-faint); opacity: 1; }
-.w-input::selection { background: rgba(237, 230, 214, .85); color: var(--w-ink); }
+.w-input::selection { background: rgba(242, 242, 242, .85); color: var(--w-ink); }
 .w-input:focus, .w-field:focus-within { background: var(--w-ink-3); box-shadow: inset 0 -2px 0 var(--w-paper); }
 .w-field .w-input { flex: 1 1 auto; min-width: 0; min-height: 0; height: 100%; padding: 0; background: transparent; box-shadow: none; }
 .w-input.is-invalid, .w-field.is-invalid, .w-input[aria-invalid=true] { box-shadow: inset 0 -2px 0 var(--w-red); }
@@ -635,7 +635,7 @@
   flex: none;
   min-width: calc(var(--w-rem) * 3.2);
   padding: calc(var(--w-rem) * .18) calc(var(--w-rem) * .55) calc(var(--w-rem) * .24);
-  border: 1px solid rgba(237, 230, 214, .35);
+  border: 1px solid rgba(242, 242, 242, .35);
   background: none;
   color: var(--w-paper-dim);
   text-align: center;
@@ -663,7 +663,7 @@
 }
 .w-range::-webkit-slider-runnable-track {
   height: 2px;
-  background: linear-gradient(to var(--w-to-end), var(--w-paper) var(--w-fill), rgba(237, 230, 214, .18) var(--w-fill));
+  background: linear-gradient(to var(--w-to-end), var(--w-paper) var(--w-fill), rgba(242, 242, 242, .18) var(--w-fill));
 }
 .w-range::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -691,8 +691,8 @@
   min-width: 1.7em;
   height: 1.7em;
   padding: 0 .45em;
-  border: 1px solid rgba(237, 230, 214, .4);
-  box-shadow: inset 0 -2px 0 rgba(237, 230, 214, .14);
+  border: 1px solid rgba(242, 242, 242, .4);
+  box-shadow: inset 0 -2px 0 rgba(242, 242, 242, .14);
   color: var(--w-paper);
   font-family: var(--w-f-label);
   font-weight: 400;
@@ -736,11 +736,11 @@
 .w-glyph.is-next { --w-glyph: var(--w-tex-arrow-r); }
 
 /* ══════════════════ Scroll, motion ══════════════════ */
-.w-scroll { overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: rgba(237, 230, 214, .3) transparent; }
+.w-scroll { overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: rgba(242, 242, 242, .3) transparent; }
 .w-scroll::-webkit-scrollbar { width: 4px; height: 0; }
 .w-scroll::-webkit-scrollbar-track { background: transparent; }
-.w-scroll::-webkit-scrollbar-thumb { background: rgba(237, 230, 214, .3); border-radius: 0; }
-.w-scroll::-webkit-scrollbar-thumb:hover { background: rgba(237, 230, 214, .5); }
+.w-scroll::-webkit-scrollbar-thumb { background: rgba(242, 242, 242, .3); border-radius: 0; }
+.w-scroll::-webkit-scrollbar-thumb:hover { background: rgba(242, 242, 242, .5); }
 .w-scroll::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
 
 /* blocks arrive in a short stagger: style="--i:3" */

@@ -301,7 +301,7 @@ local DrawPoly = DrawPoly
 
 -- ★ Ink, paper and one red on every interface (w_lib/nui/theme/tokens.css): a zone's debug drawing is
 --   the paper step nearest in lightness to the colour it was given (paper by default), alpha kept.
-local PAPER_STEPS = { { 237, 230, 214 }, { 185, 175, 156 }, { 125, 116, 102 } }
+local PAPER_STEPS = { { 242, 242, 242 }, { 180, 180, 180 }, { 122, 122, 122 } }
 
 local function toPaper(r, g, b)
     local y = 0.2126 * r + 0.7152 * g + 0.0722 * b
