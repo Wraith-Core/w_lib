@@ -1,3 +1,11 @@
 
 # Installed dependencies
 node_modules/
+
+.claude/
+.vscode/
+.idea/
+*.log
+Thumbs.db
+desktop.ini
+.DS_Store
