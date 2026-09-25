@@ -1364,8 +1364,9 @@ body {
   color: var(--wc-accent);
 }
 
+/* ★ An error keeps the paper frame every notice has; the red is the cross alone -- the mark,
+   not a red box. */
 .lb-toast.is-error .lb-toast-icon .wc-glyph { color: var(--wc-red); }
-.lb-toast.is-error .lb-toast-icon:before { background-color: var(--wc-red); }
 
 /* ★ A notice's title is the action role (EB Garamond 600 / Amiri 700), its line reading text
    (EB Garamond / Amiri, never under 16px in Arabic) -- both paper, both on the doubled shadow

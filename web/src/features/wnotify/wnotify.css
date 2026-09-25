@@ -375,9 +375,9 @@
   bottom: 0;
   height: 3px;
   opacity: 1;
-  background-color: var(--w-red);
-  -webkit-mask: var(--tex-divider_line) center / 100% 100% no-repeat;
-  mask: var(--tex-divider_line) center / 100% 100% no-repeat;
+  /* solid in the middle and tapering at both ends, as the game's divider does -- but drawn,
+     not masked from the brush, whose soft profile turned the red a muddy brown */
+  background: linear-gradient(to right, transparent, var(--w-red) 16%, var(--w-red) 84%, transparent);
 }
 
 .wn-note.has-plate.is-law .wn-desc {
