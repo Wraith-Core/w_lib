@@ -219,13 +219,16 @@
     text-shadow: 0 0 6px rgb(237 230 214 / 38%);
   }
 
+  /* ★ Ink, paper and one red (w_lib/nui/theme/tokens.css): the counter stays paper and loses its
+     light on a failure -- a black shadow, not a red glow. The failure's one red is the ripple's
+     thin ring below, the mark; red is never a wash over the whole minigame. */
   12% {
     transform: translateX(-5px);
-    filter: brightness(1.4);
+    filter: brightness(1);
     color: rgb(237 230 214 / 96%);
     text-shadow:
-      0 0 8px rgb(203 1 1 / 82%),
-      0 0 18px rgb(203 1 1 / 54%);
+      0 0 8px rgb(0 0 0 / 82%),
+      0 0 18px rgb(0 0 0 / 54%);
   }
 
   24% {
@@ -257,64 +260,66 @@
   12% {
     opacity: 0.95;
     transform: translateX(-3px);
-    filter: drop-shadow(0 0 12px rgb(203 1 1 / 88%));
+    filter: drop-shadow(0 0 12px rgb(0 0 0 / 88%));
   }
 
   24% {
     opacity: 0.55;
     transform: translateX(4px);
-    filter: drop-shadow(0 0 18px rgb(203 1 1 / 95%));
+    filter: drop-shadow(0 0 18px rgb(0 0 0 / 95%));
   }
 
   38% {
     opacity: 1;
     transform: translateX(-2px);
-    filter: drop-shadow(0 0 12px rgb(203 1 1 / 78%));
+    filter: drop-shadow(0 0 12px rgb(0 0 0 / 78%));
   }
 
   54% {
     opacity: 0.7;
     transform: translateX(2px);
-    filter: drop-shadow(0 0 9px rgb(203 1 1 / 64%));
+    filter: drop-shadow(0 0 9px rgb(0 0 0 / 64%));
   }
 }
 
+/* The success halo is a paper glow; the failure's is the light going out -- a black pulse. */
 @keyframes qte-failure-halo {
   0% {
     opacity: 0;
     box-shadow:
-      0 0 0 0 rgb(203 1 1 / 0%),
-      inset 0 0 0 0 rgb(203 1 1 / 0%);
+      0 0 0 0 rgb(0 0 0 / 0%),
+      inset 0 0 0 0 rgb(0 0 0 / 0%);
   }
 
   25% {
     opacity: 1;
     box-shadow:
-      0 0 38px 10px rgb(203 1 1 / 62%),
-      inset 0 0 30px 6px rgb(203 1 1 / 44%);
+      0 0 38px 10px rgb(0 0 0 / 62%),
+      inset 0 0 30px 6px rgb(0 0 0 / 50%);
   }
 
   100% {
     opacity: 0;
     box-shadow:
-      0 0 62px 18px rgb(203 1 1 / 0%),
-      inset 0 0 42px 10px rgb(203 1 1 / 0%);
+      0 0 62px 18px rgb(0 0 0 / 0%),
+      inset 0 0 42px 10px rgb(0 0 0 / 0%);
   }
 }
 
+/* ★ The failure's one red: a thin ring of the mark (#CB0101) running out, with no red glow. */
 @keyframes qte-failure-ripple {
   0% {
     opacity: 0.95;
     transform: scale(0.08);
-    border: 3px solid rgb(203 1 1 / 95%);
-    box-shadow: 0 0 20px rgb(203 1 1 / 74%);
+    border: 2px solid rgb(203 1 1 / 95%);
+    box-shadow: none;
   }
 
   100% {
     opacity: 0;
     transform: scale(3.15);
-    border: 3px solid rgb(203 1 1 / 0%);
-    box-shadow: 0 0 52px rgb(203 1 1 / 0%);
+    border: 2px solid rgb(203 1 1 / 0%);
+    box-shadow: none;
   }
 }
 

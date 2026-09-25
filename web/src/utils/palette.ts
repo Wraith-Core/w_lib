@@ -155,13 +155,17 @@ export function textStyle(input: unknown, tones: readonly string[] = TEXT_TONES)
 
 /* ── colours inside markup ─────────────────────────────────────────────── */
 
-const COLOR_TOKEN = /#[0-9a-f]{3,8}\b|(?:rgb|hsl)a?\([^)]*\)|\b[a-z]{3,20}\b/gi;
+/* ⚠️ url(...) and quoted strings come first and pass through whole: a picture's path is not a
+      colour, and 'items/gold.png' or 'tan_saddle.webp' must not have a word inside it read as one
+      ('gold' -> '#B9AF9C.png' would break the picture). */
+const COLOR_TOKEN = /url\([^)]*\)|"[^"]*"|'[^']*'|#[0-9a-f]{3,8}\b|(?:rgb|hsl)a?\([^)]*\)|\b[a-z]{3,20}\b/gi;
 const TEXT_PROPS = /^(color|-webkit-text-fill-color|caret-color)$/i;
 const PAINT_PROPS = /color|background|border|outline|shadow|fill|stroke|decoration/i;
 
 /** Every colour in one declaration's value, clamped. Words that are not colours pass through. */
 function clampValue(value: string, tones: readonly string[]): string {
   return value.replace(COLOR_TOKEN, (token) => {
+    if (/^(url\(|["'])/i.test(token)) return token;
     if (/^(transparent|inherit|initial|unset|currentcolor|none)$/i.test(token)) return token;
     const c = parseColor(token);
     return c ? toPalette(token, tones) ?? token : token;

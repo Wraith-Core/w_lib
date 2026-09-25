@@ -1,9 +1,54 @@
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { TransformControls } from '@react-three/drei';
-import { MathUtils, Mesh } from 'three';
+import { Color, MathUtils, Mesh, Object3D } from 'three';
 import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { postNui } from '../../utils/postNui';
 import { GizmoEntity, GizmoMode, GizmoVector } from './types';
+
+/**
+ * ★ Ink, paper and one red on every interface (w_lib/nui/theme/tokens.css). three's
+ *   TransformControls paints its handles in pure red, green and blue, its planes in yellow, cyan
+ *   and magenta. Here each handle takes a paper step instead, so the three axes are still told
+ *   apart -- by tone, as well as by the direction they point:
+ *     X (red) -> paper, three's Y = the game's Z, up (green) -> paper-dim,
+ *     three's Z = the game's Y (blue) -> paper-faint; the planes and the view ring follow the
+ *     same steps, white and grey go to paper and paper-faint.
+ *   The hover highlight is the control's own (full opacity, lerped toward white, the others
+ *   faded), so it now brightens a paper step instead of a hue.
+ *
+ * ⚠️ The control caches each material's first colour in `tempColor` on its first frame and resets
+ *    to it every frame after. Both are written, so the tone holds whichever of the two ran first.
+ */
+const PAPER = '#EDE6D6';
+const PAPER_DIM = '#B9AF9C';
+const PAPER_FAINT = '#7D7466';
+
+const toneFor = (c: Color): string => {
+  const { r, g, b } = c;
+  const hi = (v: number) => v > 0.5;
+  if (Math.max(r, g, b) - Math.min(r, g, b) < 0.1) return Math.max(r, g, b) > 0.5 ? PAPER : PAPER_FAINT;
+  if (hi(r) && hi(g)) return PAPER; // yellow: the XY plane, the view ring
+  if (hi(g) && hi(b)) return PAPER_DIM; // cyan: the YZ plane
+  if (hi(r) && hi(b)) return PAPER_FAINT; // magenta: the XZ plane
+  if (hi(r)) return PAPER; // X
+  if (hi(g)) return PAPER_DIM; // three's Y, the game's Z
+  return PAPER_FAINT; // three's Z, the game's Y
+};
+
+type TintedMaterial = { color?: Color; tempColor?: Color; wMono?: boolean };
+
+const monoGizmo = (root: Object3D | null) => {
+  root?.traverse((object) => {
+    const material = (object as Mesh).material as TintedMaterial | TintedMaterial[] | undefined;
+    for (const m of Array.isArray(material) ? material : material ? [material] : []) {
+      if (!m?.color || m.wMono) continue;
+      const tone = toneFor(m.tempColor ?? m.color);
+      m.color.set(tone);
+      m.tempColor?.set(tone);
+      m.wMono = true;
+    }
+  });
+};
 
 /**
  * RDR3 is Z-up and left-handed; three.js is Y-up and right-handed. The whole conversion is
@@ -105,6 +150,7 @@ export const Transform: React.FC<Props> = ({ entity }) => {
   return (
     <Suspense fallback={null}>
       <TransformControls
+        ref={monoGizmo}
         size={0.5}
         object={mesh}
         mode={mode}

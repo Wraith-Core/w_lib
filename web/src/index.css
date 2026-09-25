@@ -86,6 +86,14 @@ code {
   font-family: var(--w-f-mono, Consolas, 'Courier New', monospace);
 }
 
+/* ⚠️ Mantine's normalize (withNormalizeCSS) paints <mark> yellow (#ff0). A script may send a
+      <mark> inside a notice or a text UI; highlighted words take the paper band with ink text,
+      the theme's own highlight, never a hue. `body` outranks the injected normalize rule. */
+body mark {
+  color: var(--w-ink, #0b0a08);
+  background-color: var(--w-paper, #ede6d6);
+}
+
 @keyframes progress-bar {
   from {
     width: 0%;
