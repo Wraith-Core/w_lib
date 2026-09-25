@@ -360,10 +360,11 @@
    scene between the words stays visible, which is the difference from a box.
    Positioned by transform from index.tsx (placeHail), like the card. */
 .wv-hail {
-  /* Tight to wide: the first three outline the strokes (a paper letter on a white sky has no
+  /* Tight to wide: the first four outline the strokes (a paper letter on a white sky has no
      edge without them), the last three are the soft ink the line sits in. Measured over a noon
      sky; with only the wide layers the letters washed out there. */
   --wv-halo:
+    0 0 1px rgba(11, 10, 8, 1),
     0 0 1px rgba(11, 10, 8, 1),
     0 0 2px rgba(11, 10, 8, 0.95),
     0 1px 3px rgba(11, 10, 8, 0.9),
@@ -383,7 +384,7 @@
   display: flex;
   align-items: center;
   gap: 0.5em;
-  font-size: clamp(15px, 1.75vh, 20px);
+  font-size: clamp(15px, 1.9vh, 22px);
   animation: wv-in 200ms var(--w-ease) both;
 }
 
@@ -402,8 +403,9 @@
   color: var(--w-paper-lit);
 }
 
-/* Arabic: Amiri, the menu-row role (700 for the name, 400 for the verb). A naskh needs its line
-   height for the tails, and a size step over the Latin to read at the same weight. */
+/* Arabic: Amiri -- the name at the menu-row weight (700), the verb at the reading weight (400),
+   both well over the theme's 16px floor for Amiri 400. A naskh needs its line height for the
+   tails, and a size step over the Latin to read at the same weight. */
 .wv-hail-text.is-ar {
   font-family: var(--wv-face-ar-text);
   font-weight: 400;

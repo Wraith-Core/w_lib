@@ -3510,6 +3510,9 @@ Parameters:
   - `icon` (string, optional): accepted for compatibility; the card draws no emblem.
   - `commands` (string[], optional): phrases the ped answers to (a `lib.voicePanel` for the same person replaces them with its grouped list).
   - `says` (string, optional): a line the ped is saying now; shown under the name while set. The phrase list folds away until it is cleared (the key row stays, dimmed).
+  - `minimal` (boolean, optional): `true` draws no card while nothing is being said -- one line centred above the head: `talkKey` as a small paper key cap, then `title`, on a transparent background (no plate, border, rule or list), kept legible by an ink halo on the letters. It follows the head and is clamped to the screen. While `lib.voiceListening` is active the key cap becomes the level meter on the same line. With `says` set, or when a `lib.voicePanel` belongs to the same person, the normal card is drawn instead.
+  - `talkKey` (string, optional): the push-to-talk key for the minimal line (`'G'`, or a keybind name such as `'LMENU'`, shown as `Alt`).
+  - `name` (string, optional): the person alone. Inside a minimal `title` it is drawn a weight heavier; it is also the card's heading when a minimal hint speaks (`title` there is the whole prompt, such as "Talk to Clara Morgan").
 
 Returns: `nil`
 
@@ -3520,6 +3523,8 @@ local head = GetPedBoneCoords(ped, 0x796E, 0.0, 0.0, 0.0)
 lib.voiceHint({ id = ('ped_%d'):format(ped), coords = head, title = 'Shopkeeper', icon = 'blip_shop_store', commands = { 'Show me your wares' } })
 -- make the same balloon speak
 lib.voiceHint({ id = ('ped_%d'):format(ped), coords = head, title = 'Shopkeeper', says = 'Take a look around.' })
+-- the one-line prompt above the head (what w_voiceintract shows)
+lib.voiceHint({ id = ('ped_%d'):format(ped), entity = ped, title = 'Talk to Clara Morgan', name = 'Clara Morgan', talkKey = 'G', minimal = true })
 ```
 
 ### lib.hideVoiceHint
@@ -3586,7 +3591,7 @@ Parameters:
 
 Returns: `nil`
 
-Draws or clears the listening indicator in the library's frame. In the shipped frame the meter is drawn inside the voice panel's badge, so it is visible only while a voice panel with at least one group is showing. Purely visual; the script owns speech recognition and calls this as its state changes.
+Draws or clears the listening indicator in the library's frame. The meter is drawn once: in the key row of the card that holds a voice panel when one is up, otherwise in place of the key cap of the nearest minimal `lib.voiceHint` line, otherwise with `label` at the bottom of the screen. Purely visual; the script owns speech recognition and calls this as its state changes.
 
 ```lua
 lib.voiceListening(true, 35, 'Listening')
