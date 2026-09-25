@@ -99,10 +99,10 @@ end
 --   SIREC scripts send) showed "text ———" instead of a state icon. warning.png and info.png
 --   were added to the frame, and every name that reaches Notify is checked against the list.
 local STYLE_ICON  = { success = 'tick', error = 'cross', info = 'info', warning = 'warning', inform = 'info', primary = 'info' }
--- ⚠️ Monochrome by request: the notice is solid black with white text, so a per-style hue
+-- ⚠️ Monochrome by request (paper, never #fff -- w_lib/nui/theme/tokens.css): the notice is text in paper, so a per-style hue
 --    (blue/green/red/orange) was the only colour left on it and read as noise. The STYLE word still
 --    picks the ICON, which is what distinguishes success from error now.
-local STYLE_COLOR = { success = '#ffffff', error = '#ffffff', info = '#ffffff', warning = '#ffffff', inform = '#ffffff', primary = '#ffffff' }
+local STYLE_COLOR = { success = '#ede6d6', error = '#ede6d6', info = '#ede6d6', warning = '#ede6d6', inform = '#ede6d6', primary = '#ede6d6' }
 
 --- The frame's texture names (web/build/assets/index-*.js, `nl["tex/ui"]` + `nl["tex/blips"]`).
 --- Keep in step with that list when a texture is added to web/build/tex.
@@ -151,7 +151,7 @@ local function styled(title, message, style, duration)
         icon             = STYLE_ICON[style] or 'info',
         style            = style,
         duration         = tonumber(duration) or 5000,
-        titleColor       = STYLE_COLOR[style] or '#ffffff',
+        titleColor       = STYLE_COLOR[style] or '#ede6d6',
         isRTL            = true,
         contentAlignment = 'center',
         useBackground    = false,
@@ -227,11 +227,11 @@ function Notify(data)
             meta = meta or nil,
             contentAlignment = data.contentAlignment or "center",
             isRTL = data.isRTL or false,
-            titleColor = data.titleColor or "#ffffff",
+            titleColor = data.titleColor or "#ede6d6",
             -- ⚠️ This default was pushed INLINE by index.tsx, so it beat every stylesheet rule and
             --    made the body text 80% white on a transparent notice — the "باهت" the player saw.
             --    Full white now; the stylesheet (.wn-desc) still owns the look when a caller sends none.
-            descriptionColor = data.descriptionColor or "#ffffff"
+            descriptionColor = data.descriptionColor or "#ede6d6"
         }
     })
 end
