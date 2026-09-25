@@ -26,9 +26,9 @@ end
 ---@param coords vector (The coordinates where the sphere will be drawn)
 ---@param size? vector (The size of the sphere in x,y,z dimensions - default:vec3(0.5, 0.5, 0.5))
 ---@param color? table (The color of the sphere)
---- color.r number (Red component 0-255 - default:237)
---- color.g number (Green component 0-255 - default:230)
---- color.b number (Blue component 0-255 - default:214)
+--- color.r number (Red component 0-255 - default:242)
+--- color.g number (Green component 0-255 - default:242)
+--- color.b number (Blue component 0-255 - default:242)
 --- color.a number (Alpha/transparency 0-255 - default:100)
 function w.debugger.drawSphere(coords, size, color)
   if not coords then return end

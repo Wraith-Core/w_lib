@@ -80,7 +80,7 @@ local vector3_zero = vector3(0, 0, 0)
 local PAPER_STEPS = { { 242, 242, 242 }, { 180, 180, 180 }, { 122, 122, 122 } }
 
 local function toPaper(c)
-  local r, g, b = tonumber(c.r) or 237, tonumber(c.g) or 230, tonumber(c.b) or 214
+  local r, g, b = tonumber(c.r) or 242, tonumber(c.g) or 242, tonumber(c.b) or 242
   local y = 0.2126 * r + 0.7152 * g + 0.0722 * b
   local best, dist = PAPER_STEPS[1], math.huge
   for i = 1, #PAPER_STEPS do
