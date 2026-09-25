@@ -32,6 +32,14 @@ export const debugVoice = () => {
     },
   ], 200);
 
+  // ★ The minimal prompt w_voiceintract uses: one line over the head, the key and "Talk to <name>".
+  debugData([
+    {
+      action: 'voiceHint',
+      data: { id: 'clara', x: 0.52, y: 0.26, d: 3, title: 'Talk to Clara Morgan', name: 'Clara Morgan', talkKey: 'G', minimal: true },
+    },
+  ], 300);
+
   // ★ The 2D panel: everything sayable right now, grouped the way the layer system groups it.
   debugData([
     {
