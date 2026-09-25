@@ -360,11 +360,16 @@
    scene between the words stays visible, which is the difference from a box.
    Positioned by transform from index.tsx (placeHail), like the card. */
 .wv-hail {
+  /* Tight to wide: the first three outline the strokes (a paper letter on a white sky has no
+     edge without them), the last three are the soft ink the line sits in. Measured over a noon
+     sky; with only the wide layers the letters washed out there. */
   --wv-halo:
-    0 0 1px rgba(11, 10, 8, 0.95),
-    0 1px 2px rgba(11, 10, 8, 0.9),
-    0 0 6px rgba(11, 10, 8, 0.72),
-    0 0 16px rgba(11, 10, 8, 0.48);
+    0 0 1px rgba(11, 10, 8, 1),
+    0 0 2px rgba(11, 10, 8, 0.95),
+    0 1px 3px rgba(11, 10, 8, 0.9),
+    0 0 8px rgba(11, 10, 8, 0.75),
+    0 0 18px rgba(11, 10, 8, 0.55),
+    0 0 32px rgba(11, 10, 8, 0.35);
 
   position: absolute;
   left: 0;
@@ -419,9 +424,9 @@
   justify-content: center;
   flex: none;
   box-sizing: border-box;
-  min-width: 1.75em;
-  height: 1.75em;
-  padding: 0.08em 0.42em 0;
+  min-width: 1.6em;
+  height: 1.6em;
+  padding: 0.08em 0.38em 0;
   border-radius: 2px;
   background: var(--wv-paper);
   box-shadow:
@@ -429,7 +434,7 @@
     0 0 0 1px rgba(11, 10, 8, 0.35),
     0 1px 6px rgba(11, 10, 8, 0.55);
   font-family: var(--w-f-num);
-  font-size: 0.72em;
+  font-size: 0.8em;
   font-style: normal;
   line-height: 1;
   letter-spacing: 0.04em;
@@ -444,8 +449,8 @@
   align-items: center;
   justify-content: center;
   flex: none;
-  min-width: 1.26em;
-  height: 1.26em;
+  min-width: 1.28em;
+  height: 1.28em;
   animation: wv-fade 150ms ease-out both;
 }
 
