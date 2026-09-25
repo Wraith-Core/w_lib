@@ -723,11 +723,9 @@ const Panel: React.FC = () => {
                                 was the ▾ / ▸ characters, which no theme face has: the system drew them. */}
                             <span className={`wc-category-chevron${open ? ' is-open' : ''}`} aria-hidden="true" />
                             <span className="wc-category-name">
-                              {group.private && (
-                                <span className="wc-category-lock" aria-hidden="true">
-                                  🔒
-                                </span>
-                              )}
+                              {/* ★ The game's lock texture (masked, currentColor), as w_crafting draws it.
+                                  It was the lock emoji, which no theme face has: the system drew it. */}
+                              {group.private && <Glyph tex="lock" className="wc-category-lock" />}
                               {group.label}
                             </span>
                             <span className="wc-category-meta" dir="ltr">

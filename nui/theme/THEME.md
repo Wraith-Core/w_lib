@@ -97,6 +97,10 @@ Arabic is never letter-spaced, uppercased, small-capped, slanted or faux-bold. N
 | Invalid | – | – | – | Red underline, plus `.w-error`: reading text in paper with a red square |
 | Disabled | 40% | 45% | 45% (primary 35%, with `.w-reason` under it) | 40% |
 
+One cursor: RDR has a single cursor, so a screen shows one band at a time. While the mouse is over a
+list, the row under it carries the band and a row that only kept focus from an earlier click or key goes
+back to rest (the creator's `.menu-list:hover` / `.component:hover` rules are the pattern).
+
 Red has five uses only:
 - `.w-tick` (the focused card's ribbon);
 - `.w-pin` (you are here);

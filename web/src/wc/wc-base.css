@@ -139,6 +139,7 @@
 .wc-category.is-private{box-shadow:inset 0 -1px 0 rgba(203,1,1,.6)}
 .wc-category.is-private.is-selected{box-shadow:none}
 .wc-category-lock{margin-inline-end:4px;font-size:.85em;opacity:.9}
+.wc-category-lock.wc-glyph{width:.9em;height:.9em;vertical-align:-.1em}
 .wc-category-name{font-family:var(--w-f-label);font-weight:var(--w-wt-label);font-size:calc(clamp(11px,1.5vh,13px) * var(--w-k-label));line-height:var(--w-lh-label);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
 .wc-category-meta{display:flex;align-items:center;gap:8px;font-size:calc(clamp(10px,1.3vh,12px) * var(--w-k-label));color:var(--wc-text-faint)}
 .wc-category.is-selected .wc-category-meta{color:inherit;opacity:.75}
