@@ -12,7 +12,7 @@ end
 ---@param y? number (The y-coordinate position on screen - if not provided, uses and increments the global offset)
 function w.debugger.drawText(text, x, y)
   SetTextScale(0.35, 0.35)
-  SetTextColor(255, 255, 255, 255)
+  SetTextColor(237, 230, 214, 255) -- paper, never #fff (w_lib/nui/theme/tokens.css)
   SetTextCentre(false)
   SetTextDropshadow(1, 1, 1, 0, 200)
   SetTextFontForCurrentCommand(0)
@@ -26,14 +26,14 @@ end
 ---@param coords vector (The coordinates where the sphere will be drawn)
 ---@param size? vector (The size of the sphere in x,y,z dimensions - default:vec3(0.5, 0.5, 0.5))
 ---@param color? table (The color of the sphere)
---- color.r number (Red component 0-255 - default:255)
---- color.g number (Green component 0-255 - default:0)
---- color.b number (Blue component 0-255 - default:0)
+--- color.r number (Red component 0-255 - default:237)
+--- color.g number (Green component 0-255 - default:230)
+--- color.b number (Blue component 0-255 - default:214)
 --- color.a number (Alpha/transparency 0-255 - default:100)
 function w.debugger.drawSphere(coords, size, color)
   if not coords then return end
   size = size or vec3(0.5, 0.5, 0.5)
-  color = color or { r = 255, g = 0, b = 0, a = 100 }
+  color = color or { r = 237, g = 230, b = 214, a = 100 } -- paper (tokens.css)
   DrawMarker(0x50638AB9, coords.x, coords.y, coords.z, .0, .0, .0, .0, .0, .0, size.x, size.y, size.z, color.r, color.g,
     color.b, color.a)
 end

@@ -198,7 +198,7 @@ for i, pair in ipairs(E.teleports) do
             function p:onExit() lib.hideTextUI() end
             function p:nearby()
                 Citizen.InvokeNative(0x2A32FAA57B937173, 0x6903B113, here.x, here.y, here.z - 0.98, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                    1.0, 1.0, 0.9, 255, 255, 0, 155, false, false, 2, false, 0, 0, false)
+                    1.0, 1.0, 0.9, 237, 230, 214, 155, false, false, 2, false, 0, 0, false) -- paper (tokens.css), was yellow
                 if not busy and IsControlJustReleased(0, 0xCEFD9220) then -- E
                     busy = true
                     SetEntityCoords(ped(), target.coords.x, target.coords.y, target.coords.z)

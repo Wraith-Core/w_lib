@@ -35,7 +35,7 @@ end
 ---@param text string (The text of the notification)
 ---@return boolean (Always return `true`)
 function w.notif.rightSuccess(source, text)
-  w.notif.right(source, text, "hud_textures", "check", "COLOR_GREEN")
+  w.notif.right(source, text, "hud_textures", "check", "COLOR_WHITE")
   return true
 end
 
@@ -44,7 +44,7 @@ end
 ---@param text string (The text of the notification)
 ---@return boolean (Always return `false`)
 function w.notif.rightError(source, text)
-  w.notif.right(source, text, "menu_textures", "cross", "COLOR_RED")
+  w.notif.right(source, text, "menu_textures", "cross", "COLOR_WHITE")
   return false
 end
 

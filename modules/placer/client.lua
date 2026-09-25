@@ -92,12 +92,16 @@ local BLOCKED = {
 
 local MARKER_GROUND = 0x6903B113   -- flat ground cylinder (resource/essentials teleports)
 local MARKER_SPHERE = 0x50638AB9   -- sphere (modules/debugger drawSphere)
+-- ★ Ink, paper and one red (w_lib/nui/theme/tokens.css): the spot under the cursor is paper, a spot
+--   already placed paper-dim, the one the record holds now paper-faint, the reach ring a paper wash,
+--   and out of reach the theme's one red -- the mark for a refusal. (They were white, red, gold and
+--   green.)
 local COLOR = {
-  active  = { 240, 240, 240, 150 },
-  far     = { 220, 60, 60, 170 },
-  current = { 214, 170, 90, 80 },
-  placed  = { 110, 200, 130, 120 },
-  ring    = { 240, 240, 240, 60 },
+  active  = { 237, 230, 214, 150 },
+  far     = { 203, 1, 1, 170 },
+  current = { 125, 116, 102, 110 },
+  placed  = { 185, 175, 156, 120 },
+  ring    = { 237, 230, 214, 60 },
 }
 
 local SET_ANIMAL_IS_WILD     = 0xAEB97D84CDF3C00B   -- (Ped, BOOL)

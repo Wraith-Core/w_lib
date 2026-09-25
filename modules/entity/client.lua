@@ -196,7 +196,8 @@ function w.entity.getEntityInCrosshair(distance, flags, toIgnore)
 	end
 
 	w.utils.loadGameData("hud_textures", true)
-	DrawSprite("hud_textures", "breadcrumb", 0.5, 0.5, spriteDimensions.width, spriteDimensions.height, 0.0, 255, 255, 255, 240, false)
+	-- the crosshair dot in paper, never #fff (w_lib/nui/theme/tokens.css)
+	DrawSprite("hud_textures", "breadcrumb", 0.5, 0.5, spriteDimensions.width, spriteDimensions.height, 0.0, 237, 230, 214, 240, false)
 	local hit, endCoords, _, entityHit = w.utils.screenToWorld(distance, flags, toIgnore, 0.5, 0.5)
 	return hit, endCoords, entityHit
 end

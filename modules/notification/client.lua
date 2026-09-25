@@ -35,6 +35,19 @@ function UiFeedPostTwoTextShard(...)
   return InvokeNative(0xA6F4216AB10EB08E, ...)
 end
 
+-- ★ Ink, paper and one red on every interface (w_lib/nui/theme/tokens.css). The feed colours its TEXT
+--   with this name, and red or green words are exactly what the owner's rule forbids, so a toast is
+--   written in the game's white or greys; success and error are told by the tick or the cross and
+--   by the sound. A named colour that is not white, grey or black is drawn white.
+local function monoFeedColor(color)
+  local name = tostring(color or "COLOR_WHITE")
+  local up = name:upper()
+  if up:find("WHITE", 1, true) or up:find("GREY", 1, true) or up:find("GRAY", 1, true) or up:find("BLACK", 1, true) then
+    return name
+  end
+  return "COLOR_WHITE"
+end
+
 RegisterNetEvent(GetCurrentResourceName() .. ":client:notif",
   function(text, dict, icon, color, duration, soundset_ref, soundset_name)
     w.notif.right(text, dict, icon, color, duration, soundset_ref, soundset_name)
@@ -44,7 +57,7 @@ RegisterNetEvent(GetCurrentResourceName() .. ":client:notif",
 ---@param text string (The text of the notification)
 ---@return boolean (Always return `true`)
 function w.notif.rightSuccess(text)
-  w.notif.right(text, "hud_textures", "check", "COLOR_GREEN")
+  w.notif.right(text, "hud_textures", "check", "COLOR_WHITE")
   return true
 end
 
@@ -52,7 +65,7 @@ end
 ---@param text string (The text of the notification)
 ---@return boolean (Always return `false`)
 function w.notif.rightError(text)
-  w.notif.right(text, "menu_textures", "cross", "COLOR_RED", nil, nil, "Transaction_Negative")
+  w.notif.right(text, "menu_textures", "cross", "COLOR_WHITE", nil, nil, "Transaction_Negative")
   return false
 end
 
@@ -70,7 +83,7 @@ function w.notif.right(text, dict, icon, color, duration, soundset_ref, soundset
     text = tostring(text or ""),
     dict = tostring(dict or ""),
     icon = tostring(icon or ""),
-    color = tostring(color or "COLOR_WHITE"),
+    color = monoFeedColor(color),
     duration = tonumber(duration or 3000),
     soundset_ref = soundset_ref or "Transaction_Feed_Sounds",
     soundset_name = soundset_name or "Transaction_Positive"
@@ -118,7 +131,7 @@ function w.notif.left(title, text, dict, icon, color, duration, soundset_ref, so
     text = tostring(text or ""),
     dict = tostring(dict or ""),
     icon = tostring(icon or ""),
-    color = tostring(color or "COLOR_WHITE"),
+    color = monoFeedColor(color),
     duration = tonumber(duration or 3000),
     soundset_ref = soundset_ref or "Transaction_Feed_Sounds",
     soundset_name = soundset_name or "Transaction_Positive"

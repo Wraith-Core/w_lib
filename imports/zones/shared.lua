@@ -299,6 +299,21 @@ end)
 local DrawLine = DrawLine
 local DrawPoly = DrawPoly
 
+-- ★ Ink, paper and one red on every interface (w_lib/nui/theme/tokens.css): a zone's debug drawing is
+--   the paper step nearest in lightness to the colour it was given (paper by default), alpha kept.
+local PAPER_STEPS = { { 237, 230, 214 }, { 185, 175, 156 }, { 125, 116, 102 } }
+
+local function toPaper(r, g, b)
+    local y = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    local best, dist = PAPER_STEPS[1], math.huge
+    for i = 1, #PAPER_STEPS do
+        local t = PAPER_STEPS[i]
+        local d = math.abs(0.2126 * t[1] + 0.7152 * t[2] + 0.0722 * t[3] - y)
+        if d < dist then best, dist = t, d end
+    end
+    return best[1], best[2], best[3]
+end
+
 local function debugPoly(self)
     local rgba = self.debugColour
     local thickness = vec(0, 0, self.thickness / 2)
@@ -371,12 +386,16 @@ local function setDebug(self, bool, colour)
 
     self.debugColour = bool and
         {
-            r = glm.tointeger(colour?.r or self.debugColour?.r or 255),
-            g = glm.tointeger(colour?.g or self.debugColour?.g or 42),
+            r = glm.tointeger(colour?.r or self.debugColour?.r or 237),
+            g = glm.tointeger(colour?.g or self.debugColour?.g or 230),
             b = glm.tointeger(colour?.b or
-                self.debugColour?.b or 24),
+                self.debugColour?.b or 214),
             a = glm.tointeger(colour?.a or self.debugColour?.a or 100)
         } or nil
+
+    if self.debugColour then
+        self.debugColour.r, self.debugColour.g, self.debugColour.b = toPaper(self.debugColour.r, self.debugColour.g, self.debugColour.b)
+    end
 
     if not bool and self.debug then
         self.triangles = nil

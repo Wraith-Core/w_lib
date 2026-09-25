@@ -74,11 +74,28 @@ local markerTypes = {
 
 local vector3_zero = vector3(0, 0, 0)
 
+-- ★ Ink, paper and one red on every interface (w_lib/nui/theme/tokens.css): a marker is drawn in the
+--   paper step nearest in lightness to the colour it was given, its alpha kept. The caller's table
+--   is not touched; the marker keeps its own copy.
+local PAPER_STEPS = { { 237, 230, 214 }, { 185, 175, 156 }, { 125, 116, 102 } }
+
+local function toPaper(c)
+  local r, g, b = tonumber(c.r) or 237, tonumber(c.g) or 230, tonumber(c.b) or 214
+  local y = 0.2126 * r + 0.7152 * g + 0.0722 * b
+  local best, dist = PAPER_STEPS[1], math.huge
+  for i = 1, #PAPER_STEPS do
+    local t = PAPER_STEPS[i]
+    local d = math.abs(0.2126 * t[1] + 0.7152 * t[2] + 0.0722 * t[3] - y)
+    if d < dist then best, dist = t, d end
+  end
+  return { r = best[1], g = best[2], b = best[3], a = tonumber(c.a) or 100 }
+end
+
 local marker_mt = {
   type = 0,
   width = 2.,
   height = 1.,
-  color = {r = 255, g = 100, b = 0, a = 100},
+  color = {r = 237, g = 230, b = 214, a = 100}, -- paper (tokens.css), was orange
   rotation = vector3_zero,
   direction = vector3_zero,
   bobUpAndDown = false,
@@ -106,6 +123,8 @@ function lib.marker.new(options)
   self.type =
     type(self.type) == 'string' and markerTypes[self.type]
     or type(self.type) == 'number' and self.type or nil
+
+  if type(rawget(self, 'color')) == 'table' then self.color = toPaper(self.color) end
 
   self.width += .0
   self.height += .0
