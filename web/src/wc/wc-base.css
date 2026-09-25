@@ -266,13 +266,13 @@
 .wc-manage-btn.is-add:hover:not(:disabled){color:var(--w-ink);box-shadow:none}
 .wc-manage-btn.is-add:hover:not(:disabled):before{opacity:1}
 .wc-manage-btn.is-remove{color:var(--wc-text);box-shadow:inset 0 -2px 0 var(--w-red)}
-.wc-manage-btn.is-remove:hover:not(:disabled){color:var(--w-paper);background:var(--w-red);box-shadow:none}
+.wc-manage-btn.is-remove:hover:not(:disabled){color:var(--w-ink);background:var(--w-paper);box-shadow:inset 0 -2px 0 var(--w-red)}
 .wc-manage-empty{margin:auto;padding:24px 12px;text-align:center;color:var(--wc-text-faint);font-family:var(--w-f-text);font-size:calc(clamp(14px,1.7vh,16px) * var(--w-k-text));line-height:var(--w-lh-text)}
 .wc-manage-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-top:clamp(8px,1.2vh,14px)}
 .wc-manage-confirm{display:inline-flex;gap:8px}
-/* destructive: paper text with a red underline; filled red only under the cursor */
+/* destructive: paper text with a red underline; under the cursor the paper band, the red underline kept */
 .wc-manage-delete{display:inline-flex;align-items:center;gap:8px;cursor:pointer;border:0;padding:clamp(7px,1vh,10px) clamp(12px,1.2vw,16px);background:transparent;box-shadow:inset 0 -2px 0 var(--w-red);color:var(--wc-text);font-family:var(--w-f-label);font-weight:var(--w-wt-label);font-size:calc(clamp(10px,1.35vh,12px) * var(--w-k-label));text-transform:var(--w-label-case);letter-spacing:var(--w-label-track)}
-.wc-manage-delete:hover{background:var(--w-red);box-shadow:none;color:var(--w-paper)}
+.wc-manage-delete:hover{background:var(--w-paper);color:var(--w-ink)}
 .wc-manage-delete .wc-glyph{width:12px;height:12px}
 .wc-manage-refresh{display:grid;place-items:center;margin-inline-start:auto;width:clamp(34px,4.4vh,40px);aspect-ratio:1;flex:none;cursor:pointer;border:0;background:var(--w-ink-2);box-shadow:inset 0 0 0 1px var(--wc-line);color:var(--wc-text-dim)}
 .wc-manage-refresh:hover{color:var(--wc-text);box-shadow:inset 0 -2px 0 var(--w-paper)}

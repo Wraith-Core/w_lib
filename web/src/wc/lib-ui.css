@@ -1586,8 +1586,13 @@ body[data-store-theme] .wc-manage-btn.is-remove.wst-button {
   text-underline-offset: 0.3em;
 }
 
+/* under the cursor: the paper band like every button, ink text, the red underline kept */
+body[data-store-theme] .wc-manage-btn.is-remove.wst-button:hover:not(:disabled) {
+  color: var(--w-ink) !important;
+}
+
 body[data-store-theme] .wc-manage-btn.is-remove.wst-button:hover:not(:disabled)::before {
-  background: var(--w-red) !important;
+  background: var(--w-paper) !important;
 }
 
 /* ── 4. the alert: the pause menu's paper note ─────────────────────────────
