@@ -5,7 +5,7 @@ import React, { CSSProperties } from 'react';
  * `color` rather than the colour it was drawn in.
  *
  * ★ Masked, not an <img>. The art ships white; a mask lets one file serve a dim label, a red
- *   warning and a cream heading without three copies of the picture.
+ *   warning and a paper heading without three copies of the picture.
  *
  * `tex` is the texture's name as registered by bootstrapWcAssets -- `lock`, `tick`, `cross`,
  * `star`, `menu_icon_rank`, and the blips.

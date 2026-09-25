@@ -2,7 +2,7 @@
    The w_crafting surface language, lifted into the library frame.
 
    Everything here is the crafting bench's own CSS -- the 8-piece frame, the masked glyph, the
-   parchment plate, the RDR scrollbar -- so the two interfaces are one design rather than two
+   top-lit ink plate, the RDR scrollbar -- so the two interfaces are one design rather than two
    that resemble each other.
 
    ⚠️ The --tex-* variables these rules read are registered at boot by wc/bootstrap.ts, as
