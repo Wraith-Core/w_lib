@@ -9,7 +9,8 @@
      banner is the display role (RDR Lino / Lalezar, the loading screen's wordmark), a plain
      notice's title the title role (EB Garamond 600 / Lalezar), its line reading text
      (EB Garamond / Amiri), the region and the readings the label and figures faces. A colour
-     a script names (titleColor, a meta part's colour) is still honoured: it is the script's.
+     a script names (titleColor, a meta part's colour) is drawn on the palette (index.tsx,
+     utils/palette): its nearest paper step, and the red mark under it when it was red.
    ============================================================================ */
 
 /* ⚠️ direction: ltr is for GEOMETRY, not for text. Everything below places itself on the
@@ -344,27 +345,39 @@
 /* ══════════════════════════════════════════════════════════════════════
    The law banner -- WANTED, WITNESS, and the rest of the sheriff's vocabulary.
 
-   ★ The same plate and the same structure as the town banner; only three things change, and
-     they are the three the game changes: the name goes red, the rule under it goes bright and
-     solid, and the line beneath is a readable sentence rather than a whisper of wide capitals.
-     A bounty or a charge is meant to be read, where a region name is only meant to be placed.
+   ★ The same plate and the same structure as the town banner; only three things change: the
+     name carries the theme's one red as a RULE under it (the critical state a notice exists
+     for -- red is a mark, never the words), and the line beneath is a readable sentence rather
+     than a whisper of wide capitals. A bounty or a charge is meant to be read, where a region
+     name is only meant to be placed.
 
    ⚠️ Used as `variant = 'law'`, not as a titleColor. Colour alone would leave the subtitle set
       in the region's tiny letterspaced capitals, and 'Unarmed Assault' is not a region.
    ══════════════════════════════════════════════════════════════════════ */
 
 .wn-note.has-plate.is-law .wn-title {
-  /* ★ The display face, red: WANTED is the critical state a notice exists for, and at this size
-     red is a mark, not small red text. (It was RDR Catalogue, which has no Arabic.) */
+  /* ★ The display face in paper, like every name the game sets on its plates. (It was red
+     words; the owner's rule is ink and paper with red only as a mark.) */
   font-family: var(--w-f-display);
-  color: var(--w-red);
+  color: var(--w-paper);
   letter-spacing: 0.045em;
+  padding-bottom: clamp(6px, 0.9vh, 10px);
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95), 0 0 14px rgba(0, 0, 0, 0.6);
 }
 
+/* ★ The mark: the game's tapering divider under the name, in the theme's one red -- WANTED is
+   the critical state, and this rule is where it is said. */
 .wn-note.has-plate.is-law .wn-title:after {
-  opacity: 0.92;
-  height: 2px;
+  content: "";
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: 0;
+  height: 3px;
+  opacity: 1;
+  background-color: var(--w-red);
+  -webkit-mask: var(--tex-divider_line) center / 100% 100% no-repeat;
+  mask: var(--tex-divider_line) center / 100% 100% no-repeat;
 }
 
 .wn-note.has-plate.is-law .wn-desc {

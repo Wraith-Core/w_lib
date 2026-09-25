@@ -31,8 +31,8 @@
   --wc-hover: rgba(237, 230, 214, 0.12);
 
   --wc-red: var(--w-red, #cb0101);
-  --wc-red-deep: var(--w-red-deep, #a50101);
-  --wc-red-soft: var(--w-red-soft, rgba(203, 1, 1, 0.14));
+  --wc-red-deep: var(--w-red-deep, #cb0101); /* one red: the deep alias is the mark itself */
+  --wc-red-soft: var(--w-red-soft, rgba(237, 230, 214, 0.06)); /* a paper lift: red is never a wash */
   --wc-ok: var(--w-paper, #ede6d6);
 
   /* ⚠️ The accent MUST have a root value. It is otherwise declared only on .lb-panel and on
@@ -103,10 +103,10 @@ code {
   height: 0;
 }
 
-/* ⚠️ ox_lib's three coloured toast plates (#2980b9 / #27ae60 / #c0392b) used to sit here. No
+/* ⚠️ ox_lib's three coloured toast plates (blue / green / red) used to sit here. No
       markup in this frame or in any resource on the server ever set those classes, and a notice
-      carries no plate at all now -- its kind is told by the icon's colour (.lb-toast.is-error),
-      not by a blue or green box. */
+      carries no plate at all now -- its kind is told by its icon (a tick, a cross, a lock, a star;
+      the error's cross is the red mark), never by a coloured box. */
 
 /* ============================================================================
    The faces.

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNuiType } from '../../hooks/useNuiType';
 import KeyboardKey from './KeyboardKey';
 import PromptRow from './PromptRow';
+import { monoHtml } from '../../utils/palette';
 import './prompt.css';
 import {
   ForceHideData,
@@ -135,7 +136,7 @@ const Prompt: React.FC = () => {
 
         {group.title && (
           <div className="groupTitle crock">
-            <span dangerouslySetInnerHTML={{ __html: String(group.title) }} />
+            <span dangerouslySetInnerHTML={{ __html: monoHtml(String(group.title)) }} />
             {multiPage && <KeyboardKey kkey={group.nextPageKey} isNextPage pressed={Boolean(group.pressedKeys[group.nextPageKey])} />}
           </div>
         )}

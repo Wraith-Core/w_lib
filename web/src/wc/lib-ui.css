@@ -956,6 +956,58 @@ body {
   cursor: pointer;
 }
 
+/* ── the palette field (components/PaletteField): the theme's eight tones, paper to ink ──
+   ★ It stands where <input type="color"> stood. A swatch is its tone on a hairline; the cursor
+     rings it in paper-dim, the chosen one wears the paper ring and a tick -- the theme's
+     "current" mark, never a second band. The tick is ink on the paper tones, paper on the ink. */
+.lb-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: calc(7 * var(--lb-px));
+  padding: calc(3 * var(--lb-px)) calc(2 * var(--lb-px));
+}
+
+.lb-swatch {
+  position: relative;
+  flex: none;
+  width: calc(30 * var(--lb-px));
+  height: calc(30 * var(--lb-px));
+  padding: 0;
+  border: 1px solid var(--w-rule-2);
+  border-radius: 0;
+  background: var(--lb-swatch, var(--w-ink-3));
+  cursor: pointer;
+  transition: box-shadow var(--w-t-fast) var(--w-ease);
+}
+
+.lb-swatch:hover:not(:disabled),
+.lb-swatch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--w-ink), 0 0 0 3px var(--w-paper-dim);
+}
+
+.lb-swatch.is-on {
+  box-shadow: 0 0 0 2px var(--w-ink), 0 0 0 4px var(--w-paper);
+}
+
+.lb-swatch.is-on::after {
+  content: '';
+  position: absolute;
+  inset: 24%;
+  background-color: var(--w-ink);
+  -webkit-mask: var(--w-tex-tick) center / contain no-repeat;
+  mask: var(--w-tex-tick) center / contain no-repeat;
+}
+
+.lb-swatch.is-on:nth-child(n + 4)::after {
+  background-color: var(--w-paper);
+}
+
+.lb-swatch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ── حقل الرقم: أسهم RedM بدل أسهم المتصفّح ─────────────────────────────── */
 .lb-input input[type="number"] {
   -moz-appearance: textfield;

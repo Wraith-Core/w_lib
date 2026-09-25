@@ -1,6 +1,7 @@
 import React from 'react';
 import KeyboardKey from './KeyboardKey';
 import PriceDisplay from './PriceDisplay';
+import { monoHtml } from '../../utils/palette';
 import { PromptRow as Row } from './types';
 
 interface Props {
@@ -51,7 +52,7 @@ const PromptRow: React.FC<Props> = ({ prompt, isLeft, pressedKeys, onPress }) =>
           w_crafting, coloured words elsewhere -- so escaping it would print the tags. It comes
           from the server's own scripts, never from a player. */}
       <div className="label crock">
-        <span dangerouslySetInnerHTML={{ __html: prompt.label ?? '' }} />
+        <span dangerouslySetInnerHTML={{ __html: monoHtml(prompt.label ?? '') }} />
       </div>
 
       <PriceDisplay price={prompt.price} right />

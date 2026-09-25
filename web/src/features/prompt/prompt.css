@@ -88,6 +88,8 @@
 .wl-prompt-root .centime:after{content:"";position:absolute;display:block;background-image:url(/assets/images/money_line.png);height:.46vh;width:100%;left:0;bottom:0}
 .wl-prompt-root .gold{display:flex;align-items:center}
 .wl-prompt-root .gold img{height:1em;width:auto;margin-right:.46vh}
+/* ★ The gold bar is told by its shape, not its hue: the theme has ink, paper and one red, so the icon is drawn in paper tones (a warm grey, like the figures beside it). */
+.wl-prompt-root .gold img{filter:grayscale(1) sepia(.12) brightness(1.18) contrast(.95)}
 .wl-prompt-root .dollar{display:flex}
 .wl-prompt-root .price-item{display:flex;flex-direction:row;align-items:center}
 .wl-prompt-root .plus{padding:0 .2em}

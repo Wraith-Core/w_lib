@@ -35,24 +35,47 @@ const wraith: Tuple<string, 10> = [
   '#0B0A08', // ink
 ];
 
-/** Red is the game's only real accent: danger, refusal, the cost you cannot pay. */
+/**
+ * ★ Red is not a ramp. It is the theme's ONE mark (#CB0101): danger, refusal, the destructive
+ *   confirm, a progress tick -- never a family of reds, and never text. Mantine still asks for ten
+ *   shades wherever it reaches for 'red' (an invalid field's border, a required asterisk), so
+ *   every shade is the same mark. The error TEXT Mantine would paint with it is paper here
+ *   (InputWrapper below), with the red kept as a square in front of it.
+ */
 const blood: Tuple<string, 10> = [
-  '#F2D9D2',
-  '#E3B0A6',
-  '#D9887A',
-  '#D65A4A',
-  '#D32E24',
-  '#CB0101', // red
-  '#A50101', // red-deep
-  '#7D0101',
-  '#560000',
-  '#2E0000',
+  '#CB0101', '#CB0101', '#CB0101', '#CB0101', '#CB0101',
+  '#CB0101', '#CB0101', '#CB0101', '#CB0101', '#CB0101',
 ];
+
+/**
+ * Mantine's dark scheme draws its surfaces from `dark` (0 = text, 7 = the body) -- its own
+ * blue-grey ramp by default. Here it is the theme's: paper for text, the ink steps for surfaces.
+ */
+const dark: Tuple<string, 10> = [
+  '#EDE6D6', // paper: text
+  '#B9AF9C', // paper-dim
+  '#9B9281', // between paper-dim and paper-faint
+  '#7D7466', // paper-faint: placeholders
+  '#38322A', // ink-5: borders
+  '#27231C', // ink-4: hover
+  '#1D1A15', // ink-3: fields
+  '#15130F', // ink-2: body
+  '#0B0A08', // ink
+  '#0B0A08', // ink
+];
+
+/**
+ * ★ The owner's rule is ink, paper and one red on every interface, without exception -- so no
+ *   hue is left for a stray `color="green"` to reach. Every one of Mantine's named colours
+ *   (blue, teal, yellow...) resolves to the paper-to-ink ramp, and red to the mark.
+ */
+const MONO = ['gray', 'pink', 'grape', 'violet', 'indigo', 'blue', 'cyan', 'teal', 'green', 'lime', 'yellow', 'orange'] as const;
+const mono = Object.fromEntries(MONO.map((name) => [name, wraith])) as Record<(typeof MONO)[number], Tuple<string, 10>>;
 
 export const theme: MantineThemeOverride = {
   colorScheme: 'dark',
 
-  colors: { wraith, blood },
+  colors: { ...mono, dark, red: blood, wraith, blood },
   primaryColor: 'wraith',
   // ★ Shade 1, not the usual 6: on a near-black plate the accent is the *light* end of the
   //   ramp. Picking a mid grey would make every primary control disappear into its own panel.
@@ -181,7 +204,19 @@ export const theme: MantineThemeOverride = {
           marginBottom: 4,
         },
         description: { color: 'var(--wc-text-faint)' },
-        error: { color: 'var(--wc-red)' },
+        // ★ Paper text with the red square in front: red is a mark, never the words themselves.
+        error: {
+          color: 'var(--wc-text)',
+          '&::before': {
+            content: '""',
+            display: 'inline-block',
+            width: 6,
+            height: 6,
+            marginInlineEnd: '0.45em',
+            verticalAlign: '0.12em',
+            background: 'var(--wc-red)',
+          },
+        },
       },
     },
 

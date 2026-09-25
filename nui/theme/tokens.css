@@ -29,8 +29,8 @@
   --w-rule-2: rgba(237, 230, 214, .32);  /* stronger dividers, brushed rules */
   --w-rule-3: rgba(237, 230, 214, .5);   /* the store's divider brush */
   --w-red: #CB0101;            /* a MARK only: where the player is, destructive confirm, critical, progress tick */
-  --w-red-deep: #A50101;
-  --w-red-soft: rgba(203, 1, 1, .14);
+  --w-red-deep: #CB0101;       /* ONE red: the old deeper step is the mark itself now (kept as a name, many sheets read it) */
+  --w-red-soft: rgba(237, 230, 214, .06); /* was a red wash; red is never a fill, so the plate behind an error is a paper lift and the red stays on its rule */
   --w-note: #E3D9C4;           /* the paper note (confirm dialogs, help notes): the only light surface */
   --w-note-ink: #1C1712;
   --w-note-dim: #5E5344;

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { TextUiProps } from '../../typings';
 import Icon from '../../wc/Icon';
+import { monoHtml } from '../../utils/palette';
 
 /** Only a-z and dashes reach the class name -- the position comes from Lua and lands in markup. */
 const posClass = (position?: string) => (position || 'right-center').replace(/[^a-z-]/g, '');
@@ -34,7 +35,7 @@ const TextUI: React.FC = () => {
           </span>
         )}
 
-        <span dangerouslySetInnerHTML={{ __html: keyCaps(String(data.text ?? '')).replace(/\n/g, '<br>') }} />
+        <span dangerouslySetInnerHTML={{ __html: monoHtml(keyCaps(String(data.text ?? '')).replace(/\n/g, '<br>')) }} />
       </div>
     </div>
   );

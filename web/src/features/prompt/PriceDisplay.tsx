@@ -1,5 +1,6 @@
 import React from 'react';
 import { Price, PricePart } from './types';
+import { monoHtml } from '../../utils/palette';
 
 const STRINGS = { devise: '$', free: 'Free' };
 
@@ -97,7 +98,7 @@ const PriceDisplay: React.FC<{ price: Price; right?: boolean }> = ({ price, righ
                   <div className="icon">
                     {hasImage(part) && <img src={getImage(part.image)} alt="" />}
                     {displayLabel(part) && (
-                      <span className="label" dangerouslySetInnerHTML={{ __html: part.label ?? '' }} />
+                      <span className="label" dangerouslySetInnerHTML={{ __html: monoHtml(part.label ?? '') }} />
                     )}
                   </div>
                 </span>

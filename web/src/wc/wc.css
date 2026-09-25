@@ -250,8 +250,9 @@
   height: 42%;
 }
 
+/* (red on the close tab's hover is gone: closing a menu is not a destructive confirm) */
 .lb-close-tab:hover {
-  color: var(--wc-red);
+  color: var(--w-ink, #0b0a08);
 }
 
 /* ★ The cursor on it is the band's colour: paper with the mark in ink, the same answer every

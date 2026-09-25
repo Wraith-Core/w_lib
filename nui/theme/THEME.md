@@ -35,7 +35,7 @@ Order: the page's own CSS, then `store-theme.css` (its `!important` primitives m
   - Ink: `--w-ink #0B0A08`, `--w-ink-2 #15130F`, `--w-ink-3 #1D1A15`, `--w-ink-4 #27231C`, `--w-ink-5 #38322A`.
   - Paper: `--w-paper #EDE6D6`, `--w-paper-lit #F6F1E6`, `--w-paper-dim #B9AF9C`, `--w-paper-faint #7D7466`.
   - Rules: `--w-rule` (.16), `--w-rule-2` (.32), `--w-rule-3` (.5).
-  - Red, a mark only: `--w-red #CB0101`, `--w-red-deep`, `--w-red-soft`.
+  - Red, a mark only: `--w-red #CB0101`. `--w-red-deep` is the same `#CB0101` (one red, no second step). `--w-red-soft` is a paper lift (`rgba(237,230,214,.06)`), not a red wash: the plate behind an error stays ink and the red stays on its rule, tick or underline.
   - The paper note: `--w-note #E3D9C4`, `--w-note-ink`, `--w-note-dim`, `--w-note-rule`, `--w-note-glow` (its inset burn, `rgba(90,70,40,.28)`).
   - Other: `--w-strip`, `--w-scrim` (`rgba(6,5,4,.72)`), `--w-shadow`, `--w-text-shadow`.
   - "White" is always paper. Never use `#fff` or a neutral grey.
@@ -109,6 +109,10 @@ Red has five uses only:
 - the progress tick.
 
 Never use red for text.
+
+## Colours that arrive
+
+Ink, paper and one red on every interface, without exception. A colour a script sends (a notice's `titleColor`, a reading's colour, a `<span style="color:…">` in a description, a house colour, a colour a player picked in an older build) is drawn on the palette at render time: the nearest tone by lightness, alpha kept. Text takes a paper step; a red that arrives as text becomes paper text with a red underline. Stored values are never rewritten. A colour field offers the eight tones only (paper to ink), never the machine's full-spectrum picker, and keeps its value until a tone is picked. w_lib's frame does this in `web/src/utils/palette.ts` (`toPalette`, `textStyle`, `monoHtml`) and `web/src/components/PaletteField.tsx`.
 
 ## Primitives (`base.css`)
 

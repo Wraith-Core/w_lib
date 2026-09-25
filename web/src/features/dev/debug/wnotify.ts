@@ -20,7 +20,7 @@ export const debugWNotify = () => {
     placement: 'middle-right',
     duration: 5000,
     useBackground: false,
-    titleColor: '#34b895',
+    titleColor: '#EDE6D6',
   });
 };
 
@@ -36,12 +36,12 @@ export const debugWNotifyVariants = () => {
   // ★ meta is filled in by Lua in game (the clock and the temperature); the browser preview
   //   has no game to ask, so the demo supplies one.
   show({ title: 'Valentine', description: 'The Heartlands, New Hanover', meta: [
-          { text: '09:40AM', color: '#ffffff' },
-          { text: '20°C', color: '#d8b34a' },
-          { text: '1KPH', color: '#b9c9d4' },
+          { text: '09:40AM', color: '#EDE6D6' },
+          { text: '20°C', color: '#B9AF9C' },
+          { text: '1KPH', color: '#7D7466' },
         ], placement: 'top-center', useBackground: true }, 0);
   show({ title: 'إشعار عربي', description: 'من اليمين إلى اليسار', icon: 'lock', placement: 'middle-left', isRTL: true }, 300);
-  show({ title: 'Refused', description: 'Not enough on you.', icon: 'cross', placement: 'bottom-center', titleColor: '#e74c3c' }, 600);
+  show({ title: 'Refused', description: 'Not enough on you.', icon: 'cross', placement: 'bottom-center', titleColor: '#CB0101' }, 600);
   show({ description: 'No title, no icon — description only.', placement: 'top-left' }, 900);
 };
 

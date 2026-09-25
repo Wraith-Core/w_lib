@@ -5,6 +5,7 @@ import { InputProps, OptionValue } from '../../typings';
 import { Glyph, Head, Layer, Panel, play } from '../../wc/Panel';
 import Icon from '../../wc/Icon';
 import DateFields from '../../components/DateFields';
+import PaletteField from '../../components/PaletteField';
 import { useLocales } from '../../providers/LocaleProvider';
 
 type Row = InputProps['rows'][number] & Record<string, any>;
@@ -225,9 +226,26 @@ const InputDialog: React.FC = () => {
               );
             }
 
+            if (type === 'color') {
+              // ★ The palette's eight tones, not the machine's full-spectrum picker (see
+              //   components/PaletteField). The row keeps its default until a tone is picked.
+              return (
+                <div className="lb-field" key={i}>
+                  <FieldLabel row={row} />
+                  <PaletteField
+                    value={values[i]}
+                    rtl={rtl}
+                    label={row.label}
+                    disabled={row.disabled}
+                    firstRef={first}
+                    onChange={(v) => set(i, v)}
+                  />
+                </div>
+              );
+            }
+
             const htmlType =
               type === 'number' ? 'number'
-              : type === 'color' ? 'color'
               : type === 'time' ? 'time'
               : row.password ? 'password'
               : 'text';

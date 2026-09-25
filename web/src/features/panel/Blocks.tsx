@@ -1,6 +1,8 @@
 import React from 'react';
 import Icon from '../../wc/Icon';
 import DateFields from '../../components/DateFields';
+import PaletteField from '../../components/PaletteField';
+import { READING_TONES, toPalette } from '../../utils/palette';
 import { Bar, Glyph } from '../../wc/Panel';
 
 /**
@@ -29,7 +31,7 @@ export interface Field {
   /**
    * ★ colour, time and date are here because two of the five panels needed them and neither
    *   could be faked: w_kingsdom picks a crest colour from a swatch, wraith_cinema schedules a
-   *   showing at a time. A text field for either asks the player to type '#8c1d1d' or '19:30'
+   *   showing at a time. A text field for either asks the player to type a hex code or '19:30'
    *   correctly, which is a worse control, not a simpler one.
    */
   type?: 'text' | 'number' | 'select' | 'checkbox' | 'textarea' | 'color' | 'time' | 'date';
@@ -116,7 +118,7 @@ export interface Block {
   /** hero: the emblem beside the name -- a crest, a screen, a maker's mark. */
   image?: string;
   icon?: string;
-  /** hero: a colour behind the emblem, for a crest or a house colour. */
+  /** hero: a colour behind the emblem, for a crest or a house colour (drawn as its nearest palette tone). */
   color?: string;
   subtitle?: string;
 
@@ -427,11 +429,28 @@ const FormField: React.FC<{ field: FormFieldSpec; ctx: Ctx }> = ({ field, ctx })
     );
   }
 
+  if (field.type === 'color') {
+    // ★ The palette's eight tones, not the machine's full-spectrum picker (components/PaletteField).
+    //   The script keeps its stored colour until the player picks a tone.
+    return (
+      <PaletteField
+        value={text}
+        rtl={document.documentElement.dir === 'rtl'}
+        label={field.label}
+        disabled={field.disabled}
+        onChange={(v) => {
+          setText(v);
+          ctx.onField(field.id, v);
+        }}
+      />
+    );
+  }
+
   const isNumber = field.type === 'number';
   return (
     <span className="lb-input">
       <input
-        type={isNumber ? 'number' : field.type === 'color' || field.type === 'time' ? field.type : 'text'}
+        type={isNumber ? 'number' : field.type === 'time' ? field.type : 'text'}
         dir={field.type === 'text' || field.type === undefined ? undefined : 'ltr'}
         value={text}
         placeholder={field.placeholder}
@@ -451,12 +470,17 @@ const FormField: React.FC<{ field: FormFieldSpec; ctx: Ctx }> = ({ field, ctx })
 
 const Form: React.FC<{ block: Block; ctx: Ctx }> = ({ block, ctx }) => (
   <div className="wl-panel-form">
-    {block.fields?.map((field) => (
-      <label className={`wl-panel-field${field.type === 'checkbox' ? ' is-check' : ''}`} key={field.id}>
-        {field.label && <span className="wl-panel-row-label">{field.label}</span>}
-        <FormField field={field} ctx={ctx} />
-      </label>
-    ))}
+    {block.fields?.map((field) => {
+      // ⚠️ A colour row is not a <label>: a click on a label's text is forwarded to the first
+      //    control inside it, which for the swatches would pick the first tone on its own.
+      const Row = field.type === 'color' ? 'div' : 'label';
+      return (
+        <Row className={`wl-panel-field${field.type === 'checkbox' ? ' is-check' : ''}`} key={field.id}>
+          {field.label && <span className="wl-panel-row-label">{field.label}</span>}
+          <FormField field={field} ctx={ctx} />
+        </Row>
+      );
+    })}
   </div>
 );
 
@@ -513,7 +537,12 @@ const Chips: React.FC<{ block: Block; ctx: Ctx }> = ({ block, ctx }) => (
  */
 const Hero: React.FC<{ block: Block }> = ({ block }) => (
   <div className="wl-panel-hero">
-    <span className="wc-slot wl-panel-crest" style={block.color ? { ['--wl-crest' as string]: block.color } : undefined}>
+    {/* ★ The house colour on the palette: whatever hue a script stored is drawn as its nearest
+        paper tone (utils/palette), so the crest's frame stays visible on the ink. */}
+    <span
+      className="wc-slot wl-panel-crest"
+      style={toPalette(block.color, READING_TONES) ? { ['--wl-crest' as string]: toPalette(block.color, READING_TONES) } : undefined}
+    >
       <Icon icon={block.image ?? block.icon} fallback="menu_icon_rank" />
     </span>
 

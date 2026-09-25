@@ -37,7 +37,11 @@ const App: React.FC = () => {
   const themeWithConfig = useMemo(
     () => ({
       ...theme,
-      primaryColor: theme.colors?.[config.primaryColor] ? config.primaryColor : theme.primaryColor,
+      // ★ Red is the theme's mark, not an accent: a convar naming it keeps the paper ramp.
+      primaryColor:
+        theme.colors?.[config.primaryColor] && config.primaryColor !== 'red' && config.primaryColor !== 'blood'
+          ? config.primaryColor
+          : theme.primaryColor,
       primaryShade: config.primaryShade ?? theme.primaryShade,
 
       /* ★ Mantine reads dir for the components that decide a side in JavaScript rather than in

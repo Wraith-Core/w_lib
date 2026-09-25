@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { NotificationProps } from '../../typings';
 import Icon from '../../wc/Icon';
+import { monoHtml } from '../../utils/palette';
 
 /** The texture that stands for each kind when Lua does not name one. */
 const TOAST_ICON: Record<string, string> = {
@@ -64,7 +65,7 @@ const Notifications: React.FC = () => {
                   {toast.description && (
                     <span
                       className="lb-toast-desc"
-                      dangerouslySetInnerHTML={{ __html: String(toast.description).replace(/\n/g, '<br>') }}
+                      dangerouslySetInnerHTML={{ __html: monoHtml(String(toast.description).replace(/\n/g, '<br>')) }}
                     />
                   )}
                 </span>

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNuiEvent } from '../../hooks/useNuiEvent';
 import Icon from '../../wc/Icon';
+import { monoHtml, READING_TONES, textStyle } from '../../utils/palette';
 import './wnotify.css';
 
 /**
@@ -31,15 +32,17 @@ interface NotifyData {
   useBackground?: boolean;
   contentAlignment?: string;
   isRTL?: boolean;
-  /** 'law' is the wanted/witness banner -- red name over a white rule. */
+  /** 'law' is the wanted/witness banner -- the name in paper over the red rule. */
   variant?: string;
   /**
    * The third line -- the clock, the temperature, the wind.
    *
-   * ★ A plain string, or PARTS with their own colours. The game colours that line piece by
-   *   piece: the clock goes dark blue after ten at night, the temperature is gold when it is
-   *   warm and blue when it is not. One flat string cannot say that, and a second field for the
-   *   colours would be a second name for the same line.
+   * ★ A plain string, or PARTS with their own colours. A script colours that line piece by
+   *   piece (the clock after ten at night, the temperature when it is warm). The colours are
+   *   drawn on the palette (utils/palette): each part takes the paper step nearest to the colour
+   *   it was sent -- a night clock reads fainter than a noon one -- and a red one keeps the red
+   *   mark as an underline. One flat string cannot say that, and a second field for the colours
+   *   would be a second name for the same line.
    */
   meta?: string | MetaPart[];
   titleColor?: string;
@@ -48,7 +51,7 @@ interface NotifyData {
 
 interface MetaPart {
   text: string;
-  /** Any CSS colour. Left out, it takes the line's own. */
+  /** Any CSS colour, drawn as its nearest paper step. Left out, it takes the line's own. */
   color?: string;
 }
 
@@ -218,20 +221,20 @@ const WNotify: React.FC = () => {
                 dir={toast.isRTL ? 'rtl' : 'ltr'}
                 style={{ textAlign: (toast.contentAlignment as React.CSSProperties['textAlign']) || 'center' }}
               >
-                {/* ⚠️ The colour is set inline ONLY when Lua names one. It used to default to
-                    #ffffff here, and an inline style beats every stylesheet rule -- so the law
-                    banner could not make its own name red without !important. A default belongs
-                    in the stylesheet; the inline value is for the override. */}
+                {/* ⚠️ The colour is set inline ONLY when Lua names one -- a default belongs in the
+                    stylesheet, the inline value is for the override. And the override is drawn
+                    on the palette (utils/palette): the paper step nearest to what the script sent,
+                    with the red mark underneath when it sent red. Never a hue, never red words. */}
                 {toast.title && (
-                  <span className="wn-title" style={toast.titleColor ? { color: toast.titleColor } : undefined}>
+                  <span className="wn-title" style={toast.titleColor ? textStyle(toast.titleColor) : undefined}>
                     {toast.title}
                   </span>
                 )}
                 {toast.description && (
                   <Typed
                     className="wn-desc"
-                    style={toast.descriptionColor ? { color: toast.descriptionColor } : undefined}
-                    html={String(toast.description).replace(/\n/g, '<br>')}
+                    style={toast.descriptionColor ? textStyle(toast.descriptionColor) : undefined}
+                    html={monoHtml(String(toast.description).replace(/\n/g, '<br>'))}
                   />
                 )}
 
@@ -249,7 +252,7 @@ const WNotify: React.FC = () => {
                                 script sends three readings and never has to think about the bars
                                 between them -- and they cannot end up a different colour. */}
                             {i > 0 && <span className="wn-meta-sep">|</span>}
-                            <span style={part.color ? { color: part.color } : undefined}>{part.text}</span>
+                            <span style={part.color ? textStyle(part.color, READING_TONES) : undefined}>{part.text}</span>
                           </React.Fragment>
                         ))}
                   </span>
@@ -262,14 +265,14 @@ const WNotify: React.FC = () => {
         </div>
       ))}
 
-      {text2D && <div className="wn-text2d" dangerouslySetInnerHTML={{ __html: text2D }} />}
+      {text2D && <div className="wn-text2d" dangerouslySetInnerHTML={{ __html: monoHtml(text2D) }} />}
 
       {list3D.map((t) => (
         <div
           key={t.id}
           className="wn-text3d"
           style={{ left: `${t.x * 100}%`, top: `${t.y * 100}%` }}
-          dangerouslySetInnerHTML={{ __html: t.text }}
+          dangerouslySetInnerHTML={{ __html: monoHtml(t.text) }}
         />
       ))}
     </div>
