@@ -34,11 +34,14 @@ interface ProgressbarProps {
  */
 const R = 44;
 const C = 2 * Math.PI * R;
+/** The red tick at the leading edge of the fill -- the loading bar's one red, on the ring. */
+const TICK = 2.4;
 
 const Progressbar: React.FC = () => {
   const [data, setData] = useState<ProgressbarProps | null>(null);
 
   const fillRef = useRef<SVGCircleElement>(null);
+  const tickRef = useRef<SVGCircleElement>(null);
   const valueRef = useRef<HTMLElement>(null);
   const frame = useRef<number | null>(null);
 
@@ -65,6 +68,8 @@ const Progressbar: React.FC = () => {
 
     // Written straight to the nodes: the ring moves every frame and React need not know.
     fillRef.current?.setAttribute('stroke-dashoffset', String(C * (1 - clamped)));
+    // The dash covers [C*ratio - TICK, C*ratio]: the end of the fill, wherever it has reached.
+    tickRef.current?.setAttribute('stroke-dashoffset', String(TICK - C * clamped));
     if (valueRef.current) valueRef.current.textContent = `${Math.round(clamped * 100)}%`;
   };
 
@@ -116,6 +121,7 @@ const Progressbar: React.FC = () => {
           <svg viewBox="0 0 100 100">
             <circle className="lb-core-track" cx="50" cy="50" r={R} />
             <circle ref={fillRef} className="lb-core-fill" cx="50" cy="50" r={R} strokeDasharray={C} strokeDashoffset={C} />
+            <circle ref={tickRef} className="lb-core-tick" cx="50" cy="50" r={R} strokeDasharray={`${TICK} ${C}`} strokeDashoffset={TICK} />
           </svg>
 
           <span className="lb-core-disc">

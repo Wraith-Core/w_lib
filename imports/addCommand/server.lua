@@ -30,6 +30,106 @@ AddEventHandler('playerJoining', function()
     TriggerClientEvent('chat:addSuggestions', source, registeredCommands)
 end)
 
+-------------
+-- 'playerId' params name a player by his CITIZEN id (players.citizenid), not his server id.
+--
+-- Why: a server id changes on every connection and, since the citizen id became plain digits,
+-- the two collide. '/bring 12' either answered "invalid playerId" to a citizen id or grabbed
+-- whoever held server id 12. Staff work with the citizen id only, so this one parser is where
+-- every command built on the type learns it:
+--   '12', 'omg95204'   the citizen id: the character's current server id when he is in the game
+--   '#7'               an explicit server id (any connected player, even one still choosing a
+--                      character, so a stuck player can still be reached)
+--   'me'               the caller
+-- The handler still receives a server id, so those commands keep working unchanged. A citizen who
+-- is not connected fails here with the 'offline' reason: a command that can act on an offline
+-- character declares the param with NO type (the raw word arrives) and resolves it with
+-- w.citizen.resolve. Not 'string': that type refuses anything tonumber reads, so '12' never
+-- reaches the handler.
+-------------
+
+-- w.citizen runs inside this resource (a module of the w layer). If that layer failed to load
+-- here, the same resolver still answers from w_lib's VM through its exports.
+local function citizenModule()
+    local ok, mod = pcall(function() return w and w.citizen end)
+    if ok and type(mod) == 'table' and mod.requireOnline and mod.parse then return mod end
+    return nil
+end
+
+---@param source number the caller (0 = console)
+---@param arg string
+---@return number|false value the server id, or false
+---@return string|nil reason 'invalid_id' | 'not_found' | 'offline'
+---@return table|nil offline the offline character, when the reason is 'offline'
+local function parsePlayerId(source, arg)
+    local citizen = citizenModule()
+    local kind, value
+
+    if citizen then
+        kind, value = citizen.parse(arg)
+    else
+        -- only the two forms that need no lookup are read here; the rest goes to w_lib
+        local text = tostring(arg):gsub('^%s+', ''):gsub('%s+$', '')
+        local n = text:match('^#%s*(%d+)$')
+        if n then
+            kind, value = 'server', math.tointeger(tonumber(n))
+        elseif text:lower() == 'me' then
+            kind = 'self'
+        else
+            kind, value = 'citizen', text
+        end
+    end
+
+    if kind == 'self' then
+        -- the console is nobody: 'me' from it names no player
+        if source and source > 0 and DoesPlayerExist(source--[[@as string]]) then return source end
+        return false, 'invalid_id'
+    end
+
+    if kind == 'server' then
+        if value and DoesPlayerExist(value--[[@as string]]) then return value end
+        return false, 'not_found'
+    end
+
+    if kind ~= 'citizen' then return false, 'invalid_id' end
+
+    local target, reason, offline
+    if citizen then
+        target, reason, offline = citizen.requireOnline(value)
+    else
+        local ok
+        ok, target, reason, offline = pcall(function() return exports.w_lib:CitizenRequireOnline(value) end)
+        if not ok then target, reason, offline = nil, 'not_found', nil end
+    end
+
+    if target and target.source then return target.source end
+    return false, reason or 'not_found', offline
+end
+
+--- Tells the caller why the player argument was refused. The old parser only traced to the server
+--- console, so a staff member typing an id saw nothing happen at all.
+---@param source number
+---@param reason string
+---@param offline table|nil
+local function tellCaller(source, reason, offline)
+    local citizen = citizenModule()
+    local player = source and source > 0 and source or nil
+    local text, title = reason, nil
+
+    if citizen then
+        text = citizen.reasonText(reason, player)
+        if offline then text = ('%s: %s'):format(citizen.label(offline), text) end
+        title = citizen.text('label', player)
+    end
+
+    if player then
+        -- w_lib's own client answers this event, so it shows even for a resource with no client half
+        TriggerClientEvent('w_lib:notify', player, title, text, 'error')
+    else
+        print(('[%s] %s'):format(GetCurrentResourceName(), text))
+    end
+end
+
 ---@param source number
 ---@param args table
 ---@param raw string
@@ -41,17 +141,17 @@ local function parseArguments(source, args, raw, params)
     local paramsNum = #params
     for i = 1, paramsNum do
         local arg, param = args[i], params[i]
-        local value
+        local value, reason, offline
 
         if param.type == 'number' then
             value = tonumber(arg)
         elseif param.type == 'string' then
             value = not tonumber(arg) and arg
         elseif param.type == 'playerId' then
-            value = arg == 'me' and source or tonumber(arg)
+            value = false
 
-            if not value or not DoesPlayerExist(value--[[@as string]]) then
-                value = false
+            if arg ~= nil then
+                value, reason, offline = parsePlayerId(source, arg)
             end
         elseif param.type == 'longString' and i == paramsNum then
             if arg then
@@ -65,6 +165,7 @@ local function parseArguments(source, args, raw, params)
         end
 
         if not value and (not param.optional or param.optional and arg) then
+            if reason then tellCaller(source, reason, offline) end
             return Citizen.Trace(("^1command '%s' received an invalid %s for argument %s (%s), received '%s'^0\n"):format(string.strsplit(' ', raw) or raw, param.type, i, param.name, arg))
         end
 
@@ -75,6 +176,16 @@ local function parseArguments(source, args, raw, params)
     end
 
     return args
+end
+
+--- The hint shown for a 'playerId' param: what to type (the citizen id, '#' for a server id) in
+--- the server's language, instead of the bare type name that told staff to type a server id.
+---@return string
+local function playerIdHint()
+    local citizen = citizenModule()
+    local ok, text = pcall(function() return citizen and citizen.text('help') end)
+    if ok and type(text) == 'string' and text ~= '' and text ~= 'help' then return text end
+    return 'citizen ID, or #server ID'
 end
 
 ---@param commandName string
@@ -88,10 +199,11 @@ local function buildSuggestion(commandName, properties)
 
         for i = 1, #properties.params do
             local param = properties.params[i]
+            local kind = param.type == 'playerId' and playerIdHint() or param.type and ('type: %s'):format(param.type)
             hints[i] = {
                 name = param.name,
-                help = param.type
-                    and (param.help and ('%s (type: %s)'):format(param.help, param.type) or ('(type: %s)'):format(param.type))
+                help = kind
+                    and (param.help and ('%s (%s)'):format(param.help, kind) or ('(%s)'):format(kind))
                     or param.help,
             }
         end

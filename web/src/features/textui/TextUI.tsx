@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
 import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { TextUiProps } from '../../typings';
-import Frame from '../../wc/Frame';
 import Icon from '../../wc/Icon';
 
 /** Only a-z and dashes reach the class name -- the position comes from Lua and lands in markup. */
 const posClass = (position?: string) => (position || 'right-center').replace(/[^a-z-]/g, '');
+
+/**
+ * ★ "[E] - Open" names a key, so it is drawn as one: the theme's key cap (lib-ui.css .lb-key,
+ *   the loading screen's kbd). Only a short run of letters, digits or a key word in square
+ *   brackets qualifies, and never one followed by "(" -- that is a markdown link, not a key.
+ */
+const keyCaps = (html: string) =>
+  html.replace(/\[([A-Za-z0-9+\-_ ]{1,12})\](?!\()/g, (_, key: string) => `<kbd class="lb-key">${key.trim()}</kbd>`);
 
 const TextUI: React.FC = () => {
   const [data, setData] = useState<TextUiProps | null>(null);
@@ -20,7 +27,6 @@ const TextUI: React.FC = () => {
   return (
     <div className="lb-layer" data-layer="textui">
       <div className={`lb-textui lb-pos-${posClass(data.position)}`}>
-        <Frame px={9} opacity={0.45} />
 
         {icon && (
           <span className="lb-textui-icon">
@@ -28,7 +34,7 @@ const TextUI: React.FC = () => {
           </span>
         )}
 
-        <span dangerouslySetInnerHTML={{ __html: String(data.text ?? '').replace(/\n/g, '<br>') }} />
+        <span dangerouslySetInnerHTML={{ __html: keyCaps(String(data.text ?? '')).replace(/\n/g, '<br>') }} />
       </div>
     </div>
   );

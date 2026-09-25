@@ -32,6 +32,25 @@ w.cache.component = {
 -------------
 -- LOCAL FUNCTIONS
 -------------
+-- Entity(ped).state throws (native 0x3BB78F05) on a ped that is not networked, a script's
+-- local preview: such a ped keeps its wearable states here instead, dropped with the ped.
+local LocalBag = {}
+LocalBag.__index = LocalBag
+function LocalBag:set(key, value) rawset(self, key, value) end
+local localBags = {}
+local function bagOf(ped)
+  if NetworkGetEntityIsNetworked(ped) then return Entity(ped).state end
+  local bag = localBags[ped]
+  if not bag then
+    for handle in pairs(localBags) do
+      if not DoesEntityExist(handle) then localBags[handle] = nil end
+    end
+    bag = setmetatable({}, LocalBag)
+    localBags[ped] = bag
+  end
+  return bag
+end
+
 local function SetTextureOutfitTints(ped, category, palette, tint0, tint1, tint2)
   if not palette then return end
   if palette == 0 then return end
@@ -242,7 +261,7 @@ end
 local function updateComponentWearableState(ped, category, hash, state)
   category = w.component.getCategoryNameFromHash(category)
   if state == 0 then
-    Entity(ped).state:set("wearableState:" .. category, nil)
+    bagOf(ped):set("wearableState:" .. category, nil)
     if hash then
       w.component.remove(ped, category)
       w.component.apply(ped, category, hash)
@@ -250,7 +269,7 @@ local function updateComponentWearableState(ped, category, hash, state)
     return
   end
   state = GetHashFromString(state)
-  Entity(ped).state:set("wearableState:" .. category, state)
+  bagOf(ped):set("wearableState:" .. category, state)
   UpdateShopItemWearableState(ped, type(hash) == "table" and hash.hash or hash, state)
 end
 
@@ -324,7 +343,7 @@ local function reapplyComponentStats(ped)
     if w.component.isCategoryAClothes(category) then
       local isEquiped, index = w.component.isCategoryEquiped(ped, category)
       if isEquiped then
-        local state = Entity(ped).state["wearableState:" .. category] or "base"
+        local state = bagOf(ped)["wearableState:" .. category] or "base"
         local stateName = w.component.getWearableStateNameFromHash(state)
         if stateName ~= "base" and table.includes(list, stateName) then
           local hash = GetShopItemComponentAtIndex(ped, index)
@@ -336,6 +355,34 @@ local function reapplyComponentStats(ped)
       end
     end
   end
+end
+
+-- The hair's own wearable state, put back after the clothing states were re-applied.
+-- The long MP hair styles (only those) have *_TUCKED states in the game's shop item data (their
+-- own "_tuck" drawables), and the game switches an item to one through the shop-item triggers of
+-- other garments, the way a raised bandana tucks the beard (the neckwear fix in setWearableState
+-- undoes that one). A tucked long hair is drawn without its crown, meant to sit under a hat. Which
+-- garment tucks it is inferred, not proven: the raised bandana, or a hat that then left the head
+-- (RemoveTagFromMetaPed and the game's knock-off do not undo a trigger). reapplyComponentStats also
+-- sets the remembered neckwear state again after every component change, which can fire the
+-- trigger again, and the hair is not a clothing category: nothing moved it back. It gets back the
+-- state chosen for it (the bag, e.g. pomade) or base. Under a hat the crown is hidden, and the
+-- game's tucked hair is left as it is.
+---@param reportedOnly? boolean (only a state the game reports is corrected: the re-check after a commit)
+---@return boolean (true when the hair's state was changed: the caller refreshes the ped)
+local function reapplyHairState(ped, reportedOnly)
+  if IsMetaPedUsingComponentCategory(ped, "hats") then return false end
+  local index = getComponentIndexOfCategory(ped, "hair")
+  if index < 0 then return false end
+  local hash, current = GetShopItemComponentAtIndex(ped, index)
+  if not hash or hash == 0 then return false end
+  local wanted = bagOf(ped)["wearableState:hair"] or `base`
+  if current == wanted then return false end
+  -- a state the game did not report (0) is set too, since setting base again is harmless; the
+  -- re-check after the commit skips it, or it would commit the ped a second time on every pass
+  if reportedOnly and (not current or current == 0) then return false end
+  UpdateShopItemWearableState(ped, hash, wanted)
+  return true
 end
 
 local function reapplyComponentsColor(ped)
@@ -355,9 +402,13 @@ local function reapplyCached(ped)
       refreshPed(ped)
       -- w.component.waitPedLoaded(ped)
       reapplyComponentStats(ped)
+      reapplyHairState(ped)
       reapplyComponentsColor(ped)
       w.cache.component.color[ped] = nil
       refreshPed(ped)
+      -- again on the committed ped: should the game resolve the trigger of the state set just above
+      -- on the commit rather than on the state change, the hair is tucked only now, after the check
+      if reapplyHairState(ped, true) then refreshPed(ped) end
     end)
 end
 
@@ -495,9 +546,9 @@ function w.component.apply(ped, category, _data)
   if cached and cached[categoryHash] then
     if categoryName ~= "unknown" then
       local stateName = w.component.getWearableStateNameFromHash(cached[categoryHash].wearableStateHash)
-      if not Entity(ped).state["wearableState:" .. categoryName] and stateName ~= "base" and table.includes(list, stateName) then
+      if not bagOf(ped)["wearableState:" .. categoryName] and stateName ~= "base" and table.includes(list, stateName) then
         dprint("Save the wearable state of %s: %s", categoryName, tostring(stateName))
-        Entity(ped).state["wearableState:" .. categoryName] = cached[categoryHash].wearableStateHash
+        bagOf(ped)["wearableState:" .. categoryName] = cached[categoryHash].wearableStateHash
       end
     end
   end
@@ -538,7 +589,7 @@ function w.component.apply(ped, category, _data)
         SetMetaPedTag(ped, data.drawable, data.albedo, data.normal, data.material, data.palette, data.tint0, data.tint1, data.tint2)
       end
 
-      local state = data.wearableState or Entity(ped).state["wearableState:" .. category]
+      local state = data.wearableState or bagOf(ped)["wearableState:" .. category]
       if state and (data.wearableState or state ~= `base`) then
         updateComponentWearableState(ped, category, data, state)
       end
@@ -835,7 +886,7 @@ function w.component.getWearableState(ped, category)
   local _, wearableState = GetShopItemComponentAtIndex(ped, index)
   if wearableState == 0 then
     local categoryName = w.component.getCategoryNameFromHash(category)
-    wearableState = Entity(ped).state["wearableState:" .. categoryName]
+    wearableState = bagOf(ped)["wearableState:" .. categoryName]
   end
   local wearableStatesName = w.component.getWearableStateNameFromHash(wearableState)
   return wearableStatesName, wearableState
@@ -943,6 +994,18 @@ w.component.isLoadoutOnRight = w.component.loadoutIsOnRight
 --- @return boolean (Return `true` if the hair is pomaded)
 function w.component.hairIsPomade(ped)
   return w.component.getWearableState(ped, "hair") == "pomade"
+end
+
+--- A function to put the hair back in its own wearable state (the one set with setWearableState, else base)
+--- when no hat covers the crown: a garment's trigger (a raised bandana, a hat that has left the head)
+--- can have tucked a long hair, which is then drawn without its crown. The delayed refresh after every
+--- component change does it too. Call it after a hat left the head without w.component (knocked off).
+--- @param ped integer (The entity ID)
+--- @return boolean (Return `true` when the hair's state was changed: refresh the ped afterwards)
+function w.component.restoreHairState(ped)
+  ped = ped or PlayerPedId()
+  if not ped or ped == 0 or not DoesEntityExist(ped) then return false end
+  return reapplyHairState(ped)
 end
 
 -------------

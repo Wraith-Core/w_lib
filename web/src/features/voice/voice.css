@@ -1,174 +1,100 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   Voice interaction.
+   Voice interaction -- the dialogue card, the microphone, the heard line.
 
-   ★ Everything here sits OVER the world with no plate of its own except where legibility
-     demands one -- the same rule the RDR floating notice follows. A speak-to-play system is on
-     screen while the player is walking around and talking; it cannot behave like a menu.
+   ★ ONE card per person: their name over a thin rule, what they are saying, then what you can
+     say to them as a plain numbered list under its group labels. Ink plate, paper text, hairline
+     rules -- no pills, no rounded buttons, no emblem, no glow. The one red is the short tick under
+     the name and the edge of a line that was not understood.
 
-   ⚠️ direction: ltr on the root, for the same reason wnotify has it: every position below is
-      geometry, and geometry must not follow the language. The spoken line takes the document
-      direction back, because that one IS a sentence.
+   ⚠️ direction: ltr on the root, for the same reason wnotify has it: every position here is
+      geometry, and geometry must not follow the language. The card and the dock set their own
+      dir from the locale, because what is inside them IS language.
+
+   ⚠️ Arabic is never letter-spaced and never uppercased. Every label that tracks its Latin gets an
+      .is-ar twin that resets both; the class is set per string in index.tsx, so an English name in
+      an Arabic card still gets the Latin face.
    ══════════════════════════════════════════════════════════════════════════ */
 
 .wv-root {
+  /* ★ The theme's tokens (w_lib/nui/theme/tokens.css). This card was the first piece of the frame
+     drawn on the new palette; its private copies of the values are now the shared ones. */
+  --wv-ink: var(--w-ink);
+  --wv-ink-2: var(--w-ink-2);
+  --wv-paper: var(--w-paper);
+  --wv-paper-dim: var(--w-paper-dim);
+  --wv-paper-faint: rgba(237, 230, 214, 0.5);
+  --wv-rule: var(--w-rule);
+  --wv-rule-strong: var(--w-rule-2);
+  --wv-red: var(--w-red);
+
+  /* The faces by role. Latin: the name in the title face (EB Garamond), what is said in the text
+     face, labels in the label face; Arabic: Lalezar for the name, Amiri for what is said, Tajawal
+     for the small labels -- a naskh at label size is too fine to read over a moving world.
+     The -ar- stacks are Arabic-first whatever the card's direction (a string is tagged .is-ar by
+     its script in index.tsx, so an English name in an Arabic card keeps its Latin face). */
+  --wv-face-display: var(--w-f-title);
+  --wv-face-text: var(--w-f-text);
+  --wv-face-label: var(--w-f-label);
+  /* Numerals and the key letter: the figures face (EB Garamond lining) -- at 11-13px in the faint
+     number colour the slab's "11" read as "II" and the catalogue face's figures blur. */
+  --wv-face-num: var(--w-f-figure);
+  --wv-face-ar-display: var(--w-f-ar-display);
+  --wv-face-ar-text: var(--w-f-ar-text);
+  --wv-face-ar-label: var(--w-f-ar-label);
+
   position: fixed;
   inset: 0;
   z-index: 24;
   direction: ltr;
   pointer-events: none;
-  font-family: var(--wc-font-display);
+  color: var(--wv-paper);
+  font-family: var(--wv-face-text);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ── the plate above an NPC ────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   The card
+   ══════════════════════════════════════════════════════════════════════════ */
 
-/* ★ translate(-50%, -100%) puts the balloon ABOVE the point Lua sent, so a script can project
-   the ped's head bone and let it sit clear of the face. The extra 14px is the tail's room. */
-.wv-bubble {
+/* ★ Positioned by transform from index.tsx (placeCard) when it belongs to a person; the corner
+   classes below take over when it does not. left/top stay 0 so the transform IS the position. */
+.wv-card {
   position: absolute;
-  transform: translate(-50%, -100%);
-  margin-top: -14px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 6px;
-  padding: clamp(8px, 1.1vh, 12px) clamp(12px, 1.1vw, 18px);
-  max-width: min(26vw, 320px);
-  background: linear-gradient(180deg, rgba(22, 22, 22, 0.94), rgba(6, 6, 6, 0.96));
-  box-shadow: inset 0 0 0 1px var(--wc-line-strong), 0 16px 38px -16px #000000e6;
-  animation: wv-rise 160ms ease-out both;
+  left: 0;
+  top: 0;
+  width: max-content;
+  min-width: clamp(200px, 14vw, 250px);
+  max-width: clamp(250px, 21vw, 372px);
+  will-change: transform;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   The tail.
-
-   ★ A rotated square cut from the plate itself, not a CSS-border triangle. A border triangle is
-     a flat colour -- it cannot take the gradient or the hairline, so it reads as a wedge stuck
-     under the box rather than as part of the balloon. This one inherits both, and clip-path
-     hides the two edges that would otherwise cross back over the plate.
-
-   ⚠️ Square-cornered on purpose. Every plate in this library is square, and a rounded chat
-      bubble would be the one web-shaped thing on a screen full of RDR furniture. A balloon is
-      read by its TAIL, not by its corners.
-   ══════════════════════════════════════════════════════════════════════ */
-
-.wv-tail {
-  position: absolute;
-  left: 50%;
-  bottom: -6px;
-  width: 14px;
-  height: 14px;
-  transform: translateX(-50%) rotate(45deg);
-  background: rgba(6, 6, 6, 0.96);
-  box-shadow: inset 0 0 0 1px var(--wc-line-strong);
-  clip-path: polygon(100% 0, 100% 100%, 0 100%);
-}
-
-@keyframes wv-rise {
-  from { opacity: 0; transform: translate(-50%, calc(-100% + 8px)) scale(0.96); }
-  to   { opacity: 1; transform: translate(-50%, -100%) scale(1); }
-}
-
-/* The speaker's name, ruled off from what they are saying -- the same divider every panel in
-   the library puts under a heading. */
-.wv-bubble-name {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--wc-line);
-  color: var(--wc-text);
-  font-size: clamp(12px, 1.8vh, 15px);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-}
-
-/* ★ What the NPC is actually saying: the biggest thing in the balloon, in the reading face
-   rather than the display one, because it is speech and not a label. */
-.wv-says {
-  color: var(--wc-text);
-  font-family: var(--wc-font-body);
-  font-size: clamp(12px, 1.75vh, 15px);
-  line-height: 1.55;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-}
-
-.wv-bubble-name .wc-glyph { width: 13px; height: 13px; color: var(--wc-accent); }
-
-/* ⚠️ A COLUMN, not a wrapped row. Side by side the phrases read as buttons to press; stacked,
-   each on its own line, they read as things to say -- which is what they are. */
-.wv-commands {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* ★ Each phrase in quotation marks, because it is a thing to SAY, not a button to press. The
-   marks are the whole difference between a hint and a menu. */
-.wv-command {
-  padding: 2px 0;
-  color: var(--wc-text-dim);
-  font-family: var(--wc-font-body);
-  font-size: clamp(11px, 1.55vh, 13px);
-  line-height: 1.4;
-}
-
-.wv-command:before { content: "\201C"; }
-.wv-command:after  { content: "\201D"; }
-
-/* ── the dock along the bottom ─────────────────────────────────────────── */
-
-.wv-dock {
-  position: absolute;
-  left: 50%;
-  bottom: 9vh;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: clamp(7px, 1vh, 11px);
-  width: min(58vw, 760px);
-}
-
-/* ── the meter ─────────────────────────────────────────────────────────── */
-
-/* ⚠️ .wv-mic is gone. The meter now lives inside the panel's badge, where it is attached to the
-   commands being listened for; a second one floating at the bottom of the screen was the same
-   information twice, and the copy with nothing around it was the one carrying no meaning. */
-
-.wv-meter {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  height: clamp(14px, 1.9vh, 20px);
-}
-
-.wv-bar {
-  width: 3px;
-  background: var(--wc-text-faint);
-  transition: background-color 90ms linear;
-}
-
-.wv-bar.is-lit { background: var(--wc-text); }
-
-/* ── what was heard ────────────────────────────────────────────────────── */
-
-/* ⚠️ direction: inherit, not ltr. The line above is furniture; this is a sentence somebody
-   said, and it has to lay out in its own language. */
-/* The player's own line, given the same balloon so a conversation reads as a conversation --
-   their words and the NPC's are the same kind of object, only in different places. */
-.wv-line {
+.wv-card-in {
   position: relative;
-  direction: inherit;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  margin-bottom: 8px;
-  padding: clamp(9px, 1.2vh, 13px) clamp(16px, 1.5vw, 24px);
-  max-width: 100%;
-  text-align: center;
-  background: linear-gradient(180deg, rgba(22, 22, 22, 0.9), rgba(6, 6, 6, 0.94));
-  box-shadow: inset 0 0 0 1px var(--wc-line-strong);
-  animation: wv-fade 140ms ease-out both;
+  padding: clamp(10px, 1.3vh, 15px) clamp(13px, 1.05vw, 18px) clamp(8px, 1vh, 12px);
+  background: linear-gradient(180deg, rgba(21, 19, 15, 0.95) 0%, rgba(11, 10, 8, 0.94) 100%);
+  /* the pause menu's card inset glow: the paper catching light at the edge of the ink */
+  box-shadow: inset 0 0 18px rgba(237, 230, 214, 0.06), 0 18px 42px -24px rgba(0, 0, 0, 0.9);
+  animation: wv-in 200ms var(--w-ease) both;
+}
+
+/* ★ The edge that faces the speaker carries a hairline -- the card reads as said BY someone on
+   that side, the way a quotation rule sits against the text it belongs to. data-side is set by
+   placeCard; a corner card has none and no rule. */
+.wv-card[data-side] .wv-card-in::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--wv-rule-strong);
+}
+
+.wv-card[data-side='r'] .wv-card-in::before { left: 0; }
+.wv-card[data-side='l'] .wv-card-in::before { right: 0; }
+
+@keyframes wv-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
 }
 
 @keyframes wv-fade {
@@ -176,181 +102,413 @@
   to   { opacity: 1; }
 }
 
-.wv-speaker {
-  color: var(--wc-text-faint);
-  font-size: clamp(9px, 1.35vh, 11px);
-  letter-spacing: 0.16em;
+/* ── the name ──────────────────────────────────────────────────────────── */
+
+.wv-head {
+  position: relative;
+  padding-bottom: clamp(5px, 0.7vh, 8px);
+  margin-bottom: clamp(7px, 0.9vh, 10px);
+  border-bottom: 1px solid var(--wv-rule-strong);
+}
+
+/* The one red: a short tick at the start of the rule, under the first letter of the name. */
+.wv-head::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  inset-inline-start: 0;
+  width: clamp(18px, 1.4vw, 26px);
+  height: 1px;
+  background: var(--wv-red);
+}
+
+.wv-name {
+  display: block;
+  font-family: var(--wv-face-display);
+  font-weight: 600;
+  font-size: clamp(17px, 2vh, 23px);
+  line-height: 1.2;
+  color: var(--wv-paper);
+  overflow-wrap: anywhere;
+}
+
+/* the name in Arabic: the title role (Lalezar, one weight, never bold) */
+.wv-name.is-ar {
+  font-family: var(--wv-face-ar-display);
+  font-weight: 400;
+  font-size: clamp(18px, 2.2vh, 25px);
+  line-height: 1.3;
+}
+
+/* ── what they are saying now ──────────────────────────────────────────── */
+
+.wv-says {
+  margin: 0 0 clamp(8px, 1.1vh, 12px);
+  font-family: var(--wv-face-text);
+  font-size: clamp(13.5px, 1.6vh, 17.5px);
+  line-height: 1.5;
+  color: var(--wv-paper);
+  overflow-wrap: anywhere;
+  animation: wv-fade 200ms ease-out both;
+}
+
+.wv-says.is-ar {
+  font-family: var(--wv-face-ar-text);
+  font-size: clamp(15.5px, 1.9vh, 21px);
+  line-height: 1.6;
+}
+
+/* ★ While they talk the list folds away (index.tsx) and the key row steps back: it is still how
+   you answer, but it is not what you should be reading. The list fades back in when the line ends. */
+.wv-talk {
+  transition: opacity 200ms ease;
+}
+
+.wv-card.is-speaking .wv-talk {
+  opacity: 0.5;
+}
+
+.wv-list {
+  animation: wv-fade 200ms ease-out both;
+}
+
+/* ── the push-to-talk row ──────────────────────────────────────────────── */
+
+.wv-talk {
+  display: flex;
+  align-items: center;
+  gap: clamp(7px, 0.6vw, 10px);
+  min-height: clamp(20px, 2.3vh, 26px);
+  /* Air between the heading ("You can say" + key) and the first group caption under it: without
+     it the two small captions read as one two-line label. */
+  margin-bottom: clamp(6px, 0.9vh, 10px);
+}
+
+.wv-talk-label {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--wv-face-label);
+  font-size: clamp(11px, 1.15vh, 12.5px);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: var(--wv-paper-dim);
 }
 
-[dir="rtl"] .wv-speaker { letter-spacing: 0; text-transform: none; }
-
-.wv-said {
-  font-family: var(--wc-font-body);
-  font-size: clamp(13px, 2vh, 18px);
-  line-height: 1.45;
-  color: var(--wc-text);
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.9);
+.wv-talk-label.is-ar {
+  font-family: var(--wv-face-ar-label);
+  font-size: clamp(13px, 1.45vh, 15px);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
-/* ★ The three states of a spoken line, and only the LINE changes colour -- not the plate. A
-   whole panel flashing red is an error message; a red sentence is the sentence not landing,
-   which is what actually happened. */
-.wv-line.is-listening .wv-said { color: var(--wc-text); }
-.wv-line.is-matched   .wv-said { color: #6fbf7f; }
-.wv-line.is-unknown   .wv-said { color: var(--wc-red); }
+/* ★ The key, once, as a cap. It is pressed in while the microphone is open -- the paper fill is
+   the second signal after the label changing to "listening", so neither depends on colour. */
+.wv-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 1.9em;
+  height: 1.9em;
+  padding: 0 0.4em;
+  box-sizing: border-box;
+  border: 1px solid rgba(237, 230, 214, 0.4);
+  border-bottom-width: 2px;
+  border-radius: 2px;
+  font-family: var(--w-f-num);
+  letter-spacing: 0.06em;
+  font-size: clamp(11px, 1.3vh, 14px);
+  font-style: normal;
+  line-height: 1;
+  color: var(--wv-paper);
+  transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
 
-.wv-line.is-matched { box-shadow: inset 0 0 0 1px rgba(111, 191, 127, 0.45); }
-.wv-line.is-unknown { box-shadow: inset 0 0 0 1px rgba(203, 1, 1, 0.45); }
+.wv-card.is-live .wv-key {
+  background: var(--wv-paper);
+  border-color: var(--wv-paper);
+  border-bottom-width: 1px;
+  color: var(--wv-ink);
+  transform: translateY(1px);
+}
 
-/* The tail carries the state's edge too, or it would be the one piece still outlined in grey. */
-.wv-line.is-matched .wv-tail { box-shadow: inset 0 0 0 1px rgba(111, 191, 127, 0.45); }
-.wv-line.is-unknown .wv-tail { box-shadow: inset 0 0 0 1px rgba(203, 1, 1, 0.45); }
+/* ── the list ──────────────────────────────────────────────────────────── */
 
-/* Still listening: the line breathes, so a half-heard sentence does not look frozen. */
-.wv-line.is-listening .wv-said { animation: wv-breathe 1.6s ease-in-out infinite alternate; }
+.wv-group + .wv-group {
+  margin-top: clamp(6px, 0.9vh, 10px);
+}
 
-@keyframes wv-breathe {
-  from { opacity: 0.72; }
-  to   { opacity: 1; }
+/* A group label is a caption with a hairline running to the far edge -- a ledger heading, not a
+   box. */
+.wv-group-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: clamp(2px, 0.3vh, 4px) 0 clamp(2px, 0.3vh, 4px);
+  font-family: var(--wv-face-label);
+  font-size: clamp(9.5px, 1.05vh, 11.5px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--wv-paper-faint);
+}
+
+.wv-group-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--wv-rule);
+}
+
+.wv-group-label.is-ar {
+  font-family: var(--wv-face-ar-label);
+  font-weight: 700;
+  font-size: clamp(13px, 1.3vh, 14px);
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.wv-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ★ Plain rows. The number is where the eye lands and a handle to point at ("the third one"), not
+   a key to press -- keys are drawn as caps, and there is only the one. */
+.wv-line {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(8px, 0.65vw, 11px);
+  margin: 0 -6px;
+  padding: clamp(2px, 0.35vh, 4px) 6px;
+  font-size: clamp(13px, 1.5vh, 16.5px);
+  transition: background-color 150ms ease;
+}
+
+.wv-line:hover,
+.wv-line:focus-within {
+  background: rgba(237, 230, 214, 0.07);
+}
+
+.wv-line:hover .wv-num,
+.wv-line:focus-within .wv-num {
+  color: var(--wv-paper);
+}
+
+.wv-num {
+  flex: none;
+  min-width: 1.1em;
+  font-family: var(--wv-face-num);
+  font-size: 0.8em;
+  text-align: center;
+  color: var(--wv-paper-faint);
+  transition: color 150ms ease;
+}
+
+.wv-phrase {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--wv-face-text);
+  line-height: 1.4;
+  color: var(--wv-paper);
+  overflow-wrap: anywhere;
+}
+
+.wv-phrase.is-ar {
+  font-family: var(--wv-face-ar-text);
+  font-size: 1.14em;
+  line-height: 1.42;
+}
+
+/* ★ Every line sits against the card's reading edge, whatever script it is in. dir="auto" on the
+   name, the spoken line and the phrases keeps their punctuation right ("Who are you?" in an Arabic
+   card), but it would also align a Latin name or phrase to the LEFT of an Arabic card, away from
+   its number and the red tick. The card's side wins. */
+.wv-card[dir='rtl'] :is(.wv-name, .wv-says, .wv-phrase) { text-align: right; }
+.wv-card[dir='ltr'] :is(.wv-name, .wv-says, .wv-phrase) { text-align: left; }
+
+/* ★ A {slot} is a blank to fill: its name, dimmed, on a dotted rule. */
+.wv-slot {
+  color: var(--wv-paper-dim);
+  text-decoration: underline dotted rgba(237, 230, 214, 0.5);
+  text-underline-offset: 0.22em;
+}
+
+/* ── corners, for a list that belongs to nobody ─────────────────────────── */
+
+.wv-card.wv-at-bottom-left  { left: 2.4vw; top: auto; bottom: 22vh; }
+.wv-card.wv-at-bottom-right { left: auto; right: 2.4vw; top: auto; bottom: 22vh; }
+.wv-card.wv-at-top-left     { left: 2.4vw; top: 12vh; }
+.wv-card.wv-at-top-right    { left: auto; right: 2.4vw; top: 12vh; }
+.wv-card.wv-at-middle-left  { left: 2.4vw; top: 50%; transform: translateY(-50%); }
+.wv-card.wv-at-middle-right { left: auto; right: 2.4vw; top: 50%; transform: translateY(-50%); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   The microphone meter
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.wv-meter {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 2px;
+  height: clamp(12px, 1.5vh, 16px);
+}
+
+.wv-bar {
+  width: 2px;
+  height: 100%;
+  background: var(--wv-paper);
+  transform-origin: 50% 50%;
+  transition: transform 90ms linear;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   The 2D hints panel -- everything the player may say right now.
-
-   ★ The other half of the hints overlay. A balloon answers "what will THIS person respond to";
-     this answers "what may I say at all", which is the question a player has just after walking
-     into a shop and finding the whole command set has changed under them.
-
-   ⚠️ Quiet on purpose -- no plate, no border, only a rule down its leading edge. It is on screen
-      for as long as the player is in the room, and anything with a box around it that stays that
-      long stops being read and starts being furniture.
+   The dock -- the microphone when no card carries it, and the heard line
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* ⚠️ ROUNDED, and knowingly against the rest of the library.
-
-   Every other plate here is square-cornered because RDR2 is. These are not: the reference for
-   this panel is a column of pill-shaped phrases, and a phrase reads as something you SAY when it
-   is shaped like a spoken bubble rather than like a button. It is the one place the design earns
-   the exception, and it is confined to this file. */
-.wv-panel {
+.wv-dock {
   position: absolute;
+  left: 50%;
+  bottom: 8.5vh;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: clamp(6px, 0.8vh, 9px);
-  max-width: min(26vw, 360px);
+  align-items: center;
+  gap: clamp(7px, 1vh, 11px);
+  width: min(64vw, 860px);
+}
+
+.wv-mic {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: clamp(5px, 0.7vh, 8px) clamp(12px, 1vw, 16px);
+  background: rgba(11, 10, 8, 0.9);
   animation: wv-fade 180ms ease-out both;
 }
 
-/* ★ Anchored to a person: to their RIGHT, and centred on the point Lua sent. The gap is what
-   keeps it off the ped's shoulder -- a list touching the model reads as part of the world
-   rather than as an overlay about it. */
-.wv-panel.is-anchored {
-  transform: translateY(-50%);
-  margin-inline-start: clamp(26px, 2.4vw, 48px);
-  max-width: min(20vw, 280px);
-}
-
-.wv-at-bottom-left  { left: 2.4vw;  bottom: 22vh; }
-.wv-at-bottom-right { right: 2.4vw; bottom: 22vh; }
-.wv-at-top-left     { left: 2.4vw;  top: 12vh; }
-.wv-at-top-right    { right: 2.4vw; top: 12vh; }
-.wv-at-middle-left  { left: 2.4vw;  top: 50%; transform: translateY(-50%); }
-.wv-at-middle-right { right: 2.4vw; top: 50%; transform: translateY(-50%); }
-
-/* ── the badge at the head of the column ──────────────────────────────── */
-
-.wv-badge {
-  display: grid;
-  place-items: center;
-  width: clamp(30px, 4vh, 40px);
-  aspect-ratio: 1;
-  margin-bottom: 2px;
-  border-radius: 50%;
-  background: rgba(10, 10, 10, 0.86);
-  box-shadow: inset 0 0 0 1px var(--wc-line-strong);
-  transition: box-shadow 160ms ease;
-}
-
-/* ★ It lights only while the microphone is open. A permanently lit indicator says nothing; one
-   that changes is the cheapest way to tell the player the difference between "these are the
-   commands" and "I am listening to you right now". */
-.wv-badge.is-live {
-  box-shadow: inset 0 0 0 1px #c2d84a, 0 0 14px rgba(194, 216, 74, 0.28);
-}
-
-/* A waveform, drawn rather than shipped -- three strokes of a mask would be a texture to load
-   for something CSS can say in five lines. */
-/* ★ The badge holds the live meter while listening, and falls back to a flat mark when it is
-   not -- so the one indicator answers both "these are the commands" and "I can hear you". */
-.wv-badge-wave {
-  width: 46%;
-  height: 2px;
-  background: var(--wc-text-faint);
-  transition: background-color 160ms ease;
-}
-
-.wv-badge .wv-meter { height: 52%; gap: 2px; }
-.wv-badge .wv-bar { width: 2px; }
-
-.wv-panel-title {
-  color: var(--wc-text-faint);
-  font-size: clamp(10px, 1.4vh, 12px);
-  letter-spacing: 0.16em;
+.wv-mic-label {
+  font-family: var(--wv-face-label);
+  font-size: clamp(10px, 1.15vh, 12.5px);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: var(--wv-paper-dim);
 }
 
-[dir="rtl"] .wv-panel-title { letter-spacing: 0; text-transform: none; }
+.wv-mic-label.is-ar {
+  font-family: var(--wv-face-ar-label);
+  font-size: clamp(13px, 1.45vh, 15px);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-transform: none;
+}
 
-.wv-panel-group {
+/* ── one heard line ────────────────────────────────────────────────────── */
+
+/* ★ Three states, each told apart THREE ways so none depends on colour: the word above the line
+   ("Hearing" / "Understood" / "Not understood"), the rule over it (dashed, solid, a wider red
+   one), and the line itself (breathing and dim while it is still being worked out). */
+.wv-sub {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: clamp(5px, 0.7vh, 8px);
-}
-
-/* The layer or the NPC these belong to -- 'Shop', 'Barkeep', 'Always'. */
-.wv-panel-group-name {
-  color: var(--wc-text-dim);
-  font-size: clamp(11px, 1.55vh, 13px);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-}
-
-/* ── one phrase ───────────────────────────────────────────────────────── */
-
-.wv-phrase {
-  display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: clamp(6px, 0.9vh, 9px) clamp(11px, 1vw, 15px);
-  border-radius: 999px;
-  background: rgba(12, 12, 12, 0.82);
-  box-shadow: inset 0 0 0 1px var(--wc-line);
-  color: var(--wc-text);
-  font-family: var(--wc-font-body);
-  font-size: clamp(11px, 1.6vh, 14px);
+  gap: clamp(3px, 0.45vh, 5px);
+  max-width: 100%;
+  padding: clamp(10px, 1.3vh, 14px) clamp(16px, 1.6vw, 28px) clamp(10px, 1.3vh, 14px);
+  background: rgba(11, 10, 8, 0.9);
+  text-align: center;
+  animation: wv-in 200ms var(--w-ease) both;
+}
+
+.wv-sub::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 40px;
+  height: 2px;
+  transform: translateX(-50%);
+  background: var(--wv-paper);
+}
+
+.wv-sub.is-listening::before {
+  background: repeating-linear-gradient(90deg, var(--wv-paper-dim) 0 5px, transparent 5px 9px);
+}
+
+.wv-sub.is-unknown::before {
+  width: 72px;
+  background: var(--wv-red);
+}
+
+.wv-sub.is-speech::before {
+  width: 24px;
+  height: 1px;
+  background: var(--wv-rule-strong);
+}
+
+.wv-sub-tag {
+  font-family: var(--wv-face-label);
+  font-size: clamp(9.5px, 1.1vh, 12px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--wv-paper-faint);
+}
+
+.wv-sub-tag.is-ar {
+  font-family: var(--wv-face-ar-label);
+  font-size: clamp(13px, 1.35vh, 14px);
+  font-weight: 700;
   line-height: 1.3;
-  animation: wv-phrase-in 180ms ease-out both;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
-@keyframes wv-phrase-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: none; }
+.wv-sub.is-unknown .wv-sub-tag,
+.wv-sub.is-speech .wv-sub-tag {
+  color: var(--wv-paper-dim);
 }
 
-/* ── a {variable} slot ────────────────────────────────────────────────── */
+.wv-sub.is-listening .wv-sub-tag::after {
+  content: '\2026';
+}
 
-/* ★ The colour is set per-slot as --wv-slot and used three times here, so the tint, the edge and
-   the text all come from ONE value. Naming a colour three times is how a palette drifts. */
-.wv-slot {
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--wv-slot) 20%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--wv-slot) 55%, transparent);
-  color: var(--wv-slot);
-  font-family: var(--wc-font-numeral);
-  font-size: 0.92em;
-  white-space: nowrap;
+.wv-sub-text {
+  font-family: var(--wv-face-text);
+  font-size: clamp(14px, 1.8vh, 20px);
+  line-height: 1.45;
+  color: var(--wv-paper);
+  overflow-wrap: anywhere;
+}
+
+.wv-sub-text.is-ar {
+  font-family: var(--wv-face-ar-text);
+  font-size: clamp(16px, 2.05vh, 23px);
+  line-height: 1.55;
+}
+
+.wv-sub.is-listening .wv-sub-text {
+  color: var(--wv-paper-dim);
+  animation: wv-breathe 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes wv-breathe {
+  from { opacity: 0.6; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wv-card-in,
+  .wv-says,
+  .wv-list,
+  .wv-sub,
+  .wv-mic,
+  .wv-sub.is-listening .wv-sub-text {
+    animation: none;
+  }
 }

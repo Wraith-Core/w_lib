@@ -31,5 +31,40 @@
   "txadmin_dm": "Direct Message from %s",
   "txadmin_warn": "You have been warned by %s",
   "txadmin_warn_content": "%s  \nAction ID: %s",
-  "txadmin_scheduledrestart": "Scheduled Restart"
+  "txadmin_scheduledrestart": "Scheduled Restart",
+  "citizen": {
+    "label": "Citizen ID",
+    "placeholder": "e.g. 12",
+    "help": "The player's fixed citizen ID. For a server ID put # in front (e.g. #5)",
+    "invalid_id": "Invalid citizen ID",
+    "not_found": "No player with this ID",
+    "offline": "The player is not online right now"
+  },
+  "essentials": {
+    "afk": {
+      "kick_minutes": "You are AFK and will be kicked in %d minutes!",
+      "kick_minutes_many": "You are AFK and will be kicked in %d minutes!",
+      "kick_minute": "You are AFK and will be kicked in 1 minute!",
+      "kick_seconds": "You are AFK and will be kicked in %d seconds!",
+      "kick_seconds_many": "You are AFK and will be kicked in %d seconds!",
+      "kicked": "You have been kicked for being AFK"
+    },
+    "pvp": {
+      "disabled": "PVP DISABLED"
+    },
+    "keybinds": {
+      "handsup": "Raise / lower your hands",
+      "toggle_pvp": "Toggle PVP"
+    },
+    "discord": {
+      "players": "Players: %d/%d",
+      "large_text": "Wraith Core - Red Dead RP",
+      "small_text": "Wraith Core",
+      "button_connect": "Connect"
+    },
+    "teleports": {
+      "enter": "Enter",
+      "leave": "Leave"
+    }
+  }
 }

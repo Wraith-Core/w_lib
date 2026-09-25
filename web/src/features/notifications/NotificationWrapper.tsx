@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { NotificationProps } from '../../typings';
-import Frame from '../../wc/Frame';
 import Icon from '../../wc/Icon';
 
 /** The texture that stands for each kind when Lua does not name one. */
@@ -57,9 +56,9 @@ const Notifications: React.FC = () => {
             const type = toast.type || 'inform';
 
             return (
+              /* ⚠️ No <Frame> and no plate: the toast is text and icon over the world, and its
+                    border art was the last thing that still drew a box around them. */
               <div key={toast.key} className={`lb-toast is-${type}${toast.leaving ? ' is-out' : ''}`}>
-                <Frame px={9} opacity={0.4} />
-
                 <span className="lb-toast-text">
                   {toast.title && <span className="lb-toast-title">{toast.title}</span>}
                   {toast.description && (

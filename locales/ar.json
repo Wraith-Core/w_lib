@@ -31,5 +31,40 @@
   "txadmin_dm": "رسالة من %s",
   "txadmin_warn": "تم تحذيرك من قبل %s",
   "txadmin_warn_content": "%s  \nأيدي: %s",
-  "txadmin_scheduledrestart": "تحديد ريستارت للسرفر"
+  "txadmin_scheduledrestart": "تحديد ريستارت للسرفر",
+  "citizen": {
+    "label": "رقم المواطن",
+    "placeholder": "مثال: 12",
+    "help": "رقم المواطن الثابت. لرقم السيرفر اكتب # قبله (مثل #5)",
+    "invalid_id": "رقم المواطن غير صحيح",
+    "not_found": "لا يوجد لاعب بهذا الرقم",
+    "offline": "اللاعب غير متصل الآن"
+  },
+  "essentials": {
+    "afk": {
+      "kick_minutes": "أنت غير نشط وسيتم طردك خلال %d دقائق!",
+      "kick_minutes_many": "أنت غير نشط وسيتم طردك خلال %d دقيقة!",
+      "kick_minute": "أنت غير نشط وسيتم طردك خلال دقيقة واحدة!",
+      "kick_seconds": "أنت غير نشط وسيتم طردك خلال %d ثوانٍ!",
+      "kick_seconds_many": "أنت غير نشط وسيتم طردك خلال %d ثانية!",
+      "kicked": "تم طردك بسبب عدم النشاط"
+    },
+    "pvp": {
+      "disabled": "القتال بين اللاعبين معطّل"
+    },
+    "keybinds": {
+      "handsup": "رفع / إنزال اليدين",
+      "toggle_pvp": "تبديل القتال بين اللاعبين"
+    },
+    "discord": {
+      "players": "اللاعبون: %d/%d",
+      "large_text": "ورايث كور - ريد ديد آر بي",
+      "small_text": "ورايث كور",
+      "button_connect": "انضم إلى السيرفر"
+    },
+    "teleports": {
+      "enter": "الدخول",
+      "leave": "الخروج"
+    }
+  }
 }

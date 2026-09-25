@@ -1,50 +1,56 @@
-/* Shared visual primitives copied from w_store/web/src/store.css.
-   Layout and behavior stay with each interface. Assets are byte-identical to
-   the files w_store loads. Do not substitute a generic red dashboard theme. */
-@font-face{font-family:'RDR Lino';src:url('./store-theme/fonts/RDRLino-Regular.woff2') format('woff2');font-display:swap}
-@font-face{font-family:'Hapna Slab';src:url('./store-theme/fonts/HapnaSlabSerif-DemiBold.woff2') format('woff2');font-display:swap}
-@font-face{font-family:'RDR Catalogue';src:url('./store-theme/fonts/RDRCatalogueBold-Bold.woff2') format('woff2');font-display:swap}
-@font-face{font-family:'Noto Sans Arabic';src:url('./store-theme/fonts/NotoSansArabic.woff2') format('woff2');font-weight:100 900;font-display:swap}
-@font-face{font-family:'Tajawal';src:url('./store-theme/fonts/tajawal-arabic-400-normal.woff2') format('woff2');font-weight:400;font-display:swap;unicode-range:U+0600-06FF,U+0750-077F,U+0870-089F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F,U+2010-2011,U+0660-0669}
-@font-face{font-family:'Tajawal';src:url('./store-theme/fonts/tajawal-arabic-500-normal.woff2') format('woff2');font-weight:500;font-display:swap;unicode-range:U+0600-06FF,U+0750-077F,U+0870-089F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F,U+2010-2011,U+0660-0669}
-@font-face{font-family:'Tajawal';src:url('./store-theme/fonts/tajawal-arabic-700-normal.woff2') format('woff2');font-weight:700;font-display:swap;unicode-range:U+0600-06FF,U+0750-077F,U+0870-089F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F,U+2010-2011,U+0660-0669}
-@font-face{font-family:'Tajawal';src:url('./store-theme/fonts/tajawal-latin-400-normal.woff2') format('woff2');font-weight:400;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+2074,U+20AC,U+2122,U+2212}
-@font-face{font-family:'Tajawal';src:url('./store-theme/fonts/tajawal-latin-700-normal.woff2') format('woff2');font-weight:700;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+2074,U+20AC,U+2122,U+2212}
+/* Shared visual primitives (wst-*), first copied from w_store/web/src/store.css, now drawn in the
+   Wraith theme: warm ink, aged paper, one red (w_lib/nui/theme). Class names, structure and the
+   !important layering are unchanged, so the 21 resources that link this file take the theme
+   without a markup change or a rebuild. Layout and behaviour stay with each interface.
+   Every colour is a --w-* token (theme/tokens.css), every face comes from theme/fonts.css.
+   The cursor (hover, keyboard focus, the active tab, the selected row) is the paper brushed
+   band with ink text. Red is a mark only: the danger underline, the destructive fill, invalid. */
+@import url('../theme/tokens.css');
+@import url('../theme/fonts.css');
 :root{
- --wst-ink:#090909;--wst-text:#fff;--wst-text-dim:#a9a9a9;--wst-text-faint:#6d6d6d;
- --wst-line:rgba(255,255,255,.14);--wst-line-strong:rgba(255,255,255,.30);--wst-plate:#1f1f1f;
- --wst-red:#cb0101;--wst-red-soft:rgba(203,1,1,.16);--wst-accent:#ededed;--wst-hover:rgba(255,255,255,.12);
- --wst-gold:#c8a44d;--wst-gold-lit:#e7ce8a;--wst-gold-deep:#8c6d22;--wst-ok:#34b895;--wst-warn:#e67e22;--wst-bad:#e74c3c;
- --wst-f-display:'RDR Lino','Tajawal','Noto Sans Arabic',Georgia,serif;
- --wst-f-body:'Hapna Slab','Tajawal','Noto Sans Arabic',Georgia,serif;
- --wst-f-num:'RDR Catalogue','Tajawal','Noto Sans Arabic',Georgia,serif;
- --wst-f-ar:'Tajawal','Noto Sans Arabic',Georgia,serif;
- --wst-tex-help_text_bg:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/help_text_bg.png');
- --wst-tex-menu_header_1a:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/menu_header_1a.png');
- --wst-tex-selection_box_bg_1a:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/selection_box_bg_1a.png');
- --wst-tex-selection_box_bg_1c:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/selection_box_bg_1c.png');
- --wst-tex-divider_line:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/divider_line.png');
- --wst-tex-crafting_highlight_t:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/crafting_highlight_t.png');
- --wst-tex-crafting_highlight_b:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/crafting_highlight_b.png');
- --wst-tex-crafting_highlight_l:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/crafting_highlight_l.png');
- --wst-tex-crafting_highlight_r:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/crafting_highlight_r.png');
- --wst-tex-crafting_highlight_tl:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/crafting_highlight_tl.png');
- --wst-tex-crafting_highlight_tr:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/crafting_highlight_tr.png');
- --wst-tex-crafting_highlight_bl:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/crafting_highlight_bl.png');
- --wst-tex-crafting_highlight_br:url('https://cfx-nui-w_lib/nui/assets/store-theme/tex/crafting_highlight_br.png');
+ --wst-ink:var(--w-ink);--wst-text:var(--w-paper);--wst-text-dim:var(--w-paper-dim);--wst-text-faint:var(--w-paper-faint);
+ --wst-line:var(--w-rule);--wst-line-strong:var(--w-rule-2);--wst-plate:var(--w-ink-3);
+ --wst-red:var(--w-red);--wst-red-soft:var(--w-red-soft);--wst-accent:var(--w-paper);--wst-hover:rgba(237,230,214,.12);
+ /* kept for compatibility: state is told by a glyph or a word, never by a hue */
+ --wst-gold:var(--w-paper-dim);--wst-gold-lit:var(--w-paper);--wst-gold-deep:var(--w-paper-faint);--wst-ok:var(--w-paper);--wst-warn:var(--w-paper-dim);--wst-bad:var(--w-red);
+ /* Arabic faces by role, Arabic-first whatever the direction (for adapters keyed on lang).
+    --wst-f-ar keeps its old meaning: the label face (Tajawal). */
+ --wst-f-ar:var(--w-f-ar-label);--wst-f-ar-label:var(--w-f-ar-label);
+ --wst-f-ar-display:var(--w-f-ar-display);--wst-f-ar-title:var(--w-f-ar-display);
+ --wst-f-ar-text:var(--w-f-ar-text);--wst-f-ar-action:var(--w-f-ar-action);
+ --wst-tex-help_text_bg:var(--w-tex-sheet);
+ --wst-tex-menu_header_1a:var(--w-tex-header);
+ --wst-tex-selection_box_bg_1a:var(--w-tex-band);
+ --wst-tex-selection_box_bg_1c:var(--w-tex-band-sm);
+ --wst-tex-divider_line:var(--w-tex-divider);
+ --wst-tex-crafting_highlight_t:var(--w-tex-frame-t);
+ --wst-tex-crafting_highlight_b:var(--w-tex-frame-b);
+ --wst-tex-crafting_highlight_l:var(--w-tex-frame-l);
+ --wst-tex-crafting_highlight_r:var(--w-tex-frame-r);
+ --wst-tex-crafting_highlight_tl:var(--w-tex-frame-tl);
+ --wst-tex-crafting_highlight_tr:var(--w-tex-frame-tr);
+ --wst-tex-crafting_highlight_bl:var(--w-tex-frame-bl);
+ --wst-tex-crafting_highlight_br:var(--w-tex-frame-br);
 }
+/* Faces follow the nearest dir: declared on every [dir] so an Arabic panel inside a Latin page
+   (or a Latin island inside Arabic) resolves its own stack.
+   --wst-f-display  wordmarks and the headings a resource set in the display face: RDR Lino / Lalezar
+   --wst-f-title    .wst-title: EB Garamond / Lalezar
+   --wst-f-body     everything else here, the label face: Hapna Slab / Tajawal
+   --wst-f-num      numbers: RDR Catalogue */
+:root,[dir]{--wst-f-display:var(--w-f-display);--wst-f-title:var(--w-f-title);--wst-f-body:var(--w-f-label);--wst-f-num:var(--w-f-num)}
 .wst-root{color:var(--wst-text);font-family:var(--wst-f-body);-webkit-font-smoothing:antialiased}
-.wst-root *{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.3) rgba(255,255,255,.04)}
+.wst-root *{scrollbar-width:thin;scrollbar-color:rgba(237,230,214,.3) rgba(237,230,214,.04)}
 .wst-root *::-webkit-scrollbar{width:6px;height:0}
 .wst-root *::-webkit-scrollbar:horizontal{height:0!important;display:none!important}
-.wst-root *::-webkit-scrollbar-track{background:rgba(255,255,255,.04)}
-.wst-root *::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:3px}
-.wst-root *::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.5)}
+.wst-root *::-webkit-scrollbar-track{background:rgba(237,230,214,.04)}
+.wst-root *::-webkit-scrollbar-thumb{background:rgba(237,230,214,.3);border-radius:0}
+.wst-root *::-webkit-scrollbar-thumb:hover{background:rgba(237,230,214,.5)}
 .wst-root *::-webkit-scrollbar-button{display:none;width:0;height:0}
 .wst-root *::-webkit-scrollbar-corner{background:transparent!important;display:none!important}
 .wst-panel::before,.wst-header::before,.wst-button::before,.wst-tab::before,.wst-close::before,.wst-card::before,.wst-plate::before,.wst-row::before,.wst-field::before{display:block!important;width:auto!important;height:auto!important;transform:none!important;filter:none!important;border-radius:0!important;box-shadow:none!important}
-.wst-panel{isolation:isolate!important;background:radial-gradient(130% 90% at 50% 0%,#181818f5 0%,#0e0e0ef7 42%,#050505fa 100%)!important;box-shadow:0 18px 55px -18px #000d,0 0 0 1px rgba(255,255,255,.08)!important;border:0!important;border-radius:0!important;color:#fff!important;backdrop-filter:none!important}
-.wst-panel::before{content:''!important;position:absolute!important;inset:-4px -6px!important;z-index:-1!important;pointer-events:none!important;background:#090909e8!important;opacity:1!important;-webkit-mask:var(--wst-tex-help_text_bg) center/100% 100% no-repeat!important;mask:var(--wst-tex-help_text_bg) center/100% 100% no-repeat!important}
+.wst-panel{isolation:isolate!important;background:radial-gradient(130% 90% at 50% 0%,rgba(29,26,21,.96) 0%,rgba(21,19,15,.97) 42%,rgba(11,10,8,.98) 100%)!important;box-shadow:0 18px 55px -18px rgba(0,0,0,.85),0 0 0 1px rgba(237,230,214,.08)!important;border:0!important;border-radius:0!important;color:var(--w-paper)!important;backdrop-filter:none!important}
+.wst-panel::before{content:''!important;position:absolute!important;inset:-4px -6px!important;z-index:-1!important;pointer-events:none!important;background:rgba(11,10,8,.91)!important;opacity:1!important;-webkit-mask:var(--wst-tex-help_text_bg) center/100% 100% no-repeat!important;mask:var(--wst-tex-help_text_bg) center/100% 100% no-repeat!important}
 .wst-frame{position:absolute!important;inset:0!important;pointer-events:none!important;z-index:3!important;--wst-frame-px:clamp(10px,1.3vh,16px);opacity:.65!important;display:block!important}
 .wst-frame>span{position:absolute!important;background:var(--wst-accent)!important;border:0!important}
 .wst-fr-t,.wst-fr-b{left:var(--wst-frame-px)!important;right:var(--wst-frame-px)!important;height:var(--wst-frame-px)!important;-webkit-mask-repeat:repeat-x!important;mask-repeat:repeat-x!important;-webkit-mask-size:auto 100%!important;mask-size:auto 100%!important}
@@ -58,52 +64,74 @@
 .wst-fr-tr{top:0!important;right:0!important;-webkit-mask-image:var(--wst-tex-crafting_highlight_tr)!important;mask-image:var(--wst-tex-crafting_highlight_tr)!important}
 .wst-fr-bl{bottom:0!important;left:0!important;-webkit-mask-image:var(--wst-tex-crafting_highlight_bl)!important;mask-image:var(--wst-tex-crafting_highlight_bl)!important}
 .wst-fr-br{bottom:0!important;right:0!important;-webkit-mask-image:var(--wst-tex-crafting_highlight_br)!important;mask-image:var(--wst-tex-crafting_highlight_br)!important}
-.wst-header{position:relative;isolation:isolate!important;background:transparent!important;border:0!important;box-shadow:none!important;text-align:center;color:#fff!important}
-.wst-header::before{content:''!important;position:absolute!important;inset:0!important;z-index:-1!important;pointer-events:none!important;background:rgba(255,255,255,.06)!important;-webkit-mask:var(--wst-tex-menu_header_1a) center/100% 100% no-repeat!important;mask:var(--wst-tex-menu_header_1a) center/100% 100% no-repeat!important}
-.wst-title{font-family:var(--wst-f-display)!important;color:#fff!important;font-weight:800!important;letter-spacing:.04em;text-shadow:0 2px 8px #000!important}
+.wst-header{position:relative;isolation:isolate!important;background:transparent!important;border:0!important;box-shadow:none!important;text-align:center;color:var(--w-paper)!important}
+.wst-header::before{content:''!important;position:absolute!important;inset:0!important;z-index:-1!important;pointer-events:none!important;background:rgba(237,230,214,.06)!important;-webkit-mask:var(--wst-tex-menu_header_1a) center/100% 100% no-repeat!important;mask:var(--wst-tex-menu_header_1a) center/100% 100% no-repeat!important}
+/* Titles: the title role. EB Garamond 600 in Latin; Lalezar 400 in Arabic (it has one weight:
+   --w-wt-title is 400 under any RTL ancestor, and the font is declared over a weight range so
+   nothing is ever synthesised bold). Never Tajawal, never tracked in Arabic. */
+.wst-title{font-family:var(--wst-f-title)!important;color:var(--w-paper)!important;font-weight:var(--w-wt-title)!important;letter-spacing:.01em;text-shadow:0 2px 8px #000!important}
 .wst-sub{color:var(--wst-text-dim)!important;font-family:var(--wst-f-body)!important}
 .wst-num{font-family:var(--wst-f-num)!important;direction:ltr;unicode-bidi:isolate;letter-spacing:.02em}
-.wst-rule{display:block;height:4px;background:rgba(255,255,255,.5)!important;border:0!important;-webkit-mask:var(--wst-tex-divider_line) center/100% 100% no-repeat!important;mask:var(--wst-tex-divider_line) center/100% 100% no-repeat!important}
+.wst-rule{display:block;height:4px;background:var(--w-rule-3)!important;border:0!important;-webkit-mask:var(--wst-tex-divider_line) center/100% 100% no-repeat!important;mask:var(--wst-tex-divider_line) center/100% 100% no-repeat!important}
 .wst-button,.wst-tab,.wst-card,.wst-row,.wst-field{position:relative}
-.wst-button,.wst-tab,.wst-close,.wst-card,.wst-plate,.wst-row,.wst-field{isolation:isolate!important;background:transparent!important;background-image:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:#e5e5e5!important}
-.wst-button,.wst-tab,.wst-close{font-family:var(--wst-f-display)!important;font-weight:700!important;text-shadow:none!important;cursor:pointer}
-.wst-tab{color:#d6d6d6!important}
-.wst-close:hover:not(:disabled){color:#fff!important}
-.wst-button::before,.wst-tab::before,.wst-close::before,.wst-plate::before,.wst-row::before,.wst-field::before,.wst-card::before{content:''!important;position:absolute!important;inset:0!important;z-index:-1!important;pointer-events:none!important;background:#1f1f1f!important;opacity:1!important;border:0!important;-webkit-mask:var(--wst-tex-selection_box_bg_1c) center/100% 100% no-repeat!important;mask:var(--wst-tex-selection_box_bg_1c) center/100% 100% no-repeat!important}
-.wst-button:hover:not(:disabled),.wst-tab:hover:not(:disabled){color:#fff!important}
-.wst-button:hover:not(:disabled)::before,.wst-tab:hover:not(:disabled)::before{background:#383838!important}
-.wst-button.primary{color:#111!important}
-.wst-button.primary::before{background:#ededed!important}
-.wst-button.primary:hover:not(:disabled){color:#111!important}
-.wst-button.primary:hover:not(:disabled)::before{background:#fff!important}
-.wst-button.danger{color:#fff!important}
-.wst-button.danger::before,.wst-close:hover::before{background:#cb0101!important}
-.wst-button.danger:hover:not(:disabled)::before{background:#a50101!important}
-.wst-tab:is(.active,.selected,.chosen,.is-active,.is-selected,[aria-selected=true]),.wst-tab:is(.active,.selected,.chosen,.is-active,.is-selected,[aria-selected=true]):hover:not(:disabled){color:#111!important;font-weight:800!important}
-.wst-tab:is(.active,.selected,.chosen,.is-active,.is-selected,[aria-selected=true])::before,.wst-tab:is(.active,.selected,.chosen,.is-active,.is-selected,[aria-selected=true]):hover:not(:disabled)::before{background:#ededed!important}
+.wst-button,.wst-tab,.wst-close,.wst-card,.wst-plate,.wst-row,.wst-field{isolation:isolate!important;background:transparent!important;background-image:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:var(--w-paper)!important}
+/* Controls are the label role (Hapna Slab / Tajawal), at the weight the file has: no reflow on select */
+/* Latin controls read as the game's caps (Hapna Slab); no tracking is added here, because an Arabic word on a
+   Latin page would be letter-spaced with it. Arabic is never uppercased (the token is none under RTL). */
+.wst-button,.wst-tab,.wst-close{font-family:var(--wst-f-body)!important;font-weight:var(--w-wt-label)!important;text-shadow:none!important;cursor:pointer;color:var(--w-paper-dim)!important;text-transform:var(--w-label-case)}
+.wst-button::before,.wst-tab::before,.wst-close::before,.wst-plate::before,.wst-row::before,.wst-field::before,.wst-card::before{content:''!important;position:absolute!important;inset:0!important;z-index:-1!important;pointer-events:none!important;background:var(--w-ink-3)!important;opacity:1!important;border:0!important;-webkit-mask:var(--wst-tex-selection_box_bg_1c) center/100% 100% no-repeat!important;mask:var(--wst-tex-selection_box_bg_1c) center/100% 100% no-repeat!important}
+/* The cursor on a button, a tab or the close cross: the paper band, ink text */
+.wst-button:hover:not(:disabled),.wst-tab:hover:not(:disabled),.wst-close:hover:not(:disabled),.wst-button:focus-visible,.wst-tab:focus-visible,.wst-close:focus-visible{color:var(--w-ink)!important;outline:none!important}
+.wst-button:hover:not(:disabled)::before,.wst-tab:hover:not(:disabled)::before,.wst-close:hover:not(:disabled)::before,.wst-button:focus-visible::before,.wst-tab:focus-visible::before,.wst-close:focus-visible::before{background:var(--w-paper)!important}
+.wst-button:active:not(:disabled)::before,.wst-tab:active:not(:disabled)::before{background:var(--w-paper-dim)!important}
+.wst-button:hover:not(:disabled) :is(span,b,strong,small,i,svg),.wst-tab:hover:not(:disabled) :is(span,b,strong,small,i,svg),.wst-button:focus-visible :is(span,b,strong,small,i,svg),.wst-tab:focus-visible :is(span,b,strong,small,i,svg){color:inherit!important}
+.wst-button.primary{color:var(--w-ink)!important}
+.wst-button.primary::before{background:var(--w-paper)!important}
+.wst-button.primary:hover:not(:disabled),.wst-button.primary:focus-visible{color:var(--w-ink)!important}
+.wst-button.primary:hover:not(:disabled)::before,.wst-button.primary:focus-visible::before{background:var(--w-paper-lit)!important}
+/* Destructive: paper text on the plate with a red underline. Under the cursor it is the same paper
+   band as every other button (the pause menu's cursor) and the red underline stays under the ink
+   word, as on the pause menu's confirm note. Red is never a plate outside the confirm note. */
+.wst-button.danger{color:var(--w-paper)!important;text-decoration-line:underline;text-decoration-color:var(--w-red);text-decoration-thickness:2px;text-underline-offset:.3em}
+.wst-button.danger:hover:not(:disabled),.wst-button.danger:focus-visible{color:var(--w-ink)!important;text-decoration-line:underline;text-decoration-color:var(--w-red)}
+.wst-button.danger:hover:not(:disabled)::before,.wst-button.danger:focus-visible::before{background:var(--w-paper)!important}
+.wst-button.danger:active:not(:disabled)::before{background:var(--w-paper-dim)!important}
+/* The active tab: the band, same weight (no reflow). Hovering it keeps it a band. */
+.wst-tab:is(.active,.selected,.chosen,.is-active,.is-selected,[aria-selected=true]),.wst-tab:is(.active,.selected,.chosen,.is-active,.is-selected,[aria-selected=true]):hover:not(:disabled){color:var(--w-ink)!important}
+.wst-tab:is(.active,.selected,.chosen,.is-active,.is-selected,[aria-selected=true])::before,.wst-tab:is(.active,.selected,.chosen,.is-active,.is-selected,[aria-selected=true]):hover:not(:disabled)::before{background:var(--w-paper)!important}
 .wst-tab:is(.active,.selected,.chosen,.is-active,.is-selected,[aria-selected=true]) :is(span,b,strong,small){color:inherit!important}
 .wst-button:disabled,.wst-tab:disabled,.wst-close:disabled{opacity:.45!important;cursor:default}
-.wst-card{color:#e5e5e5!important;font-family:var(--wst-f-body)!important}
-.wst-card::before{background:#181818!important;-webkit-mask-image:var(--wst-tex-selection_box_bg_1a)!important;mask-image:var(--wst-tex-selection_box_bg_1a)!important}
-.wst-card:hover:not(:disabled):not(.disabled),.wst-card:is(.active,.chosen,.selected,.is-active,.is-selected,[aria-selected=true]){color:#080808!important}
-.wst-card:hover:not(:disabled):not(.disabled)::before,.wst-card:is(.active,.chosen,.selected,.is-active,.is-selected,[aria-selected=true])::before{background:#ededed!important}
-.wst-card:hover:not(:disabled):not(.disabled) :is(h1,h2,h3,h4,p,small,span,b,strong,label),.wst-card:is(.active,.chosen,.selected,.is-active,.is-selected,[aria-selected=true]) :is(h1,h2,h3,h4,p,small,span,b,strong,label){color:inherit!important}
+.wst-card{color:var(--w-paper)!important;font-family:var(--wst-f-body)!important}
+.wst-card::before{background:var(--w-ink-2)!important;-webkit-mask-image:var(--wst-tex-selection_box_bg_1a)!important;mask-image:var(--wst-tex-selection_box_bg_1a)!important}
+/* A card or a list row under the cursor, or selected: the band, everything on it in ink */
+.wst-card:hover:not(:disabled):not(.disabled),.wst-card:focus-visible,.wst-card:is(.active,.chosen,.selected,.is-active,.is-selected,[aria-selected=true]){color:var(--w-ink)!important;outline:none!important}
+.wst-card:hover:not(:disabled):not(.disabled)::before,.wst-card:focus-visible::before,.wst-card:is(.active,.chosen,.selected,.is-active,.is-selected,[aria-selected=true])::before{background:var(--w-paper)!important}
+.wst-card:hover:not(:disabled):not(.disabled) :is(h1,h2,h3,h4,p,small,span,b,strong,label,em,i,svg),.wst-card:focus-visible :is(h1,h2,h3,h4,p,small,span,b,strong,label,em,i,svg),.wst-card:is(.active,.chosen,.selected,.is-active,.is-selected,[aria-selected=true]) :is(h1,h2,h3,h4,p,small,span,b,strong,label,em,i,svg){color:inherit!important}
 .wst-card:disabled,.wst-card.disabled{opacity:.55!important;cursor:default}
-.wst-card:focus-visible,.wst-button:focus-visible,.wst-tab:focus-visible,.wst-close:focus-visible{outline:2px solid var(--wst-gold-lit)!important;outline-offset:-2px}
-.wst-plate::before{background:#1a1a1a!important}
-.wst-row::before{background:#171717!important}
-.wst-row:hover::before{background:#262626!important}
-.wst-row.clickable:hover::before{background:#383838!important}
-.wst-field:focus-within::before{background:#2b2b2b!important}
-.wst-input{background:#1f1f1f!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:#fff!important;font-family:var(--wst-f-body)!important;outline:none!important}
-.wst-field .wst-input{background:transparent!important}
-.wst-input::placeholder{color:#898989!important}
-.wst-input option{background:#1f1f1f;color:#fff}
+.wst-plate::before{background:var(--w-ink-3)!important}
+.wst-row::before{background:var(--w-ink-2)!important}
+.wst-row:hover::before{background:var(--w-ink-4)!important}
+.wst-row.clickable:hover,.wst-row:is(.selected,.is-selected,[aria-selected=true]){color:var(--w-ink)!important}
+.wst-row.clickable:hover::before,.wst-row:is(.selected,.is-selected,[aria-selected=true])::before{background:var(--w-paper)!important;-webkit-mask-image:var(--wst-tex-selection_box_bg_1a)!important;mask-image:var(--wst-tex-selection_box_bg_1a)!important}
+.wst-row.clickable:hover :is(h1,h2,h3,h4,p,small,span,b,strong,label,em,i,svg),.wst-row:is(.selected,.is-selected,[aria-selected=true]) :is(h1,h2,h3,h4,p,small,span,b,strong,label,em,i,svg){color:inherit!important}
+.wst-field:focus-within{box-shadow:inset 0 -2px 0 var(--w-paper)!important}
+.wst-field:focus-within::before{background:var(--w-ink-4)!important}
+.wst-input{background:var(--w-ink-2)!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:var(--w-paper)!important;font-family:var(--wst-f-body)!important;outline:none!important;caret-color:var(--w-paper)}
+.wst-input:focus{background:var(--w-ink-3)!important;box-shadow:inset 0 -2px 0 var(--w-paper)!important}
+.wst-field .wst-input,.wst-field .wst-input:focus{background:transparent!important;box-shadow:none!important}
+.wst-input::placeholder{color:var(--w-paper-faint)!important}
+.wst-input::selection,.wst-root ::selection{background:rgba(237,230,214,.85);color:var(--w-ink)}
+.wst-input option{background:var(--w-ink-2);color:var(--w-paper)}
 /* The store's native checkbox: a dark square, then paper with an ink center. */
-.wst-check{display:inline-flex!important;align-items:center;gap:8px!important;cursor:pointer;font-family:var(--wst-f-body);font-size:clamp(13px,1.6vh,17px);color:#e5e5e5}
-.wst-check input[type=checkbox]{appearance:none!important;width:18px!important;height:18px!important;min-width:18px;min-height:18px;box-sizing:border-box!important;border:2px solid #8a8a8a!important;background:#111!important;cursor:pointer;display:grid!important;place-items:center;flex:none!important;padding:0!important;margin:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important}
+.wst-check{display:inline-flex!important;align-items:center;gap:8px!important;cursor:pointer;font-family:var(--wst-f-body);font-size:clamp(13px,1.6vh,17px);color:var(--w-paper)}
+.wst-check input[type=checkbox]{appearance:none!important;width:18px!important;height:18px!important;min-width:18px;min-height:18px;box-sizing:border-box!important;border:2px solid var(--w-paper-faint)!important;background:var(--w-ink)!important;cursor:pointer;display:grid!important;place-items:center;flex:none!important;padding:0!important;margin:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important}
 .wst-check input[type=checkbox]::after{content:none}
-.wst-check input[type=checkbox]:checked{background:#ededed!important;border-color:#ededed!important}
-.wst-check input[type=checkbox]:checked::after{content:'';position:static;width:8px;height:8px;background:#111;border:0;box-shadow:none;transform:none}
+.wst-check input[type=checkbox]:checked{background:var(--w-paper)!important;border-color:var(--w-paper)!important}
+.wst-check input[type=checkbox]:checked::after{content:'';position:static;width:8px;height:8px;background:var(--w-ink);border:0;box-shadow:none;transform:none}
+.wst-check input[type=checkbox]:focus-visible{box-shadow:0 0 0 2px var(--w-ink),0 0 0 3px var(--w-paper)!important}
 .wst-check input[type=checkbox]:disabled{opacity:.4!important;cursor:default!important}
-.wst-root [dir=rtl] :is(.wst-title,.wst-sub,.wst-button,.wst-tab,.wst-close,.wst-card,.wst-row,.wst-input,.wst-check),.wst-root[dir=rtl] :is(.wst-title,.wst-sub,.wst-button,.wst-tab,.wst-close,.wst-card,.wst-row,.wst-input,.wst-check),html[lang=ar] .wst-root :is(.wst-title,.wst-sub,.wst-button,.wst-tab,.wst-close,.wst-card,.wst-row,.wst-input,.wst-check){font-family:var(--wst-f-ar)!important;letter-spacing:0}
+/* Arabic. The label face everywhere except titles, which keep the title role (Lalezar). Arabic is
+   never letter-spaced, uppercased or small-capped. */
+.wst-root [dir=rtl] :is(.wst-sub,.wst-button,.wst-tab,.wst-close,.wst-card,.wst-row,.wst-input,.wst-check),.wst-root[dir=rtl] :is(.wst-sub,.wst-button,.wst-tab,.wst-close,.wst-card,.wst-row,.wst-input,.wst-check),html[lang=ar] .wst-root :is(.wst-sub,.wst-button,.wst-tab,.wst-close,.wst-card,.wst-row,.wst-input,.wst-check){font-family:var(--wst-f-ar)!important;letter-spacing:0;text-transform:none;font-variant-caps:normal}
+[dir=rtl] .wst-title,.wst-title[dir=rtl],html[lang=ar]:not([dir=ltr]) .wst-title{font-family:var(--wst-f-ar-title)!important;font-weight:400!important;line-height:1.25}
+[dir=rtl] :is(.wst-title,.wst-sub,.wst-button,.wst-tab,.wst-close,.wst-card,.wst-row,.wst-input,.wst-check),:is(.wst-title,.wst-sub,.wst-button,.wst-tab,.wst-close,.wst-card,.wst-row,.wst-input,.wst-check)[dir=rtl],html[lang=ar]:not([dir=ltr]) :is(.wst-title,.wst-sub,.wst-button,.wst-tab,.wst-close,.wst-card,.wst-row,.wst-input,.wst-check){letter-spacing:0!important;text-transform:none!important;font-variant-caps:normal!important}

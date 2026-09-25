@@ -314,7 +314,7 @@ CreateThread(function()
                 `slots` int unsigned NOT NULL DEFAULT 50,
                 `max_weight` int unsigned NOT NULL DEFAULT 100000,
                 PRIMARY KEY (`id`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
         ]])
 
         local rows = MySQL.query.await('SELECT id, label, slots, max_weight FROM w_lib_stashes') or {}

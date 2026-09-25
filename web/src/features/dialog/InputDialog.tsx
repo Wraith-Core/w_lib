@@ -4,6 +4,7 @@ import { fetchNui } from '../../utils/fetchNui';
 import { InputProps, OptionValue } from '../../typings';
 import { Glyph, Head, Layer, Panel, play } from '../../wc/Panel';
 import Icon from '../../wc/Icon';
+import DateFields from '../../components/DateFields';
 import { useLocales } from '../../providers/LocaleProvider';
 
 type Row = InputProps['rows'][number] & Record<string, any>;
@@ -24,7 +25,7 @@ const FieldLabel: React.FC<{ row: Row }> = ({ row }) => (
 );
 
 const InputDialog: React.FC = () => {
-  const { locale } = useLocales();
+  const { locale, rtl } = useLocales();
   const [data, setData] = useState<InputProps | null>(null);
   const [values, setValues] = useState<Record<number, any>>({});
   const firstField = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null>(null);
@@ -106,9 +107,12 @@ const InputDialog: React.FC = () => {
             const first = i === 0 ? (el: any) => (firstField.current = el) : undefined;
 
             if (type === 'checkbox') {
+              /* ★ wst-check: the native input IS the checkbox -- the theme's square (store-theme.css
+                 .wst-check input), with the keyboard and the change event the browser gives it.
+                 The drawn .lb-check-box stays in the markup for older sheets and is hidden. */
               return (
                 <div className="lb-field" key={i}>
-                  <label className="lb-check">
+                  <label className="lb-check wst-check">
                     <input
                       type="checkbox"
                       checked={Boolean(values[i])}
@@ -159,10 +163,16 @@ const InputDialog: React.FC = () => {
             }
 
             if (type === 'slider') {
+              // ★ How far the paper runs along the track (lib-ui.css .lb-slider): the theme's
+              //   slider draws its fill from this, since a native track has no fill of its own.
+              const lo = Number(row.min ?? 0);
+              const hi = Number(row.max ?? 100);
+              const fill = hi > lo ? Math.min(100, Math.max(0, ((Number(values[i]) - lo) / (hi - lo)) * 100)) : 0;
+
               return (
                 <div className="lb-field" key={i}>
                   <FieldLabel row={row} />
-                  <div className="lb-slider">
+                  <div className="lb-slider" style={{ '--lb-fill': `${fill}%` } as React.CSSProperties}>
                     <input
                       type="range"
                       min={row.min ?? 0}
@@ -196,10 +206,28 @@ const InputDialog: React.FC = () => {
               );
             }
 
+            if (type === 'date') {
+              // ★ Day, month by name, year -- see components/DateFields for why not the native
+              //   box. It hands back the native box's own "YYYY-MM-DD" (or "" until complete).
+              return (
+                <div className="lb-field" key={i}>
+                  <FieldLabel row={row} />
+                  <DateFields
+                    value={values[i]}
+                    rtl={rtl}
+                    label={row.label}
+                    disabled={row.disabled}
+                    required={row.required}
+                    firstRef={first}
+                    onChange={(v) => set(i, v)}
+                  />
+                </div>
+              );
+            }
+
             const htmlType =
               type === 'number' ? 'number'
               : type === 'color' ? 'color'
-              : type === 'date' ? 'date'
               : type === 'time' ? 'time'
               : row.password ? 'password'
               : 'text';

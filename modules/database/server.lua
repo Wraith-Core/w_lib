@@ -23,7 +23,10 @@ function w.database.addTable(tableName, definition)
     return false
   end
 
-  MySQL.update.await("CREATE TABLE IF NOT EXISTS " .. tableName .. " (" .. definition .. ")")
+  -- the collation is named: without it the table takes the database default (utf8_general_ci on
+  -- some installs), and an id column compared with players.citizenid (utf8mb4_general_ci) in a
+  -- JOIN fails with "Illegal mix of collations"
+  MySQL.update.await("CREATE TABLE IF NOT EXISTS " .. tableName .. " (" .. definition .. ") DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci")
   gprint("Database table created: " .. tableName)
   return true
 end

@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from '../../wc/Icon';
+import DateFields from '../../components/DateFields';
 import { Bar, Glyph } from '../../wc/Panel';
 
 /**
@@ -155,9 +156,8 @@ const ActionButtons: React.FC<{ actions?: BlockAction[]; itemId?: string | numbe
         <button
           type="button"
           key={action.id}
-          className="wc-manage-btn"
+          className={`wc-manage-btn${action.danger ? ' is-remove' : ''}`}
           disabled={action.disabled}
-          style={action.danger ? { color: 'var(--wc-red)' } : undefined}
           onClick={() => ctx.onAction(action.id, itemId)}
         >
           {action.icon && <Icon icon={action.icon} />}
@@ -215,7 +215,7 @@ const Rows: React.FC<{ block: Block; ctx: Ctx }> = ({ block, ctx }) => (
           {item.input && <RowInput input={item.input} ctx={ctx} />}
 
           {item.value != null && (
-            <span className="wc-meta-value" dir="ltr" style={item.danger ? { color: 'var(--wc-red)' } : undefined}>
+            <span className={`wc-meta-value${item.danger ? ' is-danger' : ''}`} dir="ltr">
               {item.value}
             </span>
           )}
@@ -410,17 +410,28 @@ const FormField: React.FC<{ field: FormFieldSpec; ctx: Ctx }> = ({ field, ctx })
     );
   }
 
+  if (field.type === 'date') {
+    // ★ Day, month by name, year (components/DateFields): the same "YYYY-MM-DD" the native box
+    //   reported, or "" until the three parts make a real date.
+    return (
+      <DateFields
+        value={text}
+        rtl={document.documentElement.dir === 'rtl'}
+        label={field.label}
+        disabled={field.disabled}
+        onChange={(v) => {
+          setText(v);
+          ctx.onField(field.id, v);
+        }}
+      />
+    );
+  }
+
   const isNumber = field.type === 'number';
   return (
     <span className="lb-input">
       <input
-        type={
-          isNumber
-            ? 'number'
-            : field.type === 'color' || field.type === 'time' || field.type === 'date'
-              ? field.type
-              : 'text'
-        }
+        type={isNumber ? 'number' : field.type === 'color' || field.type === 'time' ? field.type : 'text'}
         dir={field.type === 'text' || field.type === undefined ? undefined : 'ltr'}
         value={text}
         placeholder={field.placeholder}
@@ -441,7 +452,7 @@ const FormField: React.FC<{ field: FormFieldSpec; ctx: Ctx }> = ({ field, ctx })
 const Form: React.FC<{ block: Block; ctx: Ctx }> = ({ block, ctx }) => (
   <div className="wl-panel-form">
     {block.fields?.map((field) => (
-      <label className="wl-panel-field" key={field.id}>
+      <label className={`wl-panel-field${field.type === 'checkbox' ? ' is-check' : ''}`} key={field.id}>
         {field.label && <span className="wl-panel-row-label">{field.label}</span>}
         <FormField field={field} ctx={ctx} />
       </label>
@@ -458,7 +469,7 @@ const Requirements: React.FC<{ block: Block }> = ({ block }) => (
         </span>
         <span className="wc-ing-label">{item.label}</span>
         {item.value != null && (
-          <span className="wc-ing-amount" dir="ltr" style={item.danger ? { color: 'var(--wc-red)' } : undefined}>
+          <span className={`wc-ing-amount${item.danger ? ' is-danger' : ''}`} dir="ltr">
             {item.value}
           </span>
         )}

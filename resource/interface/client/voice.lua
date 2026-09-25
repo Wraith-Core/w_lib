@@ -24,11 +24,48 @@ local ensureThread
 
 ---@class VoiceHint
 ---@field id string
----@field coords vector3        where in the world -- a head bone reads best
+---@field coords? vector3       where in the world -- a head bone reads best
+---@field entity? number        optional: follow this entity instead (a ped's head bone, re-read every frame)
+---@field bone? number          optional: the bone to follow on `entity`; SKEL_HEAD (21030) by default
 ---@field title? string         the ped's name
----@field icon? string
+---@field icon? string          accepted, not drawn -- the dialogue card carries no emblem
 ---@field commands? string[]    the phrases it answers to
----@field says? string          what it is saying now -- replaces the phrases while set
+---@field says? string          what it is saying now -- shown under the name while set
+
+--- SKEL_HEAD. The card is placed beside this point, so it follows a ped that ducks or leans.
+local HEAD_BONE = 21030
+
+--- ★ Where an anchor is THIS frame: the entity's bone when one was given and still exists, else
+---   the fixed coords. A person who walks off mid-conversation takes their card with them.
+---@return vector3|nil
+local function anchorPoint(anchor)
+    local entity = anchor.entity
+
+    if entity and DoesEntityExist(entity) then
+        if IsEntityAPed(entity) then
+            return GetPedBoneCoords(entity, anchor.bone or HEAD_BONE, 0.0, 0.0, 0.0)
+        end
+
+        return GetEntityCoords(entity)
+    end
+
+    return anchor.coords
+end
+
+--- ★ Metres from the camera, sent as `d`. The frame sizes the gap between the head and the card
+---   from it, so a close face is cleared and a far one's card does not drift off into the air.
+---
+--- ⚠️ Component arithmetic, not `#(cam - point)`. `coords` may arrive as a plain {x, y, z} table
+---    from a consumer, and vector3 minus a table throws -- inside the ONE projection thread, which
+---    would die with `ticking` still true and freeze every card until the resource restarts.
+local function cameraDistance(point)
+    local cam = GetFinalRenderedCamCoord and GetFinalRenderedCamCoord() or GetGameplayCamCoord()
+    local x, y, z = tonumber(point and point.x), tonumber(point and point.y), tonumber(point and point.z)
+    if not (cam and x and y and z) then return nil end
+
+    local dx, dy, dz = cam.x - x, cam.y - y, cam.z - z
+    return math.sqrt(dx * dx + dy * dy + dz * dz)
+end
 
 ---@class VoiceSubtitle
 ---@field text string
@@ -68,11 +105,16 @@ end
 --- does not know what a layer is and should not -- it draws groups of phrases.
 --- ★ مربوطة بشخص، أو في زاوية الشاشة
 ---
---- Pass `coords` and the list is pinned beside that person, projected every frame like the
---- balloons. Leave them out and it sits in the corner named by `position`.
----@param data { title?: string, position?: string, coords?: vector3, groups?: { label?: string, commands: string[] }[] }|false
+--- Pass `coords` (or `entity`) and the list is pinned beside that person, projected every frame
+--- like the balloons -- and when a hint for the same person is up, the two are drawn as ONE card.
+--- Leave them out and it sits in the corner named by `position`.
+---
+--- ★ Optional, all passed through to the frame: `speaker` (the name, when no hint carries one),
+---   `talkKey` (the push-to-talk key, drawn once as a key cap) and `id` (the hint this list
+---   belongs to -- without it the frame pairs them by position, which is exact for one head).
+---@param data { title?: string, position?: string, coords?: vector3, entity?: number, bone?: number, speaker?: string, talkKey?: string, id?: string, groups?: { label?: string, commands: string[] }[] }|false
 function lib.voicePanel(data)
-    if type(data) == 'table' and data.coords then
+    if type(data) == 'table' and (data.coords or data.entity) then
         panelAnchor = data
         ensureThread()
         return
@@ -98,7 +140,9 @@ function ensureThread()
     CreateThread(function()
         while next(hints) or panelAnchor do
             for id, hint in pairs(hints) do
-                local onScreen, x, y = GetScreenCoordFromWorldCoord(hint.coords.x, hint.coords.y, hint.coords.z)
+                local point = anchorPoint(hint)
+                local onScreen, x, y = false, 0, 0
+                if point then onScreen, x, y = GetScreenCoordFromWorldCoord(point.x, point.y, point.z) end
 
                 -- ★ Off-screen bubbles are REMOVED, not moved to the edge. A hint pinned to the
                 --   side of the screen for a ped behind you is noise pretending to be help.
@@ -106,7 +150,7 @@ function ensureThread()
                     action = onScreen and 'voiceHint' or 'voiceHintRemove',
                     data = onScreen
                         and {
-                            id = id, x = x, y = y,
+                            id = id, x = x, y = y, d = cameraDistance(point),
                             title = hint.title, icon = hint.icon,
                             commands = hint.commands, says = hint.says,
                         }
@@ -117,15 +161,19 @@ function ensureThread()
             -- ⚠️ The anchored panel rides the SAME thread as the balloons. A second one doing the
             --    same projection on the same frame would double the work to move one list.
             if panelAnchor then
-                local onScreen, px, py =
-                    GetScreenCoordFromWorldCoord(panelAnchor.coords.x, panelAnchor.coords.y, panelAnchor.coords.z)
+                local point = anchorPoint(panelAnchor)
+                local onScreen, px, py = false, 0, 0
+                if point then onScreen, px, py = GetScreenCoordFromWorldCoord(point.x, point.y, point.z) end
 
                 SendNUIMessage({
                     action = 'voicePanel',
                     data = onScreen and {
                         title = panelAnchor.title,
                         groups = panelAnchor.groups,
-                        x = px, y = py,
+                        x = px, y = py, d = cameraDistance(point),
+                        speaker = panelAnchor.speaker,
+                        talkKey = panelAnchor.talkKey,
+                        id = panelAnchor.id,
                     } or false
                 })
             end
@@ -140,8 +188,8 @@ end
 --- إظهار ما يستجيب له هذا الشخص
 ---@param hint VoiceHint
 function lib.voiceHint(hint)
-    if type(hint) ~= 'table' or not hint.id or not hint.coords then
-        error('lib.voiceHint needs an id and coords')
+    if type(hint) ~= 'table' or not hint.id or not (hint.coords or hint.entity) then
+        error('lib.voiceHint needs an id and coords (or an entity)')
     end
 
     hints[hint.id] = hint

@@ -16,32 +16,37 @@ import { MantineThemeOverride, Tuple } from '@mantine/core';
  * ============================================================================
  */
 
-/** The ramp Mantine wants for a colour: ten shades, dark to light. */
+/**
+ * The ramp Mantine wants for a colour: ten shades, light to dark -- the theme's paper down to
+ * its ink (w_lib/nui/theme/tokens.css), with the two steps between them mixed from the pair.
+ * Mantine needs literal colours here (it computes shades from them), so these are the token
+ * values written out; everything else below reads the tokens through var().
+ */
 const wraith: Tuple<string, 10> = [
-  '#f2f2f2',
-  '#d2d2d2',
-  '#a9a9a9',
-  '#8a8a8a',
-  '#6d6d6d',
-  '#4a4a4a',
-  '#2c2c2c',
-  '#1f1f1f',
-  '#111111',
-  '#0b0b0b',
+  '#F6F1E6', // paper-lit
+  '#EDE6D6', // paper
+  '#B9AF9C', // paper-dim
+  '#9B9281', // between paper-dim and paper-faint
+  '#7D7466', // paper-faint
+  '#5E5344', // note-dim
+  '#38322A', // ink-5
+  '#27231C', // ink-4
+  '#15130F', // ink-2
+  '#0B0A08', // ink
 ];
 
 /** Red is the game's only real accent: danger, refusal, the cost you cannot pay. */
 const blood: Tuple<string, 10> = [
-  '#ffe5e5',
-  '#ffb3b3',
-  '#ff8080',
-  '#f74d4d',
-  '#e52626',
-  '#cb0101',
-  '#a50101',
-  '#7d0101',
+  '#F2D9D2',
+  '#E3B0A6',
+  '#D9887A',
+  '#D65A4A',
+  '#D32E24',
+  '#CB0101', // red
+  '#A50101', // red-deep
+  '#7D0101',
   '#560000',
-  '#2e0000',
+  '#2E0000',
 ];
 
 export const theme: MantineThemeOverride = {
@@ -53,13 +58,13 @@ export const theme: MantineThemeOverride = {
   //   ramp. Picking a mid grey would make every primary control disappear into its own panel.
   primaryShade: 1,
 
-  black: '#050505',
-  white: '#ffffff',
+  black: '#0B0A08', // ink
+  white: '#EDE6D6', // paper: "white" is always paper in this theme
 
-  fontFamily: 'var(--wc-font-body)',
-  fontFamilyMonospace: 'var(--wc-font-numeral)',
+  fontFamily: 'var(--w-f-label)',
+  fontFamilyMonospace: 'var(--w-f-num)',
   headings: {
-    fontFamily: 'var(--wc-font-display)',
+    fontFamily: 'var(--w-f-title)',
     fontWeight: 400,
   },
 
@@ -83,7 +88,7 @@ export const theme: MantineThemeOverride = {
         root: {
           // ★ The plate, not a flat panel: RDR lights its surfaces from the top edge and lets
           //   them fall to black at the corners. Identical to .wc-plate in wc.css.
-          background: 'radial-gradient(140% 130% at 50% 0%, #1a1a1af0, #060606f2)',
+          background: 'radial-gradient(140% 130% at 50% 0%, rgba(29, 26, 21, 0.95), rgba(11, 10, 8, 0.96))',
           border: '1px solid var(--wc-line)',
           color: 'var(--wc-text)',
         },
@@ -93,17 +98,18 @@ export const theme: MantineThemeOverride = {
     Modal: {
       styles: {
         modal: {
-          background: 'radial-gradient(140% 130% at 50% 0%, #1a1a1af0, #060606f2)',
+          background: 'radial-gradient(140% 130% at 50% 0%, rgba(29, 26, 21, 0.95), rgba(11, 10, 8, 0.96))',
           border: '1px solid var(--wc-line)',
-          boxShadow: '0 22px 60px -18px #000000d9',
+          boxShadow: '0 22px 60px -18px rgba(0, 0, 0, 0.85)',
         },
         title: {
-          fontFamily: 'var(--wc-font-display)',
+          fontFamily: 'var(--w-f-title)',
+          fontWeight: 600,
           fontSize: 20,
           color: 'var(--wc-text)',
         },
         // The scrim is nearly opaque: RDR dims the world hard behind its menus.
-        overlay: { backgroundColor: 'rgba(3, 3, 3, 0.78)' },
+        overlay: { backgroundColor: 'var(--w-scrim)' },
         close: { color: 'var(--wc-text-dim)', '&:hover': { backgroundColor: 'var(--wc-hover)' } },
       },
     },
@@ -131,8 +137,8 @@ export const theme: MantineThemeOverride = {
           border: '1px solid var(--wc-line)',
           backgroundColor: 'var(--wc-panel-2)',
           color: 'var(--wc-text)',
-          fontFamily: 'var(--wc-font-display)',
-          fontWeight: 400,
+          fontFamily: 'var(--w-f-action)',
+          fontWeight: 500,
           letterSpacing: '0.02em',
           transition: 'background-color 120ms ease, border-color 120ms ease',
           '&:hover': {
@@ -233,7 +239,7 @@ export const theme: MantineThemeOverride = {
     },
 
     Title: {
-      styles: { root: { fontFamily: 'var(--wc-font-display)', fontWeight: 400 } },
+      styles: { root: { fontFamily: 'var(--w-f-title)', fontWeight: 400 } },
     },
 
     Badge: {

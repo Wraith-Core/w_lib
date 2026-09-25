@@ -270,7 +270,7 @@ const Requirements: React.FC<{ rows?: Requirement[]; heading?: string }> = ({ ro
             <span className="wc-ing-label">{row.label}</span>
 
             {row.amount != null && (
-              <span className="wc-ing-amount" dir="ltr" style={row.missing ? { color: 'var(--wc-red)' } : undefined}>
+              <span className={`wc-ing-amount${row.missing ? ' is-danger' : ''}`} dir="ltr">
                 {row.amount}
               </span>
             )}
@@ -719,9 +719,9 @@ const Panel: React.FC = () => {
                             aria-expanded={open}
                             onClick={() => toggleNavGroup(key)}
                           >
-                            <span className="wc-category-chevron" aria-hidden="true">
-                              {open ? '▾' : '▸'}
-                            </span>
+                            {/* ★ The game's own arrow (masked, currentColor), turned down when open. It
+                                was the ▾ / ▸ characters, which no theme face has: the system drew them. */}
+                            <span className={`wc-category-chevron${open ? ' is-open' : ''}`} aria-hidden="true" />
                             <span className="wc-category-name">
                               {group.private && (
                                 <span className="wc-category-lock" aria-hidden="true">

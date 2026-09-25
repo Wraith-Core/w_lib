@@ -4,6 +4,12 @@
    ★ The shadow does the work a background would. With `useBackground: false` the notice has
      nothing behind it, so legibility over a bright sky or a pale road comes entirely from the
      text shadow — which is why it is heavy and doubled rather than decorative.
+
+   ★ The Wraith theme: paper, never #fff; ink plates; the faces by role. A place name on the
+     banner is the display role (RDR Lino / Lalezar, the loading screen's wordmark), a plain
+     notice's title the title role (EB Garamond 600 / Lalezar), its line reading text
+     (EB Garamond / Amiri), the region and the readings the label and figures faces. A colour
+     a script names (titleColor, a meta part's colour) is still honoured: it is the script's.
    ============================================================================ */
 
 /* ⚠️ direction: ltr is for GEOMETRY, not for text. Everything below places itself on the
@@ -17,7 +23,7 @@
   z-index: 25;
   direction: ltr;
   pointer-events: none;
-  font-family: var(--wc-font-display);
+  font-family: var(--w-f-title);
 }
 
 /* ── where a stack sits ───────────────────────────────────────────────── */
@@ -46,11 +52,19 @@
    is physically left-to-right, so the body takes the space and the icon sits after it -- which
    on screen is the right. It used to be first in a row that flipped with the notice's own
    isRTL flag, so the icon crossed to the other side whenever the text did. */
+/* ⚠️ لا خلفية ولا إطار: `useBackground: false` تعني نصًّا فوق اللعبة، لا بطاقة سوداء.
+      ★ A black plate and a hairline border were added here once, to answer text that read as
+        washed out. The washed-out text was a different bug -- an inline 80% white the component
+        pushed past this stylesheet -- and it is fixed at the source. So the plate goes and the
+        notice is what the game's own tip is: white text, its icon, and a doubled shadow heavy
+        enough to hold against a bright sky (.wn-title / .wn-desc). */
 .wn-note {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 2px;
+  padding: 10px 14px;
   animation: wn-in-center 300ms ease-out both;
 }
 
@@ -88,27 +102,23 @@
   min-width: clamp(300px, 28vw, 440px);
   padding: clamp(12px, 1.7vh, 20px) clamp(30px, 3vw, 56px);
   gap: clamp(12px, 1.2vw, 20px);
-  background: none;
-  box-shadow: none;
 }
 
-/* ⚠️ 100% 100%, not contain: toast_bg is a plain plate with nothing drawn in it, so stretching
-   it to the banner's box distorts nothing -- and `contain` would letterbox it inside a box
-   whose proportion follows the town's name. */
-/* ★ A solid core UNDER the brush.
+/* ★ لافتة البلدة وحدها تحمل لوح اللعبة — مثل لافتة الموقع الأصلية تمامًا.
+      The owner compared this banner with the game's own location feed (the black brush plate at
+      the top-left) and asked for that design. So the plate comes back HERE ONLY: toast_bg, the
+      game's own brush, masked over a blurred dark core -- the two halves the original had.
+      The plain notice (.wn-note without has-plate) stays bare text over the world.
 
-   ⚠️ Measured, not guessed: the stroke's ink fades along its length -- mean alpha runs 215, 221,
-      223, 212 across the first four fifths and then drops to 169 in the last. So one end of the
-      plate was visibly thinner than the other, and centred text on it read as pushed to the
-      heavy side with the far end looking empty. This fills the middle without touching the
-      silhouette: inset well inside the ragged edge and blurred, so it has no edge of its own to
-      give away, and the brush still draws the whole outline. */
+   ⚠️ Both halves or neither: the mask alone gives a stroke whose ink fades to about two thirds
+      along its length (measured: mean alpha 215, 221, 223, 212, then 169), so the blurred core
+      under it is what keeps the far end of the plate from looking empty. */
 .wn-note.has-plate:after {
   content: "";
   position: absolute;
   inset: 16% 8%;
   z-index: -2;
-  background: rgba(5, 5, 5, 0.92);
+  background: rgba(11, 10, 8, 0.92);
   filter: blur(11px);
 }
 
@@ -117,9 +127,15 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background-color: rgba(6, 6, 6, 0.9);
+  background-color: rgba(11, 10, 8, 0.92);
   -webkit-mask: var(--tex-toast_bg) center / 100% 100% no-repeat;
   mask: var(--tex-toast_bg) center / 100% 100% no-repeat;
+}
+
+/* The game's feed sets its readings with plain space between them, not bars. */
+.wn-note.has-plate .wn-meta-sep {
+  visibility: hidden;
+  margin: 0 0.35em;
 }
 
 /* ★ The name carries the banner, and it has to be big enough to do that. The game sets a place
@@ -135,10 +151,16 @@
 .wn-note.has-plate .wn-title {
   position: relative;
   padding-bottom: clamp(2px, 0.3vh, 4px);
-  font-size: clamp(27px, 4.4vh, 46px);
-  line-height: 1.05;
+  font-family: var(--w-f-display);
+  font-weight: 400;
+  font-size: calc(clamp(27px, 4.4vh, 46px) * var(--w-k-display));
+  line-height: var(--w-lh-display);
   letter-spacing: 0.055em;
   text-transform: uppercase;
+  /* ⚠️ Its own shadow, heavier than .wn-title's. A place name is set up to 46px and it no longer
+        has a plate under it; the small notice's 4px/10px shadow is sized for 19px text and goes
+        thin under a name that large against a bright sky. The law banner already does this. */
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.95), 0 0 18px rgba(0, 0, 0, 0.75);
 }
 
 /* ⚠️ Arabic has no upper case, and letter-spacing breaks its joined script apart. Both are
@@ -163,18 +185,20 @@
   top: 0;
   height: 2px;
   opacity: 0.7;
-  background-color: var(--wc-accent, #ededed);
+  background-color: var(--w-paper, #ede6d6);
   -webkit-mask: var(--tex-divider_line) center / 100% 100% no-repeat;
   mask: var(--tex-divider_line) center / 100% 100% no-repeat;
 }
 
 /* The region line: small, wide, and quiet -- it exists to be dwarfed by the name. */
 .wn-note.has-plate .wn-desc {
-  font-family: var(--wc-font-display);
-  font-size: clamp(10px, 1.35vh, 14px);
+  font-family: var(--w-f-label);
+  font-weight: var(--w-wt-label);
+  font-size: calc(clamp(11px, 1.35vh, 14px) * var(--w-k-label));
+  line-height: var(--w-lh-label);
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 [dir="rtl"] .wn-note.has-plate .wn-desc {
@@ -190,8 +214,8 @@
   display: block;
   margin-top: clamp(7px, 1vh, 12px);
   padding-top: clamp(7px, 1vh, 12px);
-  color: #ffffff;
-  font-family: var(--wc-font-numeral);
+  color: var(--w-paper);
+  font-family: var(--w-f-num);
   font-size: clamp(13px, 2vh, 21px);
   letter-spacing: 0.04em;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.7);
@@ -220,18 +244,20 @@
 }
 
 .wn-title {
-  color: #ffffff;
-  font-size: clamp(14px, 2.1vh, 19px);
-  line-height: 1.25;
-  letter-spacing: 0.01em;
+  color: var(--w-paper);
+  font-family: var(--w-f-title);
+  font-weight: var(--w-wt-title);
+  font-size: calc(clamp(15px, 2.1vh, 20px) * var(--w-k-title));
+  line-height: var(--w-lh-title);
+  letter-spacing: var(--w-track-title);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.7);
 }
 
 .wn-desc {
-  color: rgba(255, 255, 255, 0.8);
-  font-family: var(--wc-font-body);
-  font-size: clamp(11px, 1.6vh, 14px);
-  line-height: 1.4;
+  color: var(--w-paper);
+  font-family: var(--w-f-text);
+  font-size: calc(clamp(14px, 1.6vh, 16px) * var(--w-k-text));
+  line-height: 1.5;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.7);
 }
 
@@ -243,8 +269,11 @@
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
-  font-size: clamp(13px, 2vh, 18px);
-  color: #fff;
+  font-family: var(--w-f-action);
+  font-weight: var(--w-wt-action);
+  font-size: calc(clamp(15px, 2vh, 19px) * var(--w-k-action));
+  line-height: var(--w-lh-action);
+  color: var(--w-paper);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.7);
 }
 
@@ -254,8 +283,11 @@
   transform: translate(-50%, -50%);
   text-align: center;
   white-space: nowrap;
-  font-size: clamp(11px, 1.7vh, 15px);
-  color: #fff;
+  font-family: var(--w-f-label);
+  font-weight: var(--w-wt-label);
+  font-size: calc(clamp(12px, 1.7vh, 15px) * var(--w-k-label));
+  line-height: var(--w-lh-label);
+  color: var(--w-paper);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.7);
 }
 
@@ -302,9 +334,11 @@
 }
 
 /* ★ The icon breathes while the notice is up -- rakan_notify's pulseIcon, to the frame. */
+/* ⚠️ Was `to { opacity: 0.5 }` — the icon spent half of every 500 ms cycle at half strength, which
+      on a notice that had no plate behind it looked like the whole toast was fading in and out. */
 @keyframes wn-pulse {
-  from { opacity: 1; }
-  to   { opacity: 0.5; }
+  from { opacity: 0.9; }
+  to   { opacity: 1; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -320,9 +354,10 @@
    ══════════════════════════════════════════════════════════════════════ */
 
 .wn-note.has-plate.is-law .wn-title {
-  /* RDR Catalogue is the heavy face of the three; the law banner is set in the heaviest. */
-  font-family: var(--wc-font-numeral);
-  color: var(--wc-red);
+  /* ★ The display face, red: WANTED is the critical state a notice exists for, and at this size
+     red is a mark, not small red text. (It was RDR Catalogue, which has no Arabic.) */
+  font-family: var(--w-f-display);
+  color: var(--w-red);
   letter-spacing: 0.045em;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95), 0 0 14px rgba(0, 0, 0, 0.6);
 }
@@ -333,20 +368,55 @@
 }
 
 .wn-note.has-plate.is-law .wn-desc {
-  font-family: var(--wc-font-display);
-  font-size: clamp(13px, 2vh, 21px);
+  font-family: var(--w-f-action);
+  font-weight: var(--w-wt-action);
+  font-size: calc(clamp(15px, 2vh, 21px) * var(--w-k-action));
+  line-height: var(--w-lh-action);
   letter-spacing: 0.02em;
   text-transform: none;
   opacity: 1;
 }
 
 [dir="rtl"] .wn-note.has-plate.is-law .wn-title { letter-spacing: 0; }
+[dir="rtl"] .wn-title { letter-spacing: 0; }
 [dir="rtl"] .wn-note.has-plate.is-law .wn-desc { letter-spacing: 0; }
 
 /* The bars between the readings -- white and dimmer than the readings themselves, so they
    separate without competing. */
 .wn-meta-sep {
   margin: 0 0.55em;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(237, 230, 214, 0.55);
   font-weight: 400;
+}
+
+/* ★ Arabic text in a notice the script did not mark isRTL (its body is dir="ltr", so the RTL
+   rules above do not reach it): index.tsx tags the notice .has-ar when its words are Arabic, and
+   Arabic is never letter-spaced or cased, whatever the notice's direction. */
+.wn-note.has-ar :is(.wn-title, .wn-desc) {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ── sizes over nui/assets/store-aux-responsive.css ──────────────────────
+   ★ The same selectors that sheet uses (this bundle is linked after it), with the same px unit
+     (--lb-px: 1px at 1080p, 2px at 2160p), plus the theme's Arabic factors -- and the reading
+     line never under 16px in Arabic (it was 14). */
+body[data-store-theme=library] .wn-title {
+  font-size: calc(clamp(calc(15 * var(--lb-px)), 2.1vh, calc(20 * var(--lb-px))) * var(--w-k-title));
+}
+
+body[data-store-theme=library] .wn-desc {
+  font-size: calc(clamp(calc(14 * var(--lb-px)), 1.6vh, calc(16 * var(--lb-px))) * var(--w-k-text));
+}
+
+body[data-store-theme=library] .wn-note.has-plate .wn-title {
+  font-size: calc(clamp(calc(27 * var(--lb-px)), 4.4vh, calc(46 * var(--lb-px))) * var(--w-k-display));
+}
+
+body[data-store-theme=library] .wn-note.has-plate .wn-desc {
+  font-size: calc(clamp(calc(11 * var(--lb-px)), 1.35vh, calc(14 * var(--lb-px))) * var(--w-k-label));
+}
+
+body[data-store-theme=library] .wn-note.has-plate.is-law .wn-desc {
+  font-size: calc(clamp(calc(15 * var(--lb-px)), 2vh, calc(21 * var(--lb-px))) * var(--w-k-action));
 }

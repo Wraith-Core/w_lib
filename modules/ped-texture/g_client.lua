@@ -534,7 +534,7 @@ function w.pedTexture.apply(ped, layerName, _data)
   if not category then
     return eprint("No texture category for layer: " .. layerName)
   end
-  pedsTextures[ped] = pedsTextures[ped] or Entity(ped).state["w_pedTexture"] or {}
+  pedsTextures[ped] = pedsTextures[ped] or (NetworkGetEntityIsNetworked(ped) and Entity(ped).state["w_pedTexture"]) or {}
   pedsTextures[ped][category] = pedsTextures[ped][category] or { layers = {} }
   pedsTextures[ped][category].layers[layerName] = nil
 
@@ -572,7 +572,7 @@ end
 function w.pedTexture.refreshAll(ped)
   if not ped or ped == 0 or not DoesEntityExist(ped) then return end
   dprint("Refresh all ped texture", ped)
-  pedsTextures[ped] = pedsTextures[ped] or Entity(ped).state["w_pedTexture"] or {}
+  pedsTextures[ped] = pedsTextures[ped] or (NetworkGetEntityIsNetworked(ped) and Entity(ped).state["w_pedTexture"]) or {}
   if table.count(pedsTextures[ped]) == 0 then return end
 
   for _, data in pairs(pedsTextures[ped]) do
@@ -607,7 +607,7 @@ end
 function w.pedTexture.overwriteBodyPart(ped, category, overlays, forceRemove)
   dprint("overwriteBodyPart", ped, category, overlays, forceRemove)
   forceRemove = forceRemove or false
-  pedsTextures[ped] = pedsTextures[ped] or Entity(ped).state["w_pedTexture"] or { [category] = {} }
+  pedsTextures[ped] = pedsTextures[ped] or (NetworkGetEntityIsNetworked(ped) and Entity(ped).state["w_pedTexture"]) or { [category] = {} }
   if pedsTextures[ped][category] or forceRemove then
     if pedsTextures[ped][category] then
       pedsTextures[ped][category].layers = {}
@@ -631,7 +631,7 @@ w.pedTexture.overwriteCategory = w.pedTexture.overwriteBodyPart
 ---@return object (Return the list of layer apply on the ped)
 function w.pedTexture.getAll(ped)
   local layers = {}
-  pedsTextures[ped] = pedsTextures[ped] or Entity(ped).state["w_pedTexture"] or {}
+  pedsTextures[ped] = pedsTextures[ped] or (NetworkGetEntityIsNetworked(ped) and Entity(ped).state["w_pedTexture"]) or {}
   for _, data in pairs(pedsTextures[ped]) do
     for layername, layer in pairs(data.layers) do
       layers[layername] = layer

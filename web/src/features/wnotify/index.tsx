@@ -81,6 +81,10 @@ const placementClass = (placement?: string, variant?: string) =>
 /** Which edge a placement sits against, so the notice can arrive from off that edge. */
 const sideOf = (place: string) => (place.endsWith('-right') ? 'right' : place.endsWith('-left') ? 'left' : 'center');
 
+/** Does the notice carry Arabic words? Then nothing in it is letter-spaced or cased (wnotify.css). */
+const ARABIC = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
+const hasArabic = (toast: NotifyData) => ARABIC.test(`${toast.title ?? ''}${toast.description ?? ''}`);
+
 /**
  * The lengths this markup may be cut to without splitting anything.
  *
@@ -207,7 +211,7 @@ const WNotify: React.FC = () => {
               key={toast.key}
               className={`wn-note from-${sideOf(place)}${toast.useBackground ? ' has-plate' : ''}${
                 toast.variant ? ` is-${String(toast.variant).replace(/[^a-z]/g, '')}` : ''
-              }${toast.leaving ? ' is-out' : ''}`}
+              }${hasArabic(toast) ? ' has-ar' : ''}${toast.leaving ? ' is-out' : ''}`}
             >
               <span
                 className="wn-body"

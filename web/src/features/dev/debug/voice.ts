@@ -38,10 +38,14 @@ export const debugVoice = () => {
       action: 'voicePanel',
       data: {
         title: 'You can say',
-        // ★ Beside the barkeep, not in a corner -- these are HIS commands. In game Lua projects
-        //   his head bone; the preview has no game to ask, so the point is fixed here.
-        x: 0.34,
-        y: 0.5,
+        // ★ The barkeep's own head point and hint id, so the frame folds this list into HIS card
+        //   instead of drawing a second plate beside it. In game Lua projects his head bone; the
+        //   preview has no game to ask, so the point is fixed here.
+        x: 0.32,
+        y: 0.44,
+        id: 'barkeep',
+        speaker: 'Barkeep',
+        talkKey: 'G',
         groups: [
           // ★ {slots} are the script's own phrase syntax -- see api/action: phrases = { "buy {item}" }.
           {

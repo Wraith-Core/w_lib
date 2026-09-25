@@ -1,0 +1,8 @@
+/* Wraith Core theme in one link: the tokens, the faces and the w-* primitives.
+   <link rel="stylesheet" href="https://cfx-nui-w_lib/nui/assets/wraith-theme.css">
+   Nothing here styles an element by itself (tokens and @font-face only, w-* classes opt in).
+   w_lib/html/dist/index.html has always linked this path (it was a 404 until the theme landed).
+   See ../theme/THEME.md. */
+@import url('../theme/tokens.css');
+@import url('../theme/fonts.css');
+@import url('../theme/base.css');

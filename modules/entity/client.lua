@@ -15,11 +15,16 @@ end)
 
 --- Request control of an entity and wait until it's granted
 ---@param entity integer (The entity ID to request control of)
-function w.entity.requestControl(entity)
+---@param timeout? integer (ms to give up after; default: for as long as the entity exists)
+---@return boolean granted
+function w.entity.requestControl(entity, timeout)
+	local deadline = timeout and GetGameTimer() + timeout
 	while not NetworkHasControlOfEntity(entity) do
+		if not DoesEntityExist(entity) or (deadline and GetGameTimer() >= deadline) then return false end
 		NetworkRequestControlOfEntity(entity)
 		Wait(100)
 	end
+	return true
 end
 
 --- Delete an entity if it exists

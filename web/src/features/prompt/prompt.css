@@ -21,6 +21,13 @@
 
    ⚠️ AND THE POSITION CLASS MUST COME FIRST in the group's className -- the shipped rules
       select on [class^="top-"], which reads the START of the attribute. See index.tsx.
+
+   ★ 2026-09, the Wraith theme. The prompt keeps the game's furniture -- keys on the right, the
+     hold ring, the title under a rule, the page dots -- but no longer its two faces: Crock and
+     BebasNeue have no Arabic at all, so every Arabic label fell to the system face (Arial).
+     Labels are the theme's label role (Hapna Slab caps / Tajawal 700), the group title the
+     title role (EB Garamond 600 / Lalezar), the key letter the figures face (RDR Catalogue).
+     White is paper and black is ink; a key is a paper cap with an ink letter, as in the game.
    ============================================================================ */
 
 .wl-prompt-root {
@@ -52,17 +59,27 @@
 .wl-prompt-root *::before,
 .wl-prompt-root *::after { box-sizing: border-box; }
 
-.wl-prompt-root .crock{font-family:Crock,sans-serif;text-shadow:calc(.1 * var(--wl-prompt-rem)) calc(.1 * var(--wl-prompt-rem)) rgba(0,0,0,.9)}
-.wl-prompt-root .bebas{font-family:BebasNeue,sans-serif;text-shadow:none}
-.wl-prompt-root .keyboardKey{--stroke: calc(.14 * var(--wl-prompt-rem));--fillColor: white;--strokeBgColor: rgba(255, 255, 255, .5);position:relative;color:#000;display:flex;align-items:center;justify-content:center;font-size:calc(.75 * var(--wl-prompt-rem));box-shadow:1px 1px #0000004d}
-.wl-prompt-root .keyboardKey .text{background:#fff;height:calc(1.23 * var(--wl-prompt-rem));min-width:calc(1.23 * var(--wl-prompt-rem));padding:0 calc(.49 * var(--wl-prompt-rem));display:flex;align-items:center;justify-content:center}
+.wl-prompt-root .crock{font-family:var(--w-f-label);font-weight:var(--w-wt-label);text-shadow:0 2px 4px rgba(0,0,0,.95),0 0 10px rgba(0,0,0,.7)}
+.wl-prompt-root .bebas{font-family:var(--w-f-num);font-weight:400;text-shadow:none}
+/* a label: the label role at the prompt's scale -- caps with a little air in Latin, Tajawal 700
+   and never tracked or cased in Arabic (the --w-label-* switches are 0 / none under RTL) */
+.wl-prompt-root .prompt .label{font-size:calc(.78em * var(--w-k-label));line-height:var(--w-lh-label);text-transform:var(--w-label-case);letter-spacing:calc(var(--w-label-track) * .6);padding-block:.08em}
+/* the group title: the title role, a size above the labels. 600 in both directions: Lalezar is
+   declared over a weight range (never synthesised), and a Latin name inside an Arabic title then
+   keeps EB Garamond's semibold instead of dropping to its book weight. */
+.wl-prompt-root .wl-prompt-group .groupTitle.crock{font-family:var(--w-f-title);font-weight:600;font-size:calc(1em * var(--w-k-title));line-height:var(--w-lh-title);letter-spacing:var(--w-track-title);text-transform:none;padding-block:.06em}
+.wl-prompt-root .keyboardKey{--stroke: calc(.14 * var(--wl-prompt-rem));--fillColor: var(--w-paper);--strokeBgColor: rgba(237, 230, 214, .5);position:relative;color:var(--w-ink);display:flex;align-items:center;justify-content:center;font-size:calc(.75 * var(--wl-prompt-rem));box-shadow:1px 1px #0000004d}
+.wl-prompt-root .keyboardKey .text{background:var(--w-paper);letter-spacing:.04em;text-transform:uppercase;line-height:1;padding-top:.08em;height:calc(1.23 * var(--wl-prompt-rem));min-width:calc(1.23 * var(--wl-prompt-rem));padding:0 calc(.49 * var(--wl-prompt-rem));display:flex;align-items:center;justify-content:center}
 .wl-prompt-root .keyboardKey .image{height:calc(1.23 * var(--wl-prompt-rem))}
 .wl-prompt-root .keyboardKey:not(:first-child){margin-left:calc(.205 * var(--wl-prompt-rem))}
 .wl-prompt-root .keyboardKey.holdable .progressContainer{background:linear-gradient(to right,var(--strokeBgColor) 0%,var(--strokeBgColor) calc(100% - var(--stroke)),transparent 0%),linear-gradient(to bottom,var(--strokeBgColor) 0%,var(--strokeBgColor) calc(100% - var(--stroke)),transparent 0%),linear-gradient(to left,var(--strokeBgColor) 0%,var(--strokeBgColor) calc(100% - var(--stroke)),transparent 0%),linear-gradient(to top,var(--strokeBgColor) 0%,var(--strokeBgColor) calc(100% - var(--stroke)),transparent 0%);background-size:100% var(--stroke),var(--stroke) 100%,100% var(--stroke),var(--stroke) 100%;background-position:top left,top right,bottom left,top left;background-repeat:no-repeat;width:calc(100% + calc(.6 * var(--wl-prompt-rem)));height:calc(1.8 * var(--wl-prompt-rem));position:absolute}
 .wl-prompt-root .keyboardKey.holdable .progressContainer .progress{width:100%;height:100%;position:relative;z-index:4;background:linear-gradient(to right,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-l-top) * 1%),transparent 0%,transparent 50%,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-r-top) * 1%),transparent 0%),linear-gradient(to bottom,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-right) * 1%),transparent 0%),linear-gradient(to left,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-bottom) * 1%),transparent 0%),linear-gradient(to top,var(--fillColor) 0%,var(--fillColor) calc(var(--scale-left) * 1%),transparent 0%);background-size:100% var(--stroke),var(--stroke) 100%,100% var(--stroke),var(--stroke) 100%;background-position:top left,top right,bottom left,top left;background-repeat:no-repeat}
-.wl-prompt-root .keyboardKey .activeIndicator{width:calc(100% + calc(.6 * var(--wl-prompt-rem)));height:calc(1.8 * var(--wl-prompt-rem));position:absolute;background:#c0c0c0e6;z-index:3;display:none}
+.wl-prompt-root .keyboardKey .activeIndicator{width:calc(100% + calc(.6 * var(--wl-prompt-rem)));height:calc(1.8 * var(--wl-prompt-rem));position:absolute;background:rgba(185,175,156,.9);z-index:3;display:none}
+/* ★ The picture keys (enter, space, the arrows) are white caps with a black glyph. A multiply
+   layer of paper over them turns the white into the theme's paper and leaves the glyph ink. */
+.wl-prompt-root .keyboardKey.is-image::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:var(--w-paper);mix-blend-mode:multiply}
 .wl-prompt-root .keyboardKey.active .activeIndicator{display:block}
-.wl-prompt-root .priceDisplay{position:absolute;top:.46vh;right:.92vh;display:flex;align-items:center;font-family:Crock,sans-serif;font-size:inherit;height:100%;text-shadow:calc(.1 * var(--wl-prompt-rem)) calc(.1 * var(--wl-prompt-rem)) rgba(0,0,0,.9)}
+.wl-prompt-root .priceDisplay{position:absolute;top:.46vh;right:.92vh;display:flex;align-items:center;font-family:var(--w-f-num);font-size:inherit;height:100%;text-shadow:calc(.1 * var(--wl-prompt-rem)) calc(.1 * var(--wl-prompt-rem)) rgba(0,0,0,.9)}
 .wl-prompt-root .priceDisplay.priceRight{position:static;top:auto;right:auto;height:var(--price-height);white-space:nowrap}
 .wl-prompt-root .monetary{gap:.4em;display:flex;position:relative}
 .wl-prompt-root .monetary>:first-child:not(:last-child){font-size:.6em;margin-top:.93vh}
@@ -75,11 +92,11 @@
 .wl-prompt-root .price-item{display:flex;flex-direction:row;align-items:center}
 .wl-prompt-root .plus{padding:0 .2em}
 .wl-prompt-root .quantity{font-size:.6em;margin-bottom:.2em;margin-right:.2em}
-.wl-prompt-root .circle-quantity{position:absolute;color:#000;background:#fff;border-radius:100%;aspect-ratio:1/1;min-width:1.6em;text-align:center;top:-1px;right:0;font-size:.4em;display:flex;align-items:center;justify-content:center;font-family:Crock,sans-serif;font-weight:700;text-shadow:none}
+.wl-prompt-root .circle-quantity{position:absolute;color:var(--w-ink);background:var(--w-paper);border-radius:100%;aspect-ratio:1/1;min-width:1.6em;text-align:center;top:-1px;right:0;font-size:.4em;display:flex;align-items:center;justify-content:center;font-family:var(--w-f-num);font-weight:400;text-shadow:none}
 .wl-prompt-root .item{display:flex;align-items:center;position:relative}
 .wl-prompt-root .item .icon{display:flex;flex-direction:column;align-items:center;max-width:2em;max-height:var(--price-height)}
 .wl-prompt-root .item .icon img{object-fit:cover;display:block;width:auto;height:1em}
-.wl-prompt-root .item .icon .label{font-size:.6em;font-family:Crock,sans-serif;overflow-wrap:break-word;text-align:center}
+.wl-prompt-root .item .icon .label{font-size:.6em;font-family:var(--w-f-label);overflow-wrap:break-word;text-align:center}
 .wl-prompt-root .item.with-label .icon img{height:calc(var(--price-height) * .6)}
 .wl-prompt-root .prompt{--price-height: calc(1.8 * var(--wl-prompt-rem));display:flex;flex-direction:row;align-items:center;margin-bottom:calc(.6 * var(--wl-prompt-rem));gap:calc(.5 * var(--wl-prompt-rem))}
 .wl-prompt-root .prompt.isLeft{flex-direction:row-reverse}
@@ -90,12 +107,12 @@
 .wl-prompt-root .prompt.disabled{opacity:.6}
 .wl-prompt-root .promptSeparator{width:calc(8 * var(--wl-prompt-rem));margin:calc(.05 * var(--wl-prompt-rem)) 0 calc(.65 * var(--wl-prompt-rem));opacity:.5}
 .wl-prompt-root .promptSeparator.isLeft{align-self:flex-start}
-.wl-prompt-root .wl-prompt-group{color:#fff;position:relative;display:flex;flex-direction:column}
+.wl-prompt-root .wl-prompt-group{color:var(--w-paper);position:relative;display:flex;flex-direction:column}
 .wl-prompt-root .wl-prompt-group .groupTitle{display:flex;gap:calc(.5 * var(--wl-prompt-rem))}
 .wl-prompt-root .wl-prompt-group .groupTitle span{display:flex;align-items:center;gap:calc(.5 * var(--wl-prompt-rem))}
 .wl-prompt-root .wl-prompt-group .groupTitle span img{height:calc(.9 * var(--wl-prompt-rem))}
 .wl-prompt-root .wl-prompt-group .dots{display:flex;flex-direction:row;gap:calc(.3 * var(--wl-prompt-rem));position:absolute}
-.wl-prompt-root .wl-prompt-group .dots .dot{height:calc(.215 * var(--wl-prompt-rem));width:calc(.215 * var(--wl-prompt-rem));background:#fff;border-radius:50%;opacity:.4;box-shadow:1px 1px #0000004d}
+.wl-prompt-root .wl-prompt-group .dots .dot{height:calc(.215 * var(--wl-prompt-rem));width:calc(.215 * var(--wl-prompt-rem));background:var(--w-paper);border-radius:50%;opacity:.4;box-shadow:1px 1px rgba(0,0,0,.3)}
 .wl-prompt-root .wl-prompt-group .dots .dot.active{opacity:1}
 .wl-prompt-root .wl-prompt-group .prompts{display:flex;flex-direction:column;align-items:flex-start}
 .wl-prompt-root .wl-prompt-group .line{margin:calc(.33 * var(--wl-prompt-rem)) 0;width:calc(8 * var(--wl-prompt-rem))}
@@ -133,7 +150,7 @@
 
 /* The same lift the keyboard gives, so a hovered row reads as reachable. */
 .wl-prompt-root .prompt.pressable:hover .keyboardKey .text {
-  background: #f2f2f2;
+  background: var(--w-paper-lit);
 }
 
 /* ★ The only two things here that SHOULD follow the language: the prompt's own label and the

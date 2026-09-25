@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * The w_crafting asset bridge -- textures and faces, resolved to ABSOLUTE urls.
+ * The w_crafting asset bridge -- textures resolved to ABSOLUTE urls, and the faces warmed.
  *
  * ⚠️ THE ONE RULE: a relative url() stored in a CSS custom property does NOT resolve once it
  *    is substituted through var() into mask-image or background. It renders BLANK in Chrome
@@ -106,13 +106,38 @@ export function texturePath(name: string): string | undefined {
 /** True when the named texture must be drawn as a picture instead of masked. */
 export const isImageTexture = (name: string) => IMAGE_TEXTURES.has(name);
 
-const AR_RANGE =
-  'U+0600-06FF,U+0750-077F,U+0870-089F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F,U+2010-2011,U+0660-0669';
-const LAT_RANGE = 'U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+2074,U+20AC,U+2122,U+2212';
+/**
+ * The faces to fetch before anything is shown.
+ *
+ * ★ The faces themselves are declared by the theme package (w_lib/nui/theme/fonts.css, linked
+ *   from index.html), not here. A NUI frame loads hidden, and a face is only fetched the first
+ *   time something asks for it -- so without this the first menu of a session opens in the
+ *   fallback face and redraws a frame later. Asking for each one up front (with a Latin and an
+ *   Arabic letter, so both halves of a split face load) makes that first open land finished.
+ */
+const WARM_FACES = [
+  '600 20px "EB Garamond"',
+  '400 20px "EB Garamond"',
+  '400 20px "Lalezar"',
+  '400 20px "Amiri"',
+  '700 20px "Amiri"',
+  '400 20px "Tajawal"',
+  '500 20px "Tajawal"',
+  '700 20px "Tajawal"',
+  '400 20px "Hapna Slab"',
+  '400 20px "RDR Catalogue"',
+  '400 20px "RDR Lino"',
+];
+
+function warmFaces(): void {
+  const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
+  if (!fonts || typeof fonts.load !== 'function') return;
+  for (const face of WARM_FACES) fonts.load(face, 'Aa\u0639').catch(() => undefined);
+}
 
 let done = false;
 
-/** Register every texture and face. Safe to call more than once. */
+/** Register every texture and warm the theme's faces. Safe to call more than once. */
 export function bootstrapWcAssets(): void {
   if (done || typeof document === 'undefined') return;
   done = true;
@@ -132,27 +157,8 @@ export function bootstrapWcAssets(): void {
     for (const name of names) root.setProperty(`--tex-${name}`, tex(`${dir}/${name}.png`));
   }
 
-  // ⚠️ @font-face cannot read a CSS variable, so the faces are written with ABS_BASE baked in
-  //    rather than declared in a stylesheet. Tajawal is split by unicode-range so Arabic gets
-  //    a face that has Arabic glyphs while Latin keeps the RDR lettering.
-  const style = document.createElement('style');
-  style.textContent = `
-    @font-face { font-family: "RDR Lino"; src: url("${ABS_BASE}fonts/RDRLino-Regular.woff2") format("woff2"); font-display: swap; }
-    @font-face { font-family: "Hapna Slab"; src: url("${ABS_BASE}fonts/HapnaSlabSerif-DemiBold.woff2") format("woff2"); font-display: swap; }
-    @font-face { font-family: "RDR Catalogue"; src: url("${ABS_BASE}fonts/RDRCatalogueBold-Bold.woff2") format("woff2"); font-display: swap; }
-    @font-face { font-family: "Noto Sans Arabic"; src: url("${ABS_BASE}fonts/NotoSansArabic.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
-    @font-face { font-family: "Tajawal"; font-weight: 400; src: url("${ABS_BASE}fonts/tajawal-arabic-400-normal.woff2") format("woff2"); unicode-range: ${AR_RANGE}; font-display: swap; }
-    @font-face { font-family: "Tajawal"; font-weight: 500; src: url("${ABS_BASE}fonts/tajawal-arabic-500-normal.woff2") format("woff2"); unicode-range: ${AR_RANGE}; font-display: swap; }
-    @font-face { font-family: "Tajawal"; font-weight: 700; src: url("${ABS_BASE}fonts/tajawal-arabic-700-normal.woff2") format("woff2"); unicode-range: ${AR_RANGE}; font-display: swap; }
-    @font-face { font-family: "Tajawal"; font-weight: 400; src: url("${ABS_BASE}fonts/tajawal-latin-400-normal.woff2") format("woff2"); unicode-range: ${LAT_RANGE}; font-display: swap; }
-    @font-face { font-family: "Tajawal"; font-weight: 700; src: url("${ABS_BASE}fonts/tajawal-latin-700-normal.woff2") format("woff2"); unicode-range: ${LAT_RANGE}; font-display: swap; }
-
-    /* ★ The prompt's own two faces. They were substituted with RDR Catalogue and RDR Lino at
-       first, on the belief they did not ship anywhere -- they do, in w_lib/nui/assets/fonts,
-       and the substitution was the most visible way the prompt failed to match. */
-    @font-face { font-family: "Crock"; src: url("${ABS_BASE}fonts/crock.ttf") format("truetype"); font-display: block; }
-    @font-face { font-family: "BebasNeue"; src: url("${ABS_BASE}fonts/BebasNeue-Regular.ttf") format("truetype"); font-display: block; }
-  `;
-
-  document.head.appendChild(style);
+  // ★ The faces come from the theme's fonts.css. It is a <link> in <head>, so by 'load' it has
+  //   been parsed and every @font-face is known; ask for them then.
+  if (document.readyState === 'complete') warmFaces();
+  else window.addEventListener('load', warmFaces, { once: true });
 }

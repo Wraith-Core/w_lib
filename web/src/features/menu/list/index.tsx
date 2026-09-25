@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNuiEvent } from '../../../hooks/useNuiEvent';
 import { fetchNui } from '../../../utils/fetchNui';
-import { Bar, Glyph, Head, Layer, Panel, play } from '../../../wc/Panel';
+import { Bar, Head, Layer, Panel, play } from '../../../wc/Panel';
 import Icon from '../../../wc/Icon';
 
 interface MenuItem {
@@ -182,7 +182,9 @@ const ListMenu: React.FC = () => {
                     <span className="lb-values-next" aria-hidden="true" />
                   </span>
                 ) : typeof item.checked === 'boolean' ? (
-                  <span className="lb-check-box">{item.checked && <Glyph tex="tick" style={{ opacity: 1 }} />}</span>
+                  /* ★ The theme's square: ink when off, paper with an ink centre when on (the class
+                     draws it -- lib-ui.css .lb-check-box.wst-checked), inverted on the band. */
+                  <span className={`lb-check-box${item.checked ? ' wst-checked' : ''}`} aria-checked={item.checked} role="checkbox" />
                 ) : (
                   <span />
                 )}

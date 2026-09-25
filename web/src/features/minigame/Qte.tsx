@@ -149,7 +149,7 @@ const Qte: React.FC<Props> = ({ config, onDone }) => {
 
     if (progressEl.current) {
       const progress = Math.min(Math.max(angle.current / failureAngle(), 0), 1) * 360;
-      progressEl.current.style.background = `conic-gradient(from 0deg, rgb(255 255 255) 0deg, rgb(255 255 255) ${progress}deg, transparent ${progress}deg, transparent 360deg)`;
+      progressEl.current.style.background = `conic-gradient(from 0deg, rgb(237 230 214) 0deg, rgb(237 230 214) ${progress}deg, transparent ${progress}deg, transparent 360deg)`;
     }
   };
 

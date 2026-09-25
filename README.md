@@ -475,6 +475,29 @@ Each section below covers one part of the library. Within a section, every call 
   - [Events](#events)
   - [Convars](#convars)
   - [Commands](#commands)
+- [The w.citizen module (one citizen id for every player target)](#the-wcitizen-module-one-citizen-id-for-every-player-target)
+  - [What can be typed](#what-can-be-typed)
+  - [The target table](#the-target-table)
+  - [Where the answer comes from](#where-the-answer-comes-from)
+  - [w.citizen.resolve](#wcitizenresolve)
+  - [w.citizen.requireOnline](#wcitizenrequireonline)
+  - [w.citizen.fromSource and w.citizen.idOf](#wcitizenfromsource-and-wcitizenidof)
+  - [w.citizen.normalize and w.citizen.parse](#wcitizennormalize-and-wcitizenparse)
+  - [w.citizen.label](#wcitizenlabel)
+  - [w.citizen.reasonKey, w.citizen.reasonText and w.citizen.text](#wcitizenreasonkey-wcitizenreasontext-and-wcitizentext)
+  - [w.citizen.myId and w.citizen.inputRow (client)](#wcitizenmyid-and-wcitizeninputrow-client)
+  - [exports.w_lib:Citizen* (resources without the loader)](#exportswlibcitizen-resources-without-the-loader)
+  - [Patterns](#patterns)
+- [The w.settings module (live settings edited from the admin console)](#the-wsettings-module-live-settings-edited-from-the-admin-console)
+  - [Opting in](#opting-in)
+  - [w.settings.define](#wsettingsdefine)
+  - [Fields and columns](#fields-and-columns)
+  - [Texts](#texts)
+  - [The three exports](#the-three-exports)
+  - [Storage, boot and drift](#storage-boot-and-drift)
+  - [The client side](#the-client-side)
+  - [Validation helpers](#validation-helpers)
+  - [Safe mode and the console command](#safe-mode-and-the-console-command)
 - [Shared utility modules under lib.* (data structures, strings, math, classes, commands, logging)](#shared-utility-modules-under-lib-data-structures-strings-math-classes-commands-logging)
   - [How these utilities reach a consumer resource](#how-these-utilities-reach-a-consumer-resource)
   - [Name collisions and which version wins](#name-collisions-and-which-version-wins)
@@ -633,6 +656,8 @@ Each section below covers one part of the library. Within a section, every call 
   - [w.camera.freeCamera helpers](#wcamerafreecamera-helpers)
   - [w.gizmo.moveEntity](#wgizmomoveentity)
   - [w.gizmo.cancel](#wgizmocancel)
+  - [w.placer.run](#wplacerrun)
+  - [w.placer.cancel, w.placer.isActive and w.placer.canStart](#wplacercancel-wplacerisactive-and-wplacercanstart)
   - [w.minigame.lockpick](#wminigamelockpick)
   - [w.minigame.qte](#wminigameqte)
   - [w.minigame.cancel](#wminigamecancel)
@@ -3435,7 +3460,7 @@ buy:setPrice({ money = 12.5 })
 ### lib.voicePanel
 
 ```lua
-lib.voicePanel(data: { title?: string, position?: string, coords?: vector3, groups?: { label?: string, commands: string[] }[] } | false)
+lib.voicePanel(data: { title?: string, position?: string, coords?: vector3, entity?: number, bone?: number, speaker?: string, talkKey?: string, id?: string, groups?: { label?: string, commands: string[] }[] } | false)
 ```
 
 Side: client
@@ -3443,14 +3468,18 @@ Side: client
 Parameters:
 
 - `data` (table or `false`, required): the list of phrases currently available, or `false` to hide it.
-  - `title` (string, optional)
-  - `groups` (`{label?: string, commands: string[]}[]`, optional): phrases grouped however the script groups them. The frame draws nothing unless at least one group is present.
-  - `position` (string, optional, default `'bottom-left'`): screen corner when `coords` is absent; the frame accepts `bottom-left`, `bottom-right`, `top-left`, `top-right`, `middle-left`, `middle-right`.
+  - `title` (string, optional): the heading over the list ("You can say").
+  - `groups` (`{label?: string, commands: string[]}[]`, optional): phrases grouped however the script groups them. The frame draws nothing unless at least one group is present. `{slot}` names in a phrase are drawn as blanks to fill.
+  - `position` (string, optional, default `'bottom-left'`): screen corner when neither `coords` nor `entity` is given; the frame accepts `bottom-left`, `bottom-right`, `top-left`, `top-right`, `middle-left`, `middle-right`.
   - `coords` (vector3, optional): when set the panel is anchored beside that world point, projected every frame by the library (`position` is ignored) and hidden while the point is off screen.
+  - `entity` (number, optional): anchor to this entity instead, re-read every frame (a ped's `bone`, SKEL_HEAD `21030` by default), so the list follows a person who moves. `coords` is used when the entity is gone.
+  - `speaker` (string, optional): the name shown over the list when no hint for the same person carries one.
+  - `talkKey` (string, optional): the push-to-talk key, drawn once as a key cap; pressed in while `lib.voiceListening` is active.
+  - `id` (string, optional): the `lib.voiceHint` id this list belongs to. The hint and the list are drawn as ONE dialogue card; without `id` they are paired by projected position.
 
 Returns: `nil`
 
-Shows the available-commands panel in a corner, or pinned to a world position. With `coords`, the library starts (or reuses) its projection thread, which also drives the voice hint balloons; without `coords` the description is sent once. Pass `false` to remove it.
+Shows the available-commands list in a corner, or pinned beside a person. With `coords`/`entity`, the library starts (or reuses) its projection thread, which also drives the voice hints; without them the description is sent once. Pass `false` to remove it. When a hint is up for the same person the frame merges the two into one card (name, what they are saying, then the numbered list under its group labels), placed beside the head -- never over it -- flipped to the other side only when it would not fit, and clamped to the screen.
 
 ```lua
 local groups = {
@@ -3473,13 +3502,14 @@ Side: client
 
 Parameters:
 
-- `hint` (`VoiceHint`, required): a balloon above a world point. Stored by `id`; calling again with the same `id` replaces it (used to switch between the phrase list and a spoken line). Errors (`lib.voiceHint needs an id and coords`) unless it is a table with `id` and `coords`.
+- `hint` (`VoiceHint`, required): a dialogue card beside a world point. Stored by `id`; calling again with the same `id` replaces it (used to switch between the phrase list and a spoken line). Errors (`lib.voiceHint needs an id and coords (or an entity)`) unless it is a table with `id` and `coords` or `entity`.
   - `id` (string, required): key for replacement and removal.
-  - `coords` (vector3, required): world position; the head bone reads best.
-  - `title` (string, optional): the ped's name.
-  - `icon` (string, optional): icon beside the name.
-  - `commands` (string[], optional): phrases the ped answers to.
-  - `says` (string, optional): a line the ped is saying now; shown instead of the phrases while set.
+  - `coords` (vector3, required unless `entity`): world position; the head bone reads best.
+  - `entity` (number, optional): follow this entity instead, re-read every frame (`bone`, SKEL_HEAD `21030` by default, on a ped).
+  - `title` (string, optional): the ped's name, the card's header.
+  - `icon` (string, optional): accepted for compatibility; the card draws no emblem.
+  - `commands` (string[], optional): phrases the ped answers to (a `lib.voicePanel` for the same person replaces them with its grouped list).
+  - `says` (string, optional): a line the ped is saying now; shown under the name while set. The phrase list folds away until it is cleared (the key row stays, dimmed).
 
 Returns: `nil`
 
@@ -3525,8 +3555,8 @@ Parameters:
 
 - `data` (`VoiceSubtitle` or `false`, required): the line to show, or `false` to clear it.
   - `text` (string, required)
-  - `state` (`'listening'`, `'matched'` or `'unknown'`, optional, frame default `'listening'`): colours the line (white, green, red).
-  - `speaker` (string, optional): name shown above the text.
+  - `state` (`'listening'`, `'matched'` or `'unknown'`, optional, frame default `'listening'`): told apart by a word over the line (Hearing / Understood / Not understood) and its rule (dashed, solid, red), not by colour alone.
+  - `speaker` (string, optional): name shown above the text. A `speaker` line whose text a dialogue card on screen is already showing (`lib.voiceHint` `says`) is not drawn a second time; it shows again once that card is gone.
   - `duration` (number, optional, default 4000): milliseconds before it fades.
   - `hold` (boolean, optional): exactly `true` keeps it until replaced or cleared.
 
@@ -8826,6 +8856,374 @@ local jobs = exports.w_lib:FwGetSharedJobs()
 
 This module registers no commands.
 
+## The w.citizen module (one citizen id for every player target)
+
+Every input that names another player takes the **citizen id** (`players.citizenid`: `'1'`, `'12'`, a vanity `'777'`), never a server id. A server id changes on every connection and, since the citizen id is plain digits, the two collide: a form that asked for "the player's id" answered "player not found" to a citizen id, or hit whoever held that server id. `w.citizen` says who an id is and whether he is in the game right now. When he is, his server id comes with the answer, so nobody has to look it up. When he is not, the feature takes its offline path, or tells the user that the player must be online.
+
+The module loads like any other: touch `w.citizen`, call `w.require("citizen")` or list it under `w_module { 'citizen' }`. `shared.lua` (normalize, parse, label, the locale strings) and `server.lua` or `client.lua` run inside your resource.
+
+| Side | Functions |
+|---|---|
+| shared | `normalize`, `parse`, `label`, `reasonKey`, `reasonText`, `text` |
+| server | `resolve`, `requireOnline`, `fromSource`, `idOf` |
+| client | `myId`, `inputRow` |
+
+### What can be typed
+
+| Input | Meaning |
+|---|---|
+| `'12'`, `' 12 '`, `'012'`, `'١٢'` | Citizen id 12. Surrounding spaces, invisible bidi or zero-width marks, no-break spaces and leading zeros are dropped. Arabic-Indic and Persian digits count as digits. |
+| `12` (a Lua number) | Citizen id 12. A number given to `resolve` is **always** a citizen id. Use `fromSource` for a server id you already hold. |
+| `'omg95204'`, `'OMG95204'` | The old random form (3 letters + 5 digits), upper-cased. Accepted until the migration has run everywhere. |
+| `'#7'`, `'# 7'`, `'＃٧'` | An explicit **server** id: the character in play on server id 7 (1..65535). |
+| `'me'` | The caller, only when `resolve` is given `{ self = source }`. |
+| a target table | Asked again by its `citizenid` (is he still online?). A table holding only a `source` is treated like `fromSource`. |
+
+Anything else is `'invalid_id'`: letters, `'0'`, more than 9 digits, or an empty string. The rules match w_core's `C.Normalize`. They live in the library as well, so a client dialog can refuse a malformed id before it asks the server.
+
+### The target table
+
+```lua
+{
+    citizenid = '12',            -- string, canonical form
+    source    = 7,               -- server id while the character is in play, nil otherwise
+    online    = true,            -- source ~= nil
+    name      = 'John Doe',      -- character first + last name ('' when the character has none)
+    license   = 'license:...',   -- account identifier (players.license; VORP: characters.identifier)
+    row       = { ... },         -- offline only: the saved row (w_core: citizenid, cid, license, name, charinfo, job, gang, last_updated)
+}
+```
+
+Store `citizenid`, never `source`. Use `source` only for something that happens now (a client event, a notification, a teleport).
+
+### Where the answer comes from
+
+- **w_core running**: `exports.w_core:ResolveCitizen` (w_core `server/citizen.lua`, the owner of the id). An online character is found in `WCore.Players`. Otherwise its `players` row is read. Inside w_core itself `WCore.Citizen.Resolve` is called directly, which also works while w_core is still `starting`. A player who dropped between w_core's read and the answer comes back as offline.
+- **no w_core** (another core), or an older w_core without that export, or an export error: the library's `Fw*` bridge answers instead. It scans the online players with `FwGetCharacterIdentifier` / `FwGetCharacterName` / `FwGetIdentifier`, then falls back to `FwCharacterRows('citizenid', id)`. That reads `players` on RSG-family cores and `characters.charidentifier` on VORP.
+
+### w.citizen.resolve
+
+```lua
+w.citizen.resolve(input: any, opts?: { self?: integer }) -> target | nil, reason
+```
+
+Side: server
+
+Parameters:
+- `input` (any, required): see [What can be typed](#what-can-be-typed)
+- `opts.self` (integer, optional): the caller's server id, so `'me'` names him
+
+Returns: the target, or `nil` and `'invalid_id'` (not an id) / `'not_found'` (no such character; nobody on that server id; a connected player with no character in play yet)
+
+Who the id is, online or not. Use it for every action that works without the player present: hiring, ownership, money, items, a job, a record, a warrant. The database write uses `target.citizenid`. The live part (a notification, a HUD refresh) runs only `if target.online`.
+
+```lua
+local target, reason = w.citizen.resolve(data.citizenid)
+if not target then return false, w.citizen.reasonText(reason, source) end
+MySQL.insert.await('INSERT INTO my_employees (citizenid, name) VALUES (?, ?)', { target.citizenid, target.name })
+if target.online then TriggerClientEvent('my_res:client:hired', target.source) end
+```
+
+### w.citizen.requireOnline
+
+```lua
+w.citizen.requireOnline(input: any, opts?: { self?: integer }) -> target | nil, reason, offlineTarget?
+```
+
+Side: server
+
+Returns: the target when he is in the game. Otherwise `nil` and `'invalid_id'` / `'not_found'` / `'offline'`. With `'offline'`, the offline target comes as a third value, so the message can still name him.
+
+For actions that need the player present: teleport, revive, spectate, a private message, a live jail.
+
+```lua
+local target, reason, offline = w.citizen.requireOnline(args.target, { self = source })
+if not target then
+    local text = w.citizen.reasonText(reason, source)
+    if offline then text = ('%s: %s'):format(w.citizen.label(offline), text) end
+    return w.notify(source, { description = text, type = 'error' })
+end
+SetEntityCoords(GetPlayerPed(target.source), GetEntityCoords(GetPlayerPed(source)))
+```
+
+### w.citizen.fromSource and w.citizen.idOf
+
+```lua
+w.citizen.fromSource(serverId: integer|string) -> target | nil, 'invalid_id' | 'not_found'
+w.citizen.idOf(serverId: integer|string) -> string | nil
+```
+
+Side: server
+
+`fromSource` is for a server id your code already holds and a user did not type: a player picked from a nearby list, the `source` of an event. It returns the same target table. It answers `'not_found'` when nobody is on that id or the player has no character in play yet (the character selection screen). `idOf` returns only the citizen id of the character in play on that server id: the value to store.
+
+```lua
+local owner = w.citizen.idOf(source)   -- '12'
+```
+
+### w.citizen.normalize and w.citizen.parse
+
+```lua
+w.citizen.normalize(value: any) -> string | nil
+w.citizen.parse(input: any) -> 'citizen', string | 'server', integer | 'self' | nil
+```
+
+Side: shared
+
+`normalize` returns the canonical citizen id (`' 007 '` gives `'7'`, `'omg95204'` gives `'OMG95204'`, `12` gives `'12'`) or nil. `parse` only says what kind of id was typed. It asks nobody, so a client can validate a field with it.
+
+### w.citizen.label
+
+```lua
+w.citizen.label(target: table|nil) -> string
+```
+
+Side: shared
+
+`'John Doe (12)'` for a notification or a log line. It gives just `'12'` when the character has no name, and `''` without a target.
+
+### w.citizen.reasonKey, w.citizen.reasonText and w.citizen.text
+
+```lua
+w.citizen.reasonKey(reason: string|nil) -> string          -- 'citizen.invalid_id' | 'citizen.not_found' | 'citizen.offline'
+w.citizen.reasonText(reason: string|nil, src?: integer) -> string
+w.citizen.text(name: string, src?: integer) -> string      -- 'label' | 'placeholder' | 'help' | 'invalid_id' | 'not_found' | 'offline'
+```
+
+Side: shared
+
+The strings live in w_lib's own `locales/<lang>.json` under `"citizen"`, so every resource uses the same words for the same failure. On the server, `src` picks that player's language (`getPlayerLocaleKey`). Without it, and on the client, the language of that side is used. A missing language falls back to English. An unknown reason reads as not found.
+
+| key | en | ar |
+|---|---|---|
+| `citizen.label` | Citizen ID | رقم المواطن |
+| `citizen.placeholder` | e.g. 12 | مثال: 12 |
+| `citizen.help` | The player's fixed citizen ID. For a server ID put # in front (e.g. #5) | رقم المواطن الثابت. لرقم السيرفر اكتب # قبله (مثل #5) |
+| `citizen.invalid_id` | Invalid citizen ID | رقم المواطن غير صحيح |
+| `citizen.not_found` | No player with this ID | لا يوجد لاعب بهذا الرقم |
+| `citizen.offline` | The player is not online right now | اللاعب غير متصل الآن |
+
+### w.citizen.myId and w.citizen.inputRow (client)
+
+```lua
+w.citizen.myId() -> string | nil
+w.citizen.inputRow(overrides?: table) -> table
+```
+
+Side: client
+
+`myId` returns the local character's citizen id. It is nil before a character is in play, and on cores that keep no player data on the client (VORP). It reads the core's player data on every call, so use it in menus and not in every frame. `inputRow` returns a `lib.inputDialog` / `w.inputDialog` row that asks for a citizen id, with the label, placeholder and `#` hint in the player's language. `overrides` replaces any of its fields.
+
+```lua
+local input = w.inputDialog('Hire', { w.citizen.inputRow() })
+if not input then return end
+if not w.citizen.parse(input[1]) then
+    return w.notify({ description = w.citizen.reasonText('invalid_id'), type = 'error' })
+end
+local ok, message = lib.callback.await('my_res:hire', false, input[1])   -- send the text as typed
+```
+
+### exports.w_lib:Citizen* (resources without the loader)
+
+A resource that does not load `@w_lib/init.lua` reaches the same functions through exports. They run in w_lib's VM:
+
+| Export | Same as |
+|---|---|
+| `exports.w_lib:CitizenResolve(input, opts)` | `w.citizen.resolve` |
+| `exports.w_lib:CitizenRequireOnline(input, opts)` | `w.citizen.requireOnline` |
+| `exports.w_lib:CitizenFromSource(serverId)` | `w.citizen.fromSource` |
+| `exports.w_lib:CitizenIdOf(serverId)` | `w.citizen.idOf` |
+| `exports.w_lib:CitizenNormalize(value)` | `w.citizen.normalize` |
+| `exports.w_lib:CitizenLabel(target)` | `w.citizen.label` |
+| `exports.w_lib:CitizenReasonKey(reason)` | `w.citizen.reasonKey` |
+| `exports.w_lib:CitizenReasonText(reason, src)` | `w.citizen.reasonText` |
+| `exports.w_lib:CitizenText(name, src)` | `w.citizen.text` |
+
+All of them are server-side.
+
+### Patterns
+
+- **Forms (NUI or dialogs)**: one field, labelled with the citizen id (`w.citizen.text('label')` / your locale). Send the text as typed. Do not strip non-digits and do not `Number()` it: old ids contain letters, and `'#5'` is a server id.
+- **Commands**: a command that only acts on a player in the game can keep `type = 'playerId'`. That parser reads the citizen id through `requireOnline` (and `'#5'` as a server id, `'me'` as the caller), hands the handler the live server id, and tells the caller why it refused (`invalid_id` / `not_found` / `offline`). A command that also works on an offline character declares the argument with **no** `type` (the raw text arrives; `type = 'string'` refuses anything `tonumber` reads, so `12` would never reach the handler) and resolves it with `resolve`, passing `{ self = source }` when `me` should work.
+- **Lists the user picks from** (nearby players, the online list): these already carry a server id. Use `fromSource` and store `target.citizenid`.
+- **Messages**: `w.citizen.reasonText(reason, source)`, prefixed with `w.citizen.label(target)` when you have one.
+
+## The w.settings module (live settings edited from the admin console)
+
+`w.settings` lets the admin console (w_admin: Scripts hub, Food & drink) change a resource's settings while the server runs. Every value comes with a plain explanation in Arabic and English. The resource stays the authority: it validates every change again, saves it, writes it into its own `Config` in place, and sends the client half to every player. w_admin only draws the page, checks its own levels and asks. Only data crosses resources, never functions (a function turns into a funcref on the way).
+
+The module loads like any other (touch `w.settings`). `shared.lua` (constructors, the validator, `define`) and `server.lua` or `client.lua` run inside your resource. The server-console command lives in `g_server.lua`, inside w_lib.
+
+### Opting in
+
+Two lines in the manifest, and one shared file loaded **last** in `shared_scripts` (after everything that builds the `Config` it edits):
+
+```lua
+shared_scripts {
+    '@w_lib/init.lua',
+    'shared/config.lua',
+    -- ...
+    'shared/settings_schema.lua', -- LAST
+}
+w_settings 'yes'                   -- w_admin finds the resource by this line (GetResourceMetadata)
+server_scripts { '@oxmysql/lib/MySQL.lua', 'server/*.lua' }   -- the central store needs oxmysql
+```
+
+There is no registry: w_admin scans the resources for `w_settings 'yes'`. Start order and restarts need no handling.
+
+### w.settings.define
+
+`w.settings.define(spec) -> handle` (shared, once per resource)
+
+| Field | Meaning |
+|---|---|
+| `version` | Your schema version (information only). |
+| `access(src) -> boolean` | The resource's own admin test (server). The console (src 0) always passes. |
+| `accessAce` | The ACE named in the refusal (`no_access`). |
+| `links` | `{ { id, command, level? } }`: "open its own interface" buttons (texts under `settings.links.<id>`). |
+| `groups` | See below. |
+
+A **group** is either a form or a table:
+
+| Field | Meaning |
+|---|---|
+| `id` | Letters, digits, `_` and `-` (no dots). |
+| `store` | `'central'` (default): one row per changed key in `w_admin_settings`. `'own'`: your existing save path (`apply`). |
+| `clientVisible` | The clients read these values. Central values are pushed to every client. |
+| `level` | The w_admin level this group needs (`'god'` for economy). By default, the resource's level. |
+| `fields` | A form: a list of fields (keys may contain dots: `needs.hungerRate`). |
+| `rows()`, `columns` | A table: one row per item. `rows()` returns `{ { id, label?, family?, image?, locked? } }`. `locked` is a text key or `{ ar, en }` that says why the row cannot change. A cell's key is `<group>.<row>.<column>`. |
+| `describe(id) -> { label?, image? }` | Row labels and pictures that cost something (another resource's catalogue). Asked only when the page opens the table. |
+| `families` | `{ { id } }`: the table's filter chips and bulk-edit scopes (texts under `settings.<group>.families.<id>`). |
+| `readOnly` | `{ { key, read(row) } }`: columns shown but never edited. |
+| `checkRow(row, cells, changed) -> reason?` | Refuses a combination on one row (for example a buff strength without a buff). |
+| `apply(changes, actor) -> ok, err` | Own groups only: save the changes. `changes = { { key, value, old, reset } }`. |
+| `onChange(changes, actor)` | Runs after a successful apply (for example, re-applying a satchel bonus to its owners). |
+
+The handle offers `onChange(fn)`, `apply(changes, actor)` (your own panel can use it), `values(group?)`, `schema()`, `get(key)` and `ready()`.
+
+```lua
+WHudLive = w.settings.define({
+    resource = 'w_hud', version = 1, accessAce = 'w_hud.admin',
+    access = function(src) return WHudAdmin.isAdmin(src) end,
+    links = { { id = 'hudmenu', command = 'hudmenu' } },
+    groups = {
+        { id = 'needs', store = 'own', clientVisible = true, apply = ownApply, fields = {
+            w.settings.number({ key = 'needs.hungerRate', min = 0, max = 25, step = 0.1, default = 1,
+                read = function() return WHudSrv.needs.hungerRate end }),
+        } },
+        { id = 'food', store = 'central', clientVisible = true, rows = foodRows, describe = describeItem,
+          families = { { id = 'fruit' }, { id = 'meat' } },
+          columns = {
+            w.settings.number({ key = 'hunger', min = -50, max = 100, step = 1, integer = true,
+                read = function(row) return Config.Consumables[row].hunger or 0 end,
+                write = function(row, v) Config.Consumables[row].hunger = v ~= 0 and v or nil end }),
+        } },
+    },
+})
+```
+
+### Fields and columns
+
+`w.settings.number / bool / enum / text / list(def)` set `def.type` and return `def`.
+
+| Key | Types | Meaning |
+|---|---|---|
+| `key` | all | The stored key. A column key has no dots. |
+| `read()` / `read(row)` | all | The value in effect now. Never return nil (use 0, false, `'none'`). |
+| `write(v)` / `write(row, v)` | central | Write the value into your Config. Called on the server and on every client. |
+| `default` | own | The code default of an own value (a value or `function(row)`). Central defaults are captured automatically: the value before the first override. |
+| `min`, `max`, `step`, `integer` | number | Out of range or off the step is **refused**, never clamped. |
+| `options` | enum | `{ { value } }`. Texts: `<base>.options.<value>` (`''` is written `none`). |
+| `maxLength`, `pattern` | text | Longer text is refused, never cut (a cut could split an Arabic letter). |
+| `item`, `maxItems` | list | The item's field definition and the list's limit. |
+| `validate(v) -> reason?` | all | Your own rule (server only; it does not travel in the schema). |
+| `requiresRestart` | all | Saved now, written at the next start. |
+| `advanced` | all | The page hides it behind "all columns / advanced". |
+| `derived` | all | `{ kind, args }`: a calculated hint the page computes (`drainTime`, `deathTime`, `buffTime`, `kg`, ...). |
+| `unit`, `label`, `help`, `example`, `danger`, `confirm` | all | A text key or `{ ar, en }`. By default they are read from `<base>.<sub>`. |
+
+### Texts
+
+Every text is read from **your** `locales/ar.json` and `locales/en.json` when the schema is built, so the schema always carries both languages. Keys follow the definition:
+
+| What | Key |
+|---|---|
+| title, description | `settings.title`, `settings.description` |
+| group | `settings.<group>.label`, `.help`, `.confirm` |
+| field | `settings.<field key>.label`, `.help`, `.example`, `.unit`, `.danger`, `.confirm` |
+| column | `settings.<group>.<column>.label`, ... |
+| option | `settings.<...>.options.<value>` |
+| family, read-only column | `settings.<group>.families.<id>`, `settings.<group>.readOnly.<key>` |
+| link | `settings.links.<id>.label`, `.help` |
+
+Write help for ordinary people: start with a verb that says the effect, say who notices, whether it can be undone, and give an example with units. At most 240 characters.
+
+`w.settings.textOf(key) -> { ar, en } | nil` reads one of them. `w.settings.reloadTexts()` drops the cache.
+
+### The three exports
+
+`define` registers them inside your resource (server):
+
+| Export | Returns |
+|---|---|
+| `WSettingsSchema()` | `{ resource, version, title, description, links?, groups = { { id, label, help, confirm?, store, clientVisible, type, level?, fields } } }`. A table group has one field `{ key = group id, type = 'table', columns, families?, readOnly? }`. |
+| `WSettingsValues(group?)` | `{ values, defaults, overridden = { [key] = { by, at, base } }, rows?, orphans }`. Without a group: every form group. For a table group: `rows = { { id, label, image, family, locked?, cells, defaults, overridden = { column... } } }`. |
+| `WSettingsApply(changes, actor)` | `{ ok, applied = { { key, value, old, reset? } }, rejected = { { key, reason } }, batch }`. `changes` is a dense array of `{ key, from, to }` or `{ key, from, reset = true }` (at most 500, 256 KB). `actor = { src, cid, name, via, note }`. |
+
+The rules inside `WSettingsApply`:
+
+1. Only `w_admin`, `w_lib` (the console command) and the resource itself may call it.
+2. The actor passes `access(src)` (the console always does).
+3. **All or nothing.** The reasons are `unknown_key`, `out_of_range`, `bad_type`, `locked_row`, `stale`, `duplicate`, `too_many`, `too_large`, `no_access`, `not_ready`, `rate_limited` (more than 2 applies a second), `safe_mode` and `db_error`.
+4. **Compare-and-set.** `from` must equal the value in effect, or the change is `stale`. This covers two admins, or your own panel, editing the same value.
+5. **Order.** Own groups save (`apply`). Then the central rows and the audit rows are written in one transaction. Then `write` runs, then `onChange`, then the push. A failed save applies nothing: own groups already saved are rolled back with their old values.
+
+A central value equal to its code default is not stored: its row is deleted. Resetting a stored value that is not applied (an orphan) only deletes its row.
+
+### Storage, boot and drift
+
+```sql
+w_admin_settings        (resource, skey) PK, value, base, updated_at, updated_by
+w_admin_settings_audit  id, batch, resource, skey, old_value, new_value (NULL = back to the default),
+                        actor_cid, actor_name, actor_src, via, note, created_at
+w_admin_settings_presets id, name, data, created_by, created_at
+```
+
+`w.settings.ensureTables()` creates them. The module and w_admin both run it, so whichever starts first creates them. `updated_by`, `actor_cid` and `created_by` hold citizen ids (history for w_core's citizen registry).
+
+At boot, a thread reads the resource's rows in declaration order (a buff type before its strength). It captures each original value and writes the stored one. A row whose field or row no longer exists, whose row is now locked, or whose value no longer passes validation is listed as an **orphan**. Orphans are shown, never applied and never deleted automatically. Each row keeps `base`, the code default it replaced. When the code later changes that default, the override still applies, and the page compares `overridden[key].base` with `defaults[key]` to say "the default changed after your edit" and offer "keep mine" (re-apply the same value, which re-bases it) or "take the new one" (reset).
+
+### The client side
+
+The client module keeps the client's `Config` in step. The snapshot holds every central value of a `clientVisible` group that is in effect.
+
+- **When it starts** (a player who joins later, or a restart), it asks for the snapshot through the callback `<resource>:w_settings:snapshot`.
+- **After every change**, it receives the snapshot through the net event `<resource>:w_settings`, 100 ms after the last change.
+
+Each value goes through the **same** `write` function the server uses. A key that left the snapshot gets its original value back. Readers that look `Config.*` up when they run see the change without any edit.
+
+### Validation helpers
+
+| Function | Meaning |
+|---|---|
+| `w.settings.check(field, value) -> reason?` | Type, range, step, options, length, pattern (plain data: works on a schema field). |
+| `w.settings.checkField(field, value)` | `check` plus the field's own `validate`. |
+| `w.settings.index(groups)` | The key lookup of a definition or a schema. |
+| `w.settings.locate(index, key) -> kind, field, group, row` | `'field'` or `'cell'`. |
+| `w.settings.checkChanges(index, changes, opts?) -> list, rejected` | The shape of a batch. The resource passes `opts.current` and `opts.row` for compare-and-set and locks. |
+| `w.settings.copy(v)`, `w.settings.equal(a, b)` | Deep copy, and equality (numbers within 1e-9). |
+| `w.settings.cellKey(group, row, col)` | `'<group>.<row>.<col>'`. |
+
+### Safe mode and the console command
+
+| Convar / command | Effect |
+|---|---|
+| `setr w_settings:safe 1` | Every resource boots with its code defaults. Its stored central values are listed as orphans (reason `safe`), and new central values are refused (`safe_mode`). Resets still work, so a bad value can be removed. |
+| `wsettings list` | The resources that opted in, and how many values were changed (server console only). |
+| `wsettings show <resource>` | The changed values, with their defaults, and the orphans. |
+| `wsettings reset <resource> [key]` | Back to the code default: one key, or every changed value. |
+
 ## Shared utility modules under lib.* (data structures, strings, math, classes, commands, logging)
 
 ### How these utilities reach a consumer resource
@@ -9939,9 +10337,9 @@ Parameters:
   - `help` (string, optional): description shown in the chat suggestion.
   - `params` (table[], optional): ordered parameter definitions; each entry is a table with:
     - `name` (string, required): key under which the parsed value is stored in `args`.
-    - `help` (string, optional): shown in the suggestion, suffixed with `(type: <type>)` when `type` is set.
-    - `type` (`'number'` | `'playerId'` | `'string'` | `'longString'`, optional): `number` converts with `tonumber`; `string` accepts only input that is not numeric (a numeric string is rejected); `playerId` accepts `me` (the caller) or a server id for which `DoesPlayerExist` is true; `longString` works only on the last parameter and captures the rest of the raw line from that word onward; no type keeps the raw word.
-    - `optional` (boolean, optional, default false): when false a missing or invalid value aborts the command with a red console trace and `cb` is not called; when true a missing value is nil, but a present-yet-invalid value still aborts.
+    - `help` (string, optional): shown in the suggestion, suffixed with `(type: <type>)` when `type` is set. A `playerId` param is suffixed with the `citizen.help` string instead (what to type, in the server's language).
+    - `type` (`'number'` | `'playerId'` | `'string'` | `'longString'`, optional): `number` converts with `tonumber`; `string` accepts only input that is not numeric (a numeric string is rejected); `playerId` takes the player's **citizen id** (`'12'`, the old `'OMG95204'`, see [w.citizen](#the-wcitizen-module-one-citizen-id-for-every-player-target)) and passes the handler his current server id, takes `'#7'` for an explicit server id (any connected player, even one still choosing a character) and `me` for the caller. A citizen who is not connected is refused with the `offline` reason: an offline-capable command declares the param with no `type` (not `string`, which refuses `12`) and resolves it with `w.citizen.resolve` instead. `longString` works only on the last parameter and captures the rest of the raw line from that word onward; no type keeps the raw word.
+    - `optional` (boolean, optional, default false): when false a missing or invalid value aborts the command with a red console trace and `cb` is not called; when true a missing value is nil, but a present-yet-invalid value still aborts. A refused `playerId` also tells the caller why (the `citizen.invalid_id` / `not_found` / `offline` string as a notification, or a console line for the console).
   - `restricted` (boolean | string | string[], optional): `false`/nil = anyone; `true` = registered as restricted so the caller needs ace `command.<name>` (no ace is added for you); a principal string such as `'group.admin'` or an array of principals = registered as restricted and each principal is granted `command.<name>` via `lib.addAce` (the `exports.w_lib:addAce` export, which runs `add_ace`) if it does not already have it.
 - `cb` (function, required): handler run in-process (a real function, not an event name). Receives `source` (0 for console), `args` (positional entries are replaced by `args[param.name]` when `params` are defined; otherwise the raw word array) and the raw string. Errors are caught with pcall and traced as `command '<name>' failed to execute`.
 
@@ -12004,7 +12402,7 @@ Consequences of the code running in the consumer resource's context:
 
 1. Ordinary Lua functions can be passed as callbacks to `w.*` functions (`onMove`, `onPinBroken`, raw key listeners, `w.player.move`, and so on). The "event names only / plain data only" rule applies to the `exports.w_lib:*` surface, never to `w.*` module functions, with one exception: `w.pedTexture` (see below).
 2. Every native prompt, blip or entity created through these modules belongs to the consumer resource and is cleaned up automatically when that resource stops (each module installs a `w.stopped` hook). Lights are drawn per frame by a thread inside the consumer resource, so they simply vanish when it stops.
-3. Anything that calls `SendNUIMessage` runs against the consumer resource's own `ui_page`. The gizmo and the minigames send their drawing to the frame named `wui`, and `w.input.nui` to `w_input`, from inside the consumer resource. They therefore only work when the manifest declares `ui_page 'nui://w_lib/web/build/index.html'` (the unified w_lib web app) and the NUI callbacks they register (`gizmo:UpdateEntity`, `w_minigame:finished`, `w_minigame:lockpick:pinBroken`, `w_input:click`, `w_nui_is_hovering`) are answered by that page. A resource with its own `ui_page` cannot use `w.gizmo`, `w.minigame` or `w.input.nui` and must fall back to natives or to the `exports.w_lib` API.
+3. Anything that calls `SendNUIMessage` runs against the consumer resource's own `ui_page`. The gizmo and the minigames send their drawing to the frame named `wui`, and `w.input.nui` to `w_input`, from inside the consumer resource. They therefore only work when the manifest declares `ui_page 'nui://w_lib/web/build/index.html'` (the unified w_lib web app) and the NUI callbacks they register (`gizmo:UpdateEntity`, `w_minigame:finished`, `w_minigame:lockpick:pinBroken`, `w_input:click`, `w_nui_is_hovering`) are answered by that page. A resource with its own `ui_page` cannot use `w.gizmo`, `w.minigame` or `w.input.nui` and must fall back to natives or to the `exports.w_lib` API. For placing things in the world, such a resource can use `w.placer` (see below), which draws only through the library's own frame.
 
 `w.nui.load` is a permanent no-op (the multi-frame shell was removed), so `w.nui.isLoaded` always returns `false` and `w.nui.forceFocus` always prints "This nui is not loaded". Only `w.nui.resetFocus` and the hovering functions still do something.
 
@@ -13114,6 +13512,88 @@ Closes the active gizmo from outside: releases NUI focus, restores the camera an
 
 ```lua
 w.gizmo.cancel()
+```
+
+### w.placer.run
+
+```lua
+w.placer.run(opts: table): table|nil, string|nil
+```
+
+Side: client (blocking: call it from a thread)
+
+A guided editor that places a list of spots in the world, one key press per spot. It is meant for admin tools in resources that ship their own `ui_page`, where `w.gizmo` cannot draw. It draws nothing into the caller's frame. The key cards are a library prompt group (`w.prompt.createGroup`, drawn in w_lib's frame). The instruction line is `w.showTextUI`. The ghosts are LOCAL entities: nobody else sees them, and no state bag is ever read on them.
+
+Parameters (`opts`):
+- `steps` (table, required): the spots, in order. Each step:
+  - `id` (string, required): the key of the value in the result.
+  - `kind` (`'ped'` | `'object'` | `'vehicle'` | `'point'` | `'camera'`, default `'point'`). A ped, object or vehicle step shows a see-through ghost of `model`. Peds are created with `w.entity.create` (random outfit). Vehicles are created with `CreateVehicle(..., bDontAutoCreateDraftAnimals = true)`, so a draft vehicle has no team. Objects are created with `CreateObject`.
+  - `model` (string | hash): the ghost's model (ped, object and vehicle steps).
+  - `anchor` (`'aim'` | `'front'` | `'self'`): where the spot is. `aim` (the default) is the point the gameplay camera looks at, capped at `distance` metres from the admin. `front` is `distance` metres (default 1.6) ahead of the admin. `self` is the admin's own position, which is the default for camera steps.
+  - `distance` (number): the reach of an `aim` step (default `opts.aimDistance`), or the metres ahead for `front`.
+  - `height` (number): metres added to the spot. A camera step defaults to 0.65, the eye above the root.
+  - `ground` (boolean): snap the spot to the ground. The default is true, except for `self` anchors and camera steps.
+  - `face` (`'player'` | `'away'` | `'side'` | `'free'`) and `heading` (number): how the ghost starts turned. The defaults are `player` for peds and `side` for vehicles. The mouse wheel then turns the ghost by `opts.rotateStep` degrees per notch.
+  - `ring` (number): draws a ring of this radius at the admin's feet, for example the interaction distance.
+  - `text` (string): the instruction line for this step.
+  - `current` (vector3 | vector4 | `{x,y,z,w}`): the stored spot. It is drawn as a faded marker, and the skip key keeps it. A kept ped, object or vehicle stands as a ghost for the rest of the run.
+  - `optional` (boolean): the skip key skips the step when nothing is stored. `removable` (boolean): the remove key clears a stored spot (the result holds `false`).
+  - `when(values, ctx)` (function): return false to skip the step by itself (the stored value stays).
+  - `capture(value, ctx)` (function): returns the fields a placement sets (default `{ [id] = value }`). For example, `{ npc = value, interact = ctx.playerCoords }`.
+  - `skipLabel(values, ctx)` and `skip(values, ctx)` (functions): the step's own meaning for the skip key. When `skipLabel` returns a label, the key shows it and `skip` returns the fields to set. Example: "same as the display spot".
+  - `lookAt` (string | string[]) and `lookHeight` (number): camera steps only. The step ids the camera looks at (the first one with a spot wins) and the height above that ghost's root. A line is drawn from the camera spot to it.
+  - `frame(spot, target, ctx)` (function): camera steps only. Returns `camCoords, pointAt, fov` for the look-through key. `ctx` holds `targetEntity` (the ghost) and `targetHeading`. The default looks straight from the spot.
+  - `create(model, coords, heading)` (function): creates your own ghost entity instead.
+- `title` (string | false): the title of the key cards.
+- `maxDistance` (number, default 60): every spot must stay within this distance of the first spot set in the run. A spot too far is refused, and so is keeping a stored spot that far. The save on the confirm step is also refused while the admin stands farther than this from the first spot, because a server that checks the spots against the admin's position would refuse the whole run. Set it to 0 to turn the check off.
+- `aimDistance` (number, default 12), `rotateStep` (degrees, default 5), `fov` (default 42), `cancelHold` (ms, default 1000).
+- `confirm` (boolean, default true): adds a last step, "check, then save".
+- `textPosition` (default `'bottom-center'`) and `keyPosition` (default `'bottom-right'`).
+- `keys` (table): `{ place = 'E', skip = 'G', remove = 'DELETE', back = 'BACK', cancel = 'X', look = 'C' }`. Cancel is a hold.
+- `labels` (table): `place`, `skip`, `keep`, `remove`, `back`, `cancel`, `look`, `save`, `confirm`, `rotate`, `tooFar` (a `%d` format that receives the metres), and `step`. `step` is a format string `'Step %d/%d - %s'` (step number, total, text) or a function taking the same three values. Missing labels fall back to built-in English or Arabic, following the library language.
+
+Returns: the table of fields the admin set, or `nil` and a reason when he left without saving: `'cancelled'`, `'dead'`, `'mounted'`, `'stopped'` (the resource stopped), `'busy'` (an editor is already running), `'invalid'` or `'error'`. A placed ped, object or vehicle spot is a `vector4` (x, y, ground z, heading 0-360). A point or camera spot is a `vector3`. A kept spot is absent from the result (nil means keep it as it is). A cleared spot is `false`.
+
+While it runs, every frame it does the following:
+- Claims the walk-up prompt arbitration at distance 0 (`exports.w_lib:WalkupClaim(0)`), so another resource's walk-up prompt cannot replace the cards. The group is displayed again if something hid it.
+- Disables the game controls on its keys (E would mount the ghost horse), plus attack, aim, the weapon wheel and weapon switching (the wheel turns the ghost). It also hides the game's native prompts.
+- Drops key presses made while a NUI has focus or the pause menu is open.
+
+It stops by itself on death, on mounting or entering a vehicle, and when the resource stops. Every exit path deletes the ghosts, the look-through camera, the cards and its text line. Your own walk-up prompts (`w.prompt.at`) are in the same resource, so the claim does not silence them. Gate their `canInteract` on `w.placer.isActive()`, or on a busy flag of your own.
+
+```lua
+CreateThread(function()
+  local values, reason = w.placer.run({
+    title = 'Valentine', maxDistance = 60.0,
+    steps = {
+      { id = 'npc', kind = 'ped', model = 'U_M_M_BwmStablehand_01', anchor = 'front', ring = 2.5,
+        text = 'Press E to place the stable hand where you stand',
+        capture = function(v, ctx) return { npc = v, interact = ctx.playerCoords } end },
+      { id = 'preview', kind = 'ped', model = 'A_C_Horse_Morgan_Bay', text = 'Press E to place the horse' },
+      { id = 'camera', kind = 'camera', lookAt = 'preview', lookHeight = 0.4, text = 'Stand where the camera goes' },
+      { id = 'wagon', kind = 'vehicle', model = 'cart01', optional = true, removable = true, text = 'The wagon' },
+    },
+  })
+  if values then TriggerServerEvent('myres:savePlaces', values) end
+end)
+```
+
+### w.placer.cancel, w.placer.isActive and w.placer.canStart
+
+```lua
+w.placer.cancel()
+w.placer.isActive(): boolean
+w.placer.canStart(): boolean, string|nil
+```
+
+Side: client
+
+Parameters: none.
+
+Returns: `cancel` returns nothing, and the running `run` returns `nil, 'cancelled'`. `isActive` returns true while an editor runs in this resource. `canStart` returns false with `'busy'`, `'dead'` or `'mounted'` when an editor could not start now.
+
+```lua
+if not w.placer.canStart() then return notify('Get off your horse first') end
 ```
 
 ### w.minigame.lockpick
@@ -15253,6 +15733,26 @@ The queries are convenience checks over `getWearableState`. The setters combine 
 if w.component.neckwearIsUp(PlayerPedId()) then print("masked") end
 w.component.sleeveRoll(PlayerPedId())
 w.component.collarOpen(PlayerPedId())
+```
+
+### w.component.restoreHairState
+
+```lua
+w.component.restoreHairState(ped?: integer): boolean
+```
+
+Side: client
+
+Parameters:
+
+- `ped` (integer, optional): entity id (default `PlayerPedId()`).
+
+Returns: `true` when the hair's state was changed (refresh the ped afterwards), `false` otherwise.
+
+Puts the hair back in its own wearable state (the one set with `setWearableState`, e.g. `"pomade"`, else `"base"`) unless a hat is worn. The long MP hair styles have `*_TUCKED` states that the game switches through other garments' triggers, and the tucked hair is drawn without its crown. Which garment tucks it is inferred, not proven: a raised bandana, or a hat that has since left the head. Lowering the bandana, taking a garment off or the game knocking the hat off does not switch it back. The delayed refresh that follows every `apply` / `remove` / `setWearableState` runs this rule too, before and after its commit. Call it yourself when you need the ped right at once, or after a hat left the head without `w.component` (the game knocked it off). Under a hat the tucked hair is left alone.
+
+```lua
+if w.component.restoreHairState(PlayerPedId()) then w.component.refreshPed(PlayerPedId()) end
 ```
 
 ### w.component.getComponentEquiped

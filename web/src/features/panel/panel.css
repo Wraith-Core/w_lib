@@ -5,6 +5,10 @@
      action row -- is all in wc-base.css already, and the list rows reuse .lb-item from the
      context menu. What is left is the detail pane and the group headings, which nothing else in
      the library draws.
+
+   ★ The Wraith theme: the selected row, the active chip and the chosen card are the paper band
+     (the cursor); a table is rows on hairlines; the status dot is paper / paper-dim / red, a
+     mark rather than a traffic light; labels are the label role, reading text the text role.
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── the browser list ──────────────────────────────────────────────────── */
@@ -20,15 +24,35 @@
    pick is a list of things to pick, and two stylings of it would drift apart. Only the selected
    state is new: the context menu has no selection to hold, this does. */
 .wl-panel-list .lb-item.is-active {
-  background: linear-gradient(180deg, #1c1c1cf0, #0a0a0af2);
-  box-shadow: inset 0 0 0 1px var(--wc-line-strong);
+  color: var(--w-ink);
+}
+
+body[data-store-theme] .wl-panel-list .lb-item.wst-card.is-active::before,
+.wl-panel-list .lb-item.is-active::before {
+  background: var(--w-paper) !important;
+  opacity: 1;
+}
+
+.wl-panel-list .lb-item.is-active :is(.lb-item-title, .lb-item-desc, .lb-meta, .lb-meta b) {
+  color: inherit;
+}
+
+.wl-panel-list .lb-item.is-active .lb-item-icon::before {
+  background-color: var(--w-ink);
+  opacity: 0.6;
+}
+
+.wl-panel-list .lb-item.is-active::after {
+  opacity: 0;
 }
 
 .wl-panel-group {
   padding: clamp(8px, 1.2vh, 12px) 4px clamp(3px, 0.5vh, 5px);
   color: var(--wc-text-faint);
-  font-family: var(--wc-font-display);
-  font-size: clamp(10px, 1.3vh, 12px);
+  font-family: var(--w-f-label);
+  font-weight: var(--w-wt-label);
+  font-size: calc(clamp(11px, 1.3vh, 12px) * var(--w-k-label));
+  line-height: var(--w-lh-label);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -46,10 +70,14 @@
   grid-template-columns: clamp(84px, 20%, 140px) minmax(0, 1fr);
   align-items: center;
   gap: clamp(8px, 1vw, 16px);
-  font-size: clamp(11px, 1.6vh, 13px);
+  font-family: var(--w-f-label);
+  font-weight: var(--w-wt-label);
+  font-size: calc(clamp(12px, 1.55vh, 14px) * var(--w-k-label));
+  line-height: var(--w-lh-label);
 }
 
 .wl-panel-row-label {
+  padding-block: 0.1em;
   color: var(--wc-text-dim);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -57,9 +85,11 @@
 }
 
 .wl-panel-aside {
-  color: var(--wc-text-dim);
-  font-family: var(--wc-font-numeral);
-  font-size: clamp(12px, 1.8vh, 16px);
+  color: var(--wc-text);
+  font-family: var(--w-f-num);
+  font-size: clamp(14px, 2vh, 19px);
+  direction: ltr;
+  unicode-bidi: isolate;
 }
 
 /* ── actions ───────────────────────────────────────────────────────────── */
@@ -93,15 +123,26 @@
 }
 
 .wl-panel-amount input {
-  font-family: var(--wc-font-numeral);
+  font-family: var(--w-f-num);
   text-align: center;
+  direction: ltr;
 }
 
-/* ★ The last half-minute of a lot, in the colour the library already uses for trouble. Only the
-   clock changes -- the row is still readable, it is the time that has become the news. */
+/* ★ The last half-minute of a lot. Red is a mark, never small text: the clock stays paper and
+   carries the red tick in front of it -- it is the time that has become the news. */
 .wl-panel-urgent {
-  color: var(--wc-red);
-  font-family: var(--wc-font-numeral);
+  color: var(--wc-text);
+  font-family: var(--w-f-num);
+}
+
+.wl-panel-urgent::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-inline-end: 0.4em;
+  vertical-align: 0.12em;
+  background: var(--w-red);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -141,8 +182,9 @@
 .wl-panel-text {
   margin: 0;
   color: var(--wc-text-dim);
-  font-size: clamp(12px, 1.7vh, 14px);
-  line-height: 1.7;
+  font-family: var(--w-f-text);
+  font-size: calc(clamp(15px, 1.75vh, 17px) * var(--w-k-text));
+  line-height: var(--w-lh-text);
 }
 
 /* ── tables ────────────────────────────────────────────────────────────── */
@@ -170,11 +212,14 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  background: var(--wc-panel-2);
+  background: var(--w-ink-2);
+  box-shadow: inset 0 -1px 0 var(--wc-line-strong);
   color: var(--wc-text-faint);
-  font-family: var(--wc-font-display);
-  font-size: clamp(10px, 1.4vh, 12px);
-  letter-spacing: 0.1em;
+  font-family: var(--w-f-label);
+  font-weight: var(--w-wt-label);
+  font-size: calc(clamp(10px, 1.3vh, 12px) * var(--w-k-label));
+  line-height: var(--w-lh-label);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -183,8 +228,11 @@
 .wl-panel-trow {
   position: relative;
   flex: none;
-  color: var(--wc-text-dim);
-  font-size: clamp(11px, 1.6vh, 13px);
+  color: var(--wc-text);
+  font-family: var(--w-f-label);
+  font-weight: 500;
+  font-size: calc(clamp(12px, 1.5vh, 14px) * var(--w-k-label));
+  line-height: var(--w-lh-label);
 }
 
 .wl-panel-trow:after {
@@ -192,13 +240,11 @@
   position: absolute;
   inset-inline: 6px;
   bottom: 0;
-  height: 2px;
+  height: 1px;
   background-color: var(--wc-line);
-  -webkit-mask: var(--tex-list_item_h_line_narrow) center / 100% 100% no-repeat;
-  mask: var(--tex-list_item_h_line_narrow) center / 100% 100% no-repeat;
 }
 
-.wl-panel-trow:hover { background-color: var(--wc-accent-soft); }
+.wl-panel-trow:hover { background-color: rgba(237, 230, 214, 0.05); }
 
 /* ── card grid ─────────────────────────────────────────────────────────── */
 
@@ -213,9 +259,9 @@
 
 .wl-panel-cards .wc-card { width: 100%; }
 
+/* the chosen card: the band (wc-base.css draws it for .is-active / .is-selected) */
 .wl-panel-cards .wc-card.is-active {
-  background-color: var(--wc-accent-soft);
-  box-shadow: inset 0 0 0 1px var(--wc-line-strong);
+  color: var(--w-ink);
 }
 
 /* ── forms ─────────────────────────────────────────────────────────────── */
@@ -233,20 +279,52 @@
   min-width: 0;
 }
 
-/* A checkbox sits BESIDE its label, not under it -- it is a word with a box, not a field. */
-.wl-panel-field:has(.wl-panel-check) {
+/* A checkbox sits BESIDE its label, not under it -- it is a word with a box, not a field.
+   ⚠️ .is-check, set by Blocks.tsx: it was :has(.wl-panel-check), which the game's Chromium
+      (87) does not have, so in game the box always fell under its label. */
+.wl-panel-field.is-check {
   flex-direction: row-reverse;
   align-items: center;
   justify-content: flex-end;
   gap: 9px;
 }
 
+/* the theme's square checkbox (base.css .w-checkbox) */
 .wl-panel-check {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-grid;
+  place-items: center;
   flex: none;
-  width: 16px;
-  height: 16px;
-  accent-color: var(--wc-red);
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  box-sizing: border-box;
+  border: 2px solid var(--w-paper-faint);
+  background: var(--w-ink);
   cursor: pointer;
+}
+
+.wl-panel-check:checked {
+  background: var(--w-paper);
+  border-color: var(--w-paper);
+}
+
+.wl-panel-check:checked::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: var(--w-ink);
+}
+
+.wl-panel-check:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--w-ink), 0 0 0 3px var(--w-paper);
+}
+
+.wl-panel-check:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 /* ── loose buttons, and the ones that ride on a row ────────────────────── */
@@ -270,17 +348,19 @@
   width: clamp(58px, 5vw, 86px);
   padding: clamp(5px, 0.8vh, 8px) 8px;
   border: 0;
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: inset 0 0 0 1px var(--wc-line);
+  background: var(--w-ink-2);
+  box-shadow: inset 0 -1px 0 var(--w-rule-2);
   color: var(--wc-text);
-  font-family: var(--wc-font-numeral);
-  font-size: clamp(11px, 1.6vh, 14px);
+  font-family: var(--w-f-num);
+  font-size: clamp(12px, 1.6vh, 15px);
   text-align: center;
+  direction: ltr;
 }
 
 .wl-panel-row-input:focus {
   outline: 0;
-  box-shadow: inset 0 0 0 1px var(--wc-line-strong);
+  background: var(--w-ink-3);
+  box-shadow: inset 0 -2px 0 var(--w-paper);
 }
 
 /* ── the action footer ─────────────────────────────────────────────────── */
@@ -315,30 +395,59 @@
 /* ★ .wc-category is crafting's own chip -- borrowed for its plate and its border so a tag here
    and a category there are visibly the same object. Only the layout differs: that one stacks a
    name over a count, this one is a single line. */
+/* ★ A chip is a small tab (the store layer skins it .wst-tab): an ink plate at rest, the paper
+   band when active or under the cursor. It used to take a red border when active. */
 .wl-panel-chip {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   gap: 7px;
   padding: 6px 11px;
-  border: 1px solid var(--wc-line);
-  background: var(--wc-panel-2);
+  border: 0;
+  background: transparent;
   color: var(--wc-text-dim);
-  font-family: var(--wc-font-body);
-  font-size: clamp(11px, 1.6vh, 13px);
+  font-family: var(--w-f-label);
+  font-weight: var(--w-wt-label);
+  font-size: calc(clamp(11px, 1.5vh, 13px) * var(--w-k-label));
+  line-height: var(--w-lh-label);
+  text-transform: var(--w-label-case);
+  letter-spacing: calc(var(--w-label-track) * 0.7);
   cursor: pointer;
 }
 
-.wl-panel-chip:disabled { cursor: default; }
-.wl-panel-chip:not(:disabled):hover { background: var(--wc-hover); color: var(--wc-text); }
+.wl-panel-chip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--w-ink-3);
+  -webkit-mask: var(--w-tex-band-sm) center / 100% 100% no-repeat;
+  mask: var(--w-tex-band-sm) center / 100% 100% no-repeat;
+}
+
+.wl-panel-chip:disabled { cursor: default; opacity: 0.6; }
+.wl-panel-chip:not(:disabled):hover { color: var(--w-ink); }
+.wl-panel-chip:not(:disabled):hover::before { background: var(--w-paper); }
 
 .wl-panel-chip.is-active {
-  border-color: var(--wc-red);
-  background: var(--wc-red-soft);
-  color: var(--wc-text);
+  color: var(--w-ink);
+}
+
+.wl-panel-chip.is-active::before {
+  background: var(--w-paper);
+}
+
+body[data-store-theme] .wl-panel-chip.wst-tab.is-active {
+  color: var(--w-ink) !important;
+}
+
+body[data-store-theme] .wl-panel-chip.wst-tab.is-active::before {
+  background: var(--w-paper) !important;
 }
 
 .wl-panel-chip .wc-glyph { width: 12px; height: 12px; }
-.wl-panel-chip b { font-family: var(--wc-font-numeral); color: var(--wc-text); }
+.wl-panel-chip b { font-family: var(--w-f-figure); font-weight: 600; color: inherit; direction: ltr; unicode-bidi: isolate; }
 
 /* ── the status light ──────────────────────────────────────────────────── */
 
@@ -355,9 +464,11 @@
   background: var(--wc-text-faint);
 }
 
-.wl-panel-dot[data-state="ok"] { background: #4f9d69; }
-.wl-panel-dot[data-state="warn"] { background: #c8a44d; }
-.wl-panel-dot[data-state="bad"] { background: var(--wc-red); }
+/* ★ The state is a mark, not a traffic light (the palette has no green or gold): ok is paper,
+   warn is an empty paper ring, bad is the red dot. */
+.wl-panel-dot[data-state="ok"] { background: var(--w-paper); }
+.wl-panel-dot[data-state="warn"] { background: transparent; box-shadow: inset 0 0 0 1.5px var(--w-paper-dim); }
+.wl-panel-dot[data-state="bad"] { background: var(--w-red); }
 
 /* ── the subject of the panel ──────────────────────────────────────────── */
 
@@ -377,3 +488,20 @@
 /* ── the colour swatch ─────────────────────────────────────────────────── */
 
 .lb-input input[type="color"] { min-width: 54px; }
+
+/* ── a requirement the player is short of: paper with the red mark, never red text ── */
+.wc-ing-amount.is-danger,
+.wc-meta-value.is-danger {
+  color: var(--wc-text);
+}
+
+.wc-ing-amount.is-danger::before,
+.wc-meta-value.is-danger::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-inline-end: 0.45em;
+  vertical-align: 0.15em;
+  background: var(--w-red);
+}

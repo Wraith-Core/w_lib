@@ -99,7 +99,10 @@ end
 --   SIREC scripts send) showed "text ———" instead of a state icon. warning.png and info.png
 --   were added to the frame, and every name that reaches Notify is checked against the list.
 local STYLE_ICON  = { success = 'tick', error = 'cross', info = 'info', warning = 'warning', inform = 'info', primary = 'info' }
-local STYLE_COLOR = { success = '#34b895', error = '#e74c3c', info = '#3498db', warning = '#e67e22', inform = '#3498db', primary = '#3498db' }
+-- ⚠️ Monochrome by request: the notice is solid black with white text, so a per-style hue
+--    (blue/green/red/orange) was the only colour left on it and read as noise. The STYLE word still
+--    picks the ICON, which is what distinguishes success from error now.
+local STYLE_COLOR = { success = '#ffffff', error = '#ffffff', info = '#ffffff', warning = '#ffffff', inform = '#ffffff', primary = '#ffffff' }
 
 --- The frame's texture names (web/build/assets/index-*.js, `nl["tex/ui"]` + `nl["tex/blips"]`).
 --- Keep in step with that list when a texture is added to web/build/tex.
@@ -148,7 +151,7 @@ local function styled(title, message, style, duration)
         icon             = STYLE_ICON[style] or 'info',
         style            = style,
         duration         = tonumber(duration) or 5000,
-        titleColor       = STYLE_COLOR[style] or '#3498db',
+        titleColor       = STYLE_COLOR[style] or '#ffffff',
         isRTL            = true,
         contentAlignment = 'center',
         useBackground    = false,
@@ -158,7 +161,10 @@ end
 -- إنشاء إشعار
 function Notify(data)
     if type(data) ~= 'table' then data = { description = tostring(data or '') } end
-    if FORCED_PLACEMENT then data.placement = FORCED_PLACEMENT end
+    -- ⚠️ Notices only. A town banner (useBackground) is not a notice: the game draws its own
+    --    location feed at the top-left, and ours is meant to stand in for it, so it keeps the
+    --    placement the caller chose (w_zonenotify Config.Placement) instead of the notice corner.
+    if FORCED_PLACEMENT and not data.useBackground then data.placement = FORCED_PLACEMENT end
     -- every notice carries a state icon the frame can draw: a given name is checked against the
     -- frame's list, a plain notice with none gets its style's icon; a town banner (its own plate,
     -- no icon by design), the law banner and a notice with an item image are left as they are
@@ -222,7 +228,10 @@ function Notify(data)
             contentAlignment = data.contentAlignment or "center",
             isRTL = data.isRTL or false,
             titleColor = data.titleColor or "#ffffff",
-            descriptionColor = data.descriptionColor or "rgba(255, 255, 255, 0.8)"
+            -- ⚠️ This default was pushed INLINE by index.tsx, so it beat every stylesheet rule and
+            --    made the body text 80% white on a transparent notice — the "باهت" the player saw.
+            --    Full white now; the stylesheet (.wn-desc) still owns the look when a caller sends none.
+            descriptionColor = data.descriptionColor or "#ffffff"
         }
     })
 end

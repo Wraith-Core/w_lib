@@ -176,7 +176,11 @@ const KeyboardKey: React.FC<Props> = ({ kkey, holdTime, isNextPage = false, disa
   useEffect(() => stopTimer, []);
 
   return (
-    <div className={`keyboardKey bebas${holdable ? ' holdable' : ''}${active ? ' active' : ''}`}>
+    <div
+      className={`keyboardKey bebas${holdable ? ' holdable' : ''}${active ? ' active' : ''}${
+        !keymap?.text && keymap?.image ? ' is-image' : ''
+      }`}
+    >
       {holdable && (
         <div className="progressContainer">
           <div
