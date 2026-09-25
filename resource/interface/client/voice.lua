@@ -31,6 +31,9 @@ local ensureThread
 ---@field icon? string          accepted, not drawn -- the dialogue card carries no emblem
 ---@field commands? string[]    the phrases it answers to
 ---@field says? string          what it is saying now -- shown under the name while set
+---@field minimal? boolean      true: one bare line above the head ("Talk to <name>" + the key), no card
+---@field talkKey? string       the push-to-talk key, drawn as a small cap on the minimal line
+---@field name? string          the person alone, without the verb -- styled apart inside `title`
 
 --- SKEL_HEAD. The card is placed beside this point, so it follows a ped that ducks or leans.
 local HEAD_BONE = 21030
@@ -146,6 +149,10 @@ function ensureThread()
 
                 -- ★ Off-screen bubbles are REMOVED, not moved to the edge. A hint pinned to the
                 --   side of the screen for a ped behind you is noise pretending to be help.
+                -- ⚠️ Every field the frame draws has to be copied here by name: this table is
+                --    rebuilt each frame, and a field left out never reaches the frame at all.
+                --    `minimal`, `talkKey` and `name` were sent by w_voiceintract and dropped
+                --    here, so the frame could only ever draw its prompt as a full card.
                 SendNUIMessage({
                     action = onScreen and 'voiceHint' or 'voiceHintRemove',
                     data = onScreen
@@ -153,6 +160,8 @@ function ensureThread()
                             id = id, x = x, y = y, d = cameraDistance(point),
                             title = hint.title, icon = hint.icon,
                             commands = hint.commands, says = hint.says,
+                            minimal = hint.minimal == true or nil,
+                            talkKey = hint.talkKey, name = hint.name,
                         }
                         or { id = id }
                 })

@@ -6,6 +6,9 @@
      rules -- no pills, no rounded buttons, no emblem, no glow. The one red is the short tick under
      the name and the edge of a line that was not understood.
 
+   ★ A MINIMAL hint is no card at all: one line above the head, the talk key as a small paper cap
+     and "Talk to <name>", on nothing. See "The minimal line" below.
+
    ⚠️ direction: ltr on the root, for the same reason wnotify has it: every position here is
       geometry, and geometry must not follow the language. The card and the dock set their own
       dir from the locale, because what is inside them IS language.
@@ -347,6 +350,114 @@
 .wv-card.wv-at-middle-right { left: auto; right: 2.4vw; top: 50%; transform: translateY(-50%); }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   The minimal line -- "Talk to <name>" above the head
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ★ Transparent: no plate, no border, no rule -- the owner's words. It still reads over a white
+   sky or a dark saloon because every letter carries an ink HALO: a tight dark edge that outlines
+   the strokes, then a soft fall-off that darkens only the pixels right around them. Over a dark
+   scene the halo disappears into it; over a bright one it is what the letters stand on. The
+   scene between the words stays visible, which is the difference from a box.
+   Positioned by transform from index.tsx (placeHail), like the card. */
+.wv-hail {
+  --wv-halo:
+    0 0 1px rgba(11, 10, 8, 0.95),
+    0 1px 2px rgba(11, 10, 8, 0.9),
+    0 0 6px rgba(11, 10, 8, 0.72),
+    0 0 16px rgba(11, 10, 8, 0.48);
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: max-content;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.wv-hail-in {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: clamp(15px, 1.75vh, 20px);
+  animation: wv-in 200ms var(--w-ease) both;
+}
+
+/* The words: the text face at the prompt's size. The verb is paper, the name a step brighter and
+   heavier -- one line, one face, the person picked out by weight rather than by a second colour. */
+.wv-hail-text {
+  font-family: var(--wv-face-text);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--wv-paper);
+  text-shadow: var(--wv-halo);
+}
+
+.wv-hail-name {
+  font-weight: 700;
+  color: var(--w-paper-lit);
+}
+
+/* Arabic: Amiri, the menu-row role (700 for the name, 400 for the verb). A naskh needs its line
+   height for the tails, and a size step over the Latin to read at the same weight. */
+.wv-hail-text.is-ar {
+  font-family: var(--wv-face-ar-text);
+  font-weight: 400;
+  font-size: 1.12em;
+  line-height: 1.55;
+}
+
+.wv-hail-text.is-ar .wv-hail-name {
+  font-weight: 700;
+}
+
+/* ★ The key: a paper cap with an ink letter, the prompt engine's cap (prompt.css .keyboardKey) at
+   the line's size. It is the one solid thing on the line, so it is kept small, and a faint ink
+   edge keeps its outline against a white sky. The letter carries no halo -- it is ink on paper. */
+.wv-hail-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-sizing: border-box;
+  min-width: 1.75em;
+  height: 1.75em;
+  padding: 0.08em 0.42em 0;
+  border-radius: 2px;
+  background: var(--wv-paper);
+  box-shadow:
+    inset 0 -2px 0 rgba(11, 10, 8, 0.2),
+    0 0 0 1px rgba(11, 10, 8, 0.35),
+    0 1px 6px rgba(11, 10, 8, 0.55);
+  font-family: var(--w-f-num);
+  font-size: 0.72em;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--wv-ink);
+  text-shadow: none;
+}
+
+/* ★ Listening: the meter takes the key's place, in paper with the same ink halo on its bars. */
+.wv-hail-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: 1.26em;
+  height: 1.26em;
+  animation: wv-fade 150ms ease-out both;
+}
+
+.wv-hail .wv-meter {
+  height: 1.05em;
+}
+
+.wv-hail .wv-bar {
+  box-shadow: 0 0 1px rgba(11, 10, 8, 0.9), 0 0 4px rgba(11, 10, 8, 0.6);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    The microphone meter
    ══════════════════════════════════════════════════════════════════════════ */
 
@@ -504,6 +615,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .wv-card-in,
+  .wv-hail-in,
+  .wv-hail-mark,
   .wv-says,
   .wv-list,
   .wv-sub,

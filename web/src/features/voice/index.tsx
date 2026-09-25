@@ -30,6 +30,13 @@ import './voice.css';
  *   in Arabic, right of them in English), it flips to the other side only when it would not fit,
  *   and it is clamped to the screen. See placeCard.
  *
+ * ★ A MINIMAL hint (`minimal`, and nothing being said) is not a card at all: one line ABOVE the
+ *   head -- the talk key as a small cap and "Talk to <name>" -- with no plate, no border and no
+ *   rule, kept legible over a bright sky or a dark room by an ink halo on the letters alone. The
+ *   owner asked for exactly that in place of the five example phrases beside every face. When
+ *   the person speaks (`says`), the same id is drawn as the normal card with their line. See
+ *   HailView / placeHail.
+ *
  * ⚠️ The positions are fractions of the viewport that LUA has already projected -- exactly as
  *    drawText3D in wnotify does. No world maths happens in this frame, and it must not: the
  *    projection needs the camera, and the camera lives in the game.
@@ -97,6 +104,12 @@ interface Hint {
   says?: string;
   /** Optional: metres from the camera. */
   d?: number;
+  /** Optional: draw the bare line above the head instead of a card (while nothing is said). */
+  minimal?: boolean;
+  /** Optional: the push-to-talk key, the minimal line's key cap. */
+  talkKey?: string;
+  /** Optional: the person alone. Set apart inside `title`, and the card's name while they speak. */
+  name?: string;
 }
 
 /** One card on screen: a person (hint), their list (panel), or both folded together. */
@@ -264,6 +277,55 @@ const placeCard = (el: HTMLElement, card: Card, rtl: boolean, sideRef: React.Mut
   el.dataset.top = String(Math.round(top));
 };
 
+/**
+ * Put a minimal line above the head it belongs to, centred on it.
+ *
+ * ★ The head bone is the middle of the skull. The crown, and the brim of the hat most people in
+ *   1899 wear, sit about a quarter of a metre above it, so the line's foot is lifted 0.27 m as
+ *   the game draws it: the same 1/d fall-off placeCard uses for the side gap, at the scale where
+ *   one metre at one metre is about the viewport's height. Without `d`, a fixed 8.5vh that
+ *   suits the two-to-four metres of a conversation.
+ *
+ * ★ Clamped to the screen like the card, so a person at the edge keeps a readable line instead
+ *   of half of one; and lifted clear of the heard line in the dock, like the card.
+ */
+const placeHail = (el: HTMLElement, hint: Hint) => {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const w = el.offsetWidth;
+  const h = el.offsetHeight;
+  const margin = Math.max(12, Math.round(vh * 0.024));
+
+  const ax = hint.x * vw;
+  const ay = hint.y * vh;
+  const d = Number(hint.d);
+  const lift = d > 0 ? clamp((0.27 / d) * vh, 0.03 * vh, 0.2 * vh) : 0.085 * vh;
+  // The side gap placeCard would leave: separateCards sizes this person's head from it.
+  const gap = d > 0 ? clamp((0.17 / d) * vh, 0.035 * vh, 0.2 * vh) : 0.075 * vh;
+
+  const left = clamp(ax - w / 2, margin, vw - margin - w);
+  let top = clamp(ay - lift - h, margin, vh - margin - h);
+
+  // The same test as placeCard: what is drawn in the dock, 12px of air.
+  const dockEl = document.querySelector('.wv-dock');
+  if (dockEl) {
+    for (const piece of Array.from(dockEl.children).reverse()) {
+      const r = piece.getBoundingClientRect();
+      if (left < r.right && left + w > r.left && top + h > r.top - 12 && top < r.bottom) {
+        top = Math.max(margin, r.top - 12 - h);
+      }
+    }
+  }
+
+  el.style.transform = `translate3d(${Math.round(left)}px, ${Math.round(top)}px, 0)`;
+  el.dataset.ax = String(ax);
+  el.dataset.ay = String(ay);
+  el.dataset.gap = String(gap);
+  el.dataset.d = String(d > 0 ? d : '');
+  el.dataset.left = String(Math.round(left));
+  el.dataset.top = String(Math.round(top));
+};
+
 /* ── several people at once ───────────────────────────────────────────────── */
 
 interface Box {
@@ -285,11 +347,15 @@ const overlap = (a: Box, b: Box) =>
  *   candidate that covers least, nearest to where they were. Heads count as obstacles, and so does
  *   what is drawn in the dock.
  *
+ * ★ Minimal lines take part too. They go after the talked-to card and before the other cards
+ *   (nearest person first), and they only ever move UP or DOWN: a line that slid sideways would
+ *   no longer be over the head it names. The cards placed after them then route around them.
+ *
  * ⚠️ w_voiceintract only ever talks to one person, so this is idle there. It is for a script that
  *    puts hints over several people (the dev preview does), and it costs nothing with one card.
  */
 const separateCards = (root: HTMLElement) => {
-  const els = Array.from(root.querySelectorAll<HTMLElement>('.wv-card.is-anchored'));
+  const els = Array.from(root.querySelectorAll<HTMLElement>('.wv-card.is-anchored, .wv-hail'));
   if (els.length < 2) return;
 
   const vw = window.innerWidth;
@@ -308,12 +374,19 @@ const separateCards = (root: HTMLElement) => {
       w: el.offsetWidth,
       h: el.offsetHeight,
       talks: el.classList.contains('is-talks'),
+      hail: el.classList.contains('wv-hail'),
+      d: Number(el.dataset.d) || Infinity,
     }))
     .filter((it) => [it.ax, it.ay, it.gap, it.left, it.top].every(Number.isFinite));
   if (items.length < 2) return;
 
-  // Stable: the talked-to card first, the rest in the order they arrived.
-  items.sort((a, b) => Number(b.talks) - Number(a.talks));
+  // Stable: the talked-to card first, then the minimal lines nearest first, then the other cards
+  // in the order they arrived.
+  const rank = (it: { talks: boolean; hail: boolean }) => (it.talks ? 0 : it.hail ? 1 : 2);
+  // (Compared, not subtracted: two lines with no distance are Infinity each, and Infinity minus
+  // Infinity is NaN.)
+  const nearer = (a: number, b: number) => (a === b ? 0 : a < b ? -1 : 1);
+  items.sort((a, b) => rank(a) - rank(b) || (a.hail && b.hail ? nearer(a.d, b.d) : 0));
 
   // A head is about as wide as the gap placeCard leaves beside it, and a little taller.
   const heads: Box[] = items.map((it) => ({ l: it.ax - it.gap * 0.6, r: it.ax + it.gap * 0.6, t: it.ay - it.gap * 0.8, b: it.ay + it.gap * 0.8 }));
@@ -338,7 +411,9 @@ const separateCards = (root: HTMLElement) => {
 
     if (!it.talks && cost(best) > 0) {
       const onRight = it.left >= it.ax;
-      const sides = [it.left, onRight ? it.ax - it.gap - it.w : it.ax + it.gap].map((x) => clamp(x, margin, vw - margin - it.w));
+      const sides = it.hail
+        ? [it.left]
+        : [it.left, onRight ? it.ax - it.gap - it.w : it.ax + it.gap].map((x) => clamp(x, margin, vw - margin - it.w));
       const tops = [it.top, ...obstacles.flatMap((o) => [o.b + air, o.t - air - it.h])];
 
       let bestScore = Infinity;
@@ -356,7 +431,7 @@ const separateCards = (root: HTMLElement) => {
       }
 
       it.el.style.transform = `translate3d(${Math.round(best.l)}px, ${Math.round(best.t)}px, 0)`;
-      it.el.dataset.side = best.l >= it.ax ? 'r' : 'l';
+      if (!it.hail) it.el.dataset.side = best.l >= it.ax ? 'r' : 'l';
     }
 
     placed.push(best);
@@ -468,6 +543,84 @@ const CardView: React.FC<{ card: Card; listening: Listening | null; rtl: boolean
   );
 };
 
+/* ── the minimal line ─────────────────────────────────────────────────────── */
+
+/**
+ * "Talk to <name>" as the script wrote it, cut around the name so the name can be set apart.
+ * The verb comes from the script's own dictionary, so its words and their order are the
+ * script's: the name is found inside the sentence, never glued on. A title that does not contain
+ * the name (or no name at all) is drawn whole.
+ */
+const splitTitle = (title?: string, name?: string): [string, string, string] => {
+  const text = String(title ?? '');
+  const who = String(name ?? '').trim();
+  if (!text) return ['', who, ''];
+
+  const at = who ? text.indexOf(who) : -1;
+  if (at < 0) return [text, '', ''];
+
+  return [text.slice(0, at), who, text.slice(at + who.length)];
+};
+
+/**
+ * ★ The whole prompt for someone you can talk to: the key, then the words, on one line above the
+ *   head. No plate, no border, no header rule, no list -- the owner wanted it transparent. What
+ *   keeps it readable over a white sky or a dark saloon is an ink halo on the letters and on the
+ *   key's edge (voice.css), not a box.
+ *
+ * ★ While the microphone is open for this person the key cap gives way to the level meter, in
+ *   the same place: the line itself shows that you are being heard.
+ */
+const HailView: React.FC<{ hint: Hint; listening: Listening | null; rtl: boolean }> = ({ hint, listening, rtl }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const live = !!listening?.active;
+  const t = rtl ? STRINGS.ar : STRINGS.en;
+
+  // ⚠️ Layout effect, as for the card: placed before the browser paints, never seen at 0,0.
+  useLayoutEffect(() => {
+    if (ref.current) placeHail(ref.current, hint);
+  });
+
+  // And again on a resize, straight on the element (see CardView).
+  const latest = useRef(hint);
+  latest.current = hint;
+  useEffect(() => {
+    const onResize = () => ref.current && placeHail(ref.current, latest.current);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const [before, name, after] = splitTitle(hint.title, hint.name);
+  const text = `${before}${name}${after}`;
+  const key = keyName(hint.talkKey);
+
+  return (
+    <div ref={ref} className={`wv-hail${live ? ' is-live' : ''}`} dir={rtl ? 'rtl' : 'ltr'}>
+      <div className="wv-hail-in">
+        {live ? (
+          <span className="wv-hail-mark" role="img" aria-label={listening?.label || t.listening}>
+            <Meter level={listening?.level} levels={listening?.levels} />
+          </span>
+        ) : (
+          key && (
+            <kbd className="wv-hail-key" dir="ltr" title={t.hold}>
+              {key}
+            </kbd>
+          )
+        )}
+
+        {text && (
+          <span className={`wv-hail-text${script(text)}`} dir="auto">
+            {before}
+            {name && <span className="wv-hail-name">{name}</span>}
+            {after}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
 /* ── matching a panel to its person ───────────────────────────────────────── */
 
 /**
@@ -494,20 +647,32 @@ const ownerOf = (panel: CommandPanel, hints: Hint[]) => {
   return best;
 };
 
-const buildCards = (hints: Hint[], panel: CommandPanel | null): Card[] => {
+/**
+ * A minimal hint's title is the whole prompt ("Talk to Clara Morgan"); as a card's heading it
+ * would read as her name. Its `name` is the person alone, so that is what a card shows.
+ */
+const nameOf = (hint: Hint) => (hint.minimal ? hint.name || hint.title : hint.title);
+
+const buildCards = (hints: Hint[], panel: CommandPanel | null): { cards: Card[]; hails: Hint[] } => {
   const groups = (panel?.groups || []).filter((g) => g && Array.isArray(g.commands));
   const hasPanel = !!panel && groups.length > 0;
   const anchored = hasPanel && typeof panel!.x === 'number' && typeof panel!.y === 'number';
   const owner = anchored ? ownerOf(panel!, hints) : undefined;
 
-  const cards: Card[] = hints.map((hint) =>
+  // ★ The minimal line: asked for, and nothing to say. A line being spoken needs the card (the
+  //   words have to go somewhere), and so does a list a script pinned to the same person -- it
+  //   asked for that list explicitly, and a one-line prompt has no room for it.
+  const isHail = (hint: Hint) => !!hint.minimal && !hint.says && hint !== owner;
+  const hails = hints.filter(isHail);
+
+  const cards: Card[] = hints.filter((hint) => !isHail(hint)).map((hint) =>
     hint === owner
       ? {
           key: hint.id,
           x: hint.x,
           y: hint.y,
           d: hint.d ?? panel!.d,
-          name: hint.title || panel!.speaker,
+          name: nameOf(hint) || panel!.speaker,
           says: hint.says,
           title: panel!.title,
           groups,
@@ -519,7 +684,7 @@ const buildCards = (hints: Hint[], panel: CommandPanel | null): Card[] => {
           x: hint.x,
           y: hint.y,
           d: hint.d,
-          name: hint.title,
+          name: nameOf(hint),
           says: hint.says,
           groups: !hint.says && hint.commands?.length ? [{ commands: hint.commands }] : [],
           talks: false,
@@ -545,7 +710,25 @@ const buildCards = (hints: Hint[], panel: CommandPanel | null): Card[] => {
     });
   }
 
-  return cards;
+  return { cards, hails };
+};
+
+/**
+ * The minimal line that carries the microphone while it is open: the nearest person's, since
+ * that is who a push-to-talk is aimed at (w_voiceintract only ever shows the one it addresses).
+ * Lines without a distance count as far, and the first of equals wins.
+ */
+const liveHailOf = (hails: Hint[]) => {
+  let best: Hint | undefined;
+  let bestD = Infinity;
+  for (const hint of hails) {
+    const d = Number(hint.d) > 0 ? Number(hint.d) : Infinity;
+    if (!best || d < bestD) {
+      best = hint;
+      bestD = d;
+    }
+  }
+  return best;
 };
 
 /* ── the frame ────────────────────────────────────────────────────────────── */
@@ -607,8 +790,11 @@ const Voice: React.FC = () => {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const cards = buildCards(Object.values(hints), panel);
-  const talking = cards.some((c) => c.talks);
+  const { cards, hails } = buildCards(Object.values(hints), panel);
+  // ★ The open microphone is drawn ONCE: in the talked-to card when there is one, else in the
+  //   nearest minimal line (in place of its key), else in the dock.
+  const liveHail = listening?.active && !cards.some((c) => c.talks) ? liveHailOf(hails) : undefined;
+  const talking = cards.some((c) => c.talks) || !!liveHail;
   const t = rtl ? STRINGS.ar : STRINGS.en;
 
   /**
@@ -623,7 +809,7 @@ const Voice: React.FC = () => {
   const onCard = !!spoken && cards.some((c) => !!c.says && String(c.says).trim() === spoken);
   const heardLine = !!subtitle?.text && !onCard;
 
-  if (!listening?.active && !heardLine && !cards.length) return null;
+  if (!listening?.active && !heardLine && !cards.length && !hails.length) return null;
 
   const state: Heard = subtitle?.state === 'matched' || subtitle?.state === 'unknown' ? subtitle.state : 'listening';
   const tag = subtitle?.speaker || t.heard[state];
@@ -632,6 +818,10 @@ const Voice: React.FC = () => {
     <div className="wv-root" ref={rootRef}>
       {cards.map((card) => (
         <CardView key={card.key} card={card} listening={listening} rtl={rtl} />
+      ))}
+
+      {hails.map((hint) => (
+        <HailView key={`hail:${hint.id}`} hint={hint} listening={hint === liveHail ? listening : null} rtl={rtl} />
       ))}
 
       {/* ── the dock: the microphone when no card carries it, and what was heard ── */}
