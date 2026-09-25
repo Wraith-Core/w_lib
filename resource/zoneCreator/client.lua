@@ -220,7 +220,7 @@ local function startCreator(arg, useLast)
 
             DrawLine(xCoord, yCoord, zCoord, xCoord + 2, yCoord, zCoord, 180, 180, 180, 225)
             DrawLine(xCoord, yCoord, zCoord, xCoord, yCoord + 2, zCoord, 180, 180, 180, 225)
-            DrawLine(xCoord, yCoord, zCoord, xCoord, yCoord, zCoord + 2, 185, 175, 156, 225)
+            DrawLine(xCoord, yCoord, zCoord, xCoord, yCoord, zCoord + 2, 180, 180, 180, 225)
         end
 
         if zoneType == 'poly' then
