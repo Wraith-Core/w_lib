@@ -34,7 +34,10 @@
   --wv-ink-2: var(--w-ink-2);
   --wv-paper: var(--w-paper);
   --wv-paper-dim: var(--w-paper-dim);
-  --wv-paper-faint: rgba(242, 242, 242, 0.5);
+  /* .56, not .5: the plate's torn rim and grain lift the ink a step, and the faint captions (the
+     group labels, the numbers, "Hearing") must not lose contrast to them -- measured over the
+     plate, they read at 5:1 or better. */
+  --wv-paper-faint: rgba(242, 242, 242, 0.56);
   --wv-rule: var(--w-rule);
   --wv-rule-strong: var(--w-rule-2);
   --wv-red: var(--w-red);
