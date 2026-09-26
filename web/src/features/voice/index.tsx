@@ -44,7 +44,8 @@ import './voice.css';
  * ⚠️ The class names are deliberately NOT .wv-panel / .wv-bubble any more. The store theme's
  *    bridge (nui/assets/store-theme-bridge.js) decorates those two with a textured frame and a
  *    masked plate; that frame was the scratchy white border around the old list. This card
- *    carries its own quiet edge and must not be re-skinned from outside.
+ *    carries its own edge (the theme's torn ink card, voice.css) and must not be re-skinned
+ *    from outside.
  * ============================================================================
  */
 
