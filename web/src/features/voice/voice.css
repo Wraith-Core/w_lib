@@ -582,7 +582,8 @@
   padding: calc(clamp(5px, 0.7vh, 8px) + var(--wv-bleed-sm)) calc(clamp(12px, 1vw, 16px) + var(--wv-bleed-sm));
   background-color: var(--wv-plate);
   background-image: var(--wv-sheen);
-  box-shadow: var(--wv-rim);
+  /* the rim at the strip's own depth: the card's would reach under the label on a strip this thin */
+  box-shadow: inset 0 0 var(--wv-tear-sm) rgba(242, 242, 242, 0.1), inset 0 0 calc(var(--wv-tear-sm) * 0.4) rgba(242, 242, 242, 0.08);
   -webkit-mask-box-image: var(--w-tex-tear) 64 fill / var(--wv-tear-sm) round;
   animation: wv-fade 180ms ease-out both;
 }
