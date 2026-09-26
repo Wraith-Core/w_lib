@@ -185,11 +185,18 @@
   background: var(--w-rule-3);
 }
 
-/* The one red: a short brushed tick at the start of the rule, under the first letter of the name. */
+/* The one red: a short tick at the start of the rule, under the first letter of the name -- the
+   launcher's red ribbon laid flat: torn at its ends by the same tear.png, full red in the middle
+   (the brush mask would dim it to a maroon on the ink). */
 .wv-head::after {
   inset-inline-start: 0;
+  bottom: -1px;
   width: clamp(18px, 1.4vw, 26px);
+  height: 3px;
   background: var(--wv-red);
+  -webkit-mask: none;
+  mask: none;
+  -webkit-mask-box-image: var(--w-tex-tear) 64 fill / 1px 3px round;
 }
 
 .wv-name {
@@ -649,9 +656,14 @@
   background: repeating-linear-gradient(90deg, var(--wv-paper-dim) 0 5px, transparent 5px 9px);
 }
 
+/* the red rule, like the tick under a name: torn ends, full red (see .wv-head::after) */
 .wv-sub.is-unknown::before {
   width: 72px;
+  height: 3px;
   background: var(--wv-red);
+  -webkit-mask: none;
+  mask: none;
+  -webkit-mask-box-image: var(--w-tex-tear) 64 fill / 1px 4px round;
 }
 
 .wv-sub.is-speech::before {
