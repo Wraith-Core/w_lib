@@ -1,10 +1,19 @@
 /* ══════════════════════════════════════════════════════════════════════════
    Voice interaction -- the dialogue card, the microphone, the heard line.
 
-   ★ ONE card per person: their name over a thin rule, what they are saying, then what you can
-     say to them as a plain numbered list under its group labels. Ink plate, paper text, hairline
-     rules -- no pills, no rounded buttons, no emblem, no glow. The one red is the short tick under
-     the name and the edge of a line that was not understood.
+   ★ ONE card per person: their name over a brushed rule, what they are saying, then what you can
+     say to them as a plain numbered list under its group labels. No pills, no rounded buttons, no
+     emblem. The one red is the short tick under the name and the rule over a line that was not
+     understood.
+
+   ★ Every plate here (the person's card, the heard line, the microphone) is the server's torn ink
+     card -- the launcher's player card and the pause menu's cards: solid ink, the theme's tear.png
+     9-slice as a mask, grain.png over the ink, the paler rim where the sheet is torn, and a soft
+     neutral shadow on the element AROUND the torn one (a mask clips its own element's shadow).
+     The textures come from the theme at run time through its tokens (--w-tex-tear, --w-tex-grain,
+     --w-tex-divider, --w-tex-vline: absolute https://cfx-nui-w_lib/nui/theme/tex/... urls in
+     nui/theme/tokens.css, linked by web/index.html outside the bundle). Never a url() here:
+     Vite would bundle it, and a relative one breaks once it goes through var().
 
    ★ A MINIMAL hint is no card at all: one line above the head, the talk key as a small paper cap
      and "Talk to <name>", on nothing. See "The minimal line" below.
@@ -45,6 +54,23 @@
   --wv-face-ar-text: var(--w-f-ar-text);
   --wv-face-ar-label: var(--w-f-ar-label);
 
+  /* ★ The torn ink card. --wv-tear is how deep the tear bites into the box (the launcher's player
+     card: 1.1rem, here 1.05 of the theme's rem, 21px at 1080p). Of that depth the outer ~40% is
+     air and the rest is the ragged edge, so --wv-bleed is added to every padding and every width
+     limit: the text keeps its old distance from the edge you SEE and its old line breaks.
+     The fallback keeps the arithmetic valid in a page that never linked the theme. */
+  --wv-rem: var(--w-rem, 20px);
+  --wv-tear: calc(var(--wv-rem) * 1.05);
+  --wv-bleed: calc(var(--wv-tear) * 0.4);
+  --wv-tear-sm: calc(var(--wv-tear) * 0.6);
+  --wv-bleed-sm: calc(var(--wv-tear-sm) * 0.4);
+  /* Solid ink: over a noon sky or a dark saloon the plate is the same, and nothing of the world
+     shows through the words. The sheen and the rim are the pause menu card's. */
+  --wv-plate: var(--w-ink-2);
+  --wv-sheen: linear-gradient(160deg, rgba(242, 242, 242, 0.035), rgba(242, 242, 242, 0) 55%);
+  --wv-rim: inset 0 0 var(--wv-tear) rgba(242, 242, 242, 0.1), inset 0 0 calc(var(--wv-tear) * 0.4) rgba(242, 242, 242, 0.08);
+  --wv-shadow: drop-shadow(0 calc(var(--wv-rem) * 0.5) calc(var(--wv-rem) * 0.8) rgba(0, 0, 0, 0.55));
+
   position: fixed;
   inset: 0;
   z-index: 24;
@@ -61,39 +87,65 @@
 
 /* ★ Positioned by transform from index.tsx (placeCard) when it belongs to a person; the corner
    classes below take over when it does not. left/top stay 0 so the transform IS the position. */
+/* The wrapper carries the shadow; the torn mask is on .wv-card-in and would clip its own. */
 .wv-card {
   position: absolute;
   left: 0;
   top: 0;
   width: max-content;
-  min-width: clamp(200px, 14vw, 250px);
-  max-width: clamp(250px, 21vw, 372px);
+  min-width: calc(clamp(200px, 14vw, 250px) + 2 * var(--wv-bleed));
+  max-width: calc(clamp(250px, 21vw, 372px) + 2 * var(--wv-bleed));
+  filter: var(--wv-shadow);
   will-change: transform;
 }
 
 .wv-card-in {
   position: relative;
-  padding: clamp(10px, 1.3vh, 15px) clamp(13px, 1.05vw, 18px) clamp(8px, 1vh, 12px);
-  background: linear-gradient(180deg, rgba(17, 17, 17, 0.95) 0%, rgba(10, 10, 10, 0.94) 100%);
-  /* the pause menu's card inset glow: the paper catching light at the edge of the ink */
-  box-shadow: inset 0 0 18px rgba(242, 242, 242, 0.06), 0 18px 42px -24px rgba(0, 0, 0, 0.9);
+  isolation: isolate;
+  padding:
+    calc(clamp(10px, 1.3vh, 15px) + var(--wv-bleed))
+    calc(clamp(13px, 1.05vw, 18px) + var(--wv-bleed))
+    calc(clamp(8px, 1vh, 12px) + var(--wv-bleed));
+  background-color: var(--wv-plate);
+  background-image: var(--wv-sheen);
+  /* the pause menu card's rim: the paler core of the sheet showing where it is torn */
+  box-shadow: var(--wv-rim);
+  -webkit-mask-box-image: var(--w-tex-tear) 64 fill / var(--wv-tear) round;
   animation: wv-in 200ms var(--w-ease) both;
 }
 
-/* ★ The edge that faces the speaker carries a hairline -- the card reads as said BY someone on
-   that side, the way a quotation rule sits against the text it belongs to. data-side is set by
-   placeCard; a corner card has none and no rule. */
+/* The fibres of the sheet (grain.png, the launcher's recipe): under the words, never over them. */
+.wv-card-in::after,
+.wv-sub::after,
+.wv-mic::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--w-tex-grain) 0 0 / 256px 256px repeat;
+  opacity: 0.1;
+  mix-blend-mode: screen;
+  filter: invert(1);
+}
+
+/* ★ The edge that faces the speaker carries a brushed stroke -- the card reads as said BY someone
+   on that side, the way a quotation rule sits against the text it belongs to. It runs just inside
+   the torn edge, where the ink is whole. data-side is set by placeCard; a corner card has none
+   and no stroke. */
 .wv-card[data-side] .wv-card-in::before {
   content: '';
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
+  top: calc(var(--wv-tear) * 0.8);
+  bottom: calc(var(--wv-tear) * 0.8);
+  width: 3px;
   background: var(--wv-rule-strong);
+  -webkit-mask: var(--w-tex-vline) center / 100% 100% no-repeat;
+  mask: var(--w-tex-vline) center / 100% 100% no-repeat;
 }
 
-.wv-card[data-side='r'] .wv-card-in::before { left: 0; }
-.wv-card[data-side='l'] .wv-card-in::before { right: 0; }
+.wv-card[data-side='r'] .wv-card-in::before { left: calc(var(--wv-tear) * 0.62); }
+.wv-card[data-side='l'] .wv-card-in::before { right: calc(var(--wv-tear) * 0.62); }
 
 @keyframes wv-in {
   from { opacity: 0; transform: translateY(6px); }
@@ -107,21 +159,33 @@
 
 /* ── the name ──────────────────────────────────────────────────────────── */
 
+/* The rule under the name is the game's brushed divider (divider_line.png as a mask), where a
+   plain 1px border used to be; the 1px it took is kept in the padding so nothing below moves. */
 .wv-head {
   position: relative;
-  padding-bottom: clamp(5px, 0.7vh, 8px);
+  padding-bottom: calc(clamp(5px, 0.7vh, 8px) + 1px);
   margin-bottom: clamp(7px, 0.9vh, 10px);
-  border-bottom: 1px solid var(--wv-rule-strong);
 }
 
-/* The one red: a short tick at the start of the rule, under the first letter of the name. */
+.wv-head::before,
 .wv-head::after {
   content: '';
   position: absolute;
-  bottom: -1px;
+  bottom: -1.5px;
+  height: 4px;
+  -webkit-mask: var(--w-tex-divider) center / 100% 100% no-repeat;
+  mask: var(--w-tex-divider) center / 100% 100% no-repeat;
+}
+
+.wv-head::before {
+  inset-inline: 0;
+  background: var(--w-rule-3);
+}
+
+/* The one red: a short brushed tick at the start of the rule, under the first letter of the name. */
+.wv-head::after {
   inset-inline-start: 0;
   width: clamp(18px, 1.4vw, 26px);
-  height: 1px;
   background: var(--wv-red);
 }
 
@@ -260,8 +324,10 @@
 .wv-group-label::after {
   content: '';
   flex: 1;
-  height: 1px;
-  background: var(--wv-rule);
+  height: 3px;
+  background: var(--wv-rule-strong);
+  -webkit-mask: var(--w-tex-divider) center / 100% 100% no-repeat;
+  mask: var(--w-tex-divider) center / 100% 100% no-repeat;
 }
 
 .wv-group-label.is-ar {
@@ -488,6 +554,8 @@
    The dock -- the microphone when no card carries it, and the heard line
    ══════════════════════════════════════════════════════════════════════════ */
 
+/* The dock is the wrapper that carries the shadow for the two torn plates in it. It is wider by
+   the heard line's bleed, so a long line breaks where it did before the tear. */
 .wv-dock {
   position: absolute;
   left: 50%;
@@ -497,15 +565,22 @@
   flex-direction: column;
   align-items: center;
   gap: clamp(7px, 1vh, 11px);
-  width: min(64vw, 860px);
+  width: calc(min(64vw, 860px) + 2 * var(--wv-bleed));
+  filter: var(--wv-shadow);
 }
 
+/* The microphone: a thin torn strip (the pause menu's .is-strip -- a shallower tear). */
 .wv-mic {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: clamp(5px, 0.7vh, 8px) clamp(12px, 1vw, 16px);
-  background: rgba(10, 10, 10, 0.9);
+  padding: calc(clamp(5px, 0.7vh, 8px) + var(--wv-bleed-sm)) calc(clamp(12px, 1vw, 16px) + var(--wv-bleed-sm));
+  background-color: var(--wv-plate);
+  background-image: var(--wv-sheen);
+  box-shadow: var(--wv-rim);
+  -webkit-mask-box-image: var(--w-tex-tear) 64 fill / var(--wv-tear-sm) round;
   animation: wv-fade 180ms ease-out both;
 }
 
@@ -530,16 +605,25 @@
 
 /* ★ Three states, each told apart THREE ways so none depends on colour: the word above the line
    ("Hearing" / "Understood" / "Not understood"), the rule over it (dashed, solid, a wider red
-   one), and the line itself (breathing and dim while it is still being worked out). */
+   one), and the line itself (breathing and dim while it is still being worked out).
+   The plate is the torn ink card; the rule sits just inside its top tear, drawn with the game's
+   brush (divider_line.png as a mask) -- the dashes of "hearing" are brushed dabs. */
 .wv-sub {
   position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: clamp(3px, 0.45vh, 5px);
   max-width: 100%;
-  padding: clamp(10px, 1.3vh, 14px) clamp(16px, 1.6vw, 28px) clamp(10px, 1.3vh, 14px);
-  background: rgba(10, 10, 10, 0.9);
+  padding:
+    calc(clamp(10px, 1.3vh, 14px) + var(--wv-tear) * 0.5)
+    calc(clamp(16px, 1.6vw, 28px) + var(--wv-bleed))
+    calc(clamp(10px, 1.3vh, 14px) + var(--wv-bleed));
+  background-color: var(--wv-plate);
+  background-image: var(--wv-sheen);
+  box-shadow: var(--wv-rim);
+  -webkit-mask-box-image: var(--w-tex-tear) 64 fill / var(--wv-tear) round;
   text-align: center;
   animation: wv-in 200ms var(--w-ease) both;
 }
@@ -547,12 +631,14 @@
 .wv-sub::before {
   content: '';
   position: absolute;
-  top: 0;
+  top: calc(var(--wv-tear) * 0.58);
   left: 50%;
-  width: 40px;
-  height: 2px;
+  width: 44px;
+  height: 4px;
   transform: translateX(-50%);
   background: var(--wv-paper);
+  -webkit-mask: var(--w-tex-divider) center / 100% 100% no-repeat;
+  mask: var(--w-tex-divider) center / 100% 100% no-repeat;
 }
 
 .wv-sub.is-listening::before {
@@ -565,9 +651,9 @@
 }
 
 .wv-sub.is-speech::before {
-  width: 24px;
-  height: 1px;
-  background: var(--wv-rule-strong);
+  width: 26px;
+  height: 3px;
+  background: var(--w-rule-3);
 }
 
 .wv-sub-tag {
