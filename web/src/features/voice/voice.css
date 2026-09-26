@@ -565,12 +565,17 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* The dock is the wrapper that carries the shadow for the two torn plates in it. It is wider by
-   the heard line's bleed, so a long line breaks where it did before the tear. */
+   the heard line's bleed, so a long line breaks where it did before the tear.
+   ⚠️ Centred by auto margins, never left:50% + translateX(-50%): its width is fractional (the
+      bleed), so the transform put the torn plates on a sub-pixel origin, and Chromium then paints
+      the tear 9-slice with a 1px see-through seam where the edge meets the fill -- a bright
+      hairline down both sides of the heard line over a noon sky. A layout offset is pixel-snapped. */
 .wv-dock {
   position: absolute;
-  left: 50%;
+  left: 0;
+  right: 0;
   bottom: 8.5vh;
-  transform: translateX(-50%);
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
