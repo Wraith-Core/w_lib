@@ -79,8 +79,20 @@ local function GetMetaPedAssetTint(ped, index)
 end
 local function GetNumComponentsInPed(ped) return InvokeNative(0x90403E8107B60E81, ped) or 0 end
 local function GetShopItemComponentCategory(...) return InvokeNative(0x5FF9A878C3D115B8, ...) end
+-- The native rejects a table. A component row often arrives as the hash argument, and
+-- `type(hash) == "table" and hash.hash or hash` falls back to that whole row when .hash is
+-- missing. GetHashFromString returns a table unchanged, so resolve to a number or skip.
+local function asShopHash(value)
+  if type(value) == "table" then value = value.hash end
+  if type(value) ~= "string" and type(value) ~= "number" then return nil end
+  value = GetHashFromString(value)
+  if type(value) ~= "number" or value == 0 then return nil end
+  return value
+end
 local function UpdateShopItemWearableState(ped, hash, state)
-  return InvokeNative(0x66B957AAC2EAAEAB, ped, GetHashFromString(hash), GetHashFromString(state), 0, true, 1)
+  hash, state = asShopHash(hash), asShopHash(state)
+  if not hash or not state then return end
+  return InvokeNative(0x66B957AAC2EAAEAB, ped, hash, state, 0, true, 1)
 end
 local function SetMetaPedTag(ped, drawable, albedo, normal, material, palette, tint0, tint1, tint2)
   return InvokeNative(
@@ -268,9 +280,10 @@ local function updateComponentWearableState(ped, category, hash, state)
     end
     return
   end
-  state = GetHashFromString(state)
+  state = asShopHash(state)
+  if not state then return end
   bagOf(ped):set("wearableState:" .. category, state)
-  UpdateShopItemWearableState(ped, type(hash) == "table" and hash.hash or hash, state)
+  UpdateShopItemWearableState(ped, hash, state)
 end
 
 -------------
