@@ -58,8 +58,8 @@
     },
     "discord": {
       "players": "اللاعبون: %d/%d",
-      "large_text": "ورايث كور - ريد ديد آر بي",
-      "small_text": "ورايث كور",
+      "large_text": "ريد ريفر - ريد ديد آر بي",
+      "small_text": "ريد ريفر",
       "button_connect": "انضم إلى السيرفر"
     },
     "teleports": {
