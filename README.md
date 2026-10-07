@@ -1937,6 +1937,7 @@ Parameters:
   - `title` (string, optional, default `''`): first line.
   - `description` (string, optional, default `''`): second line, typed out at 20 ms per character; newlines become line breaks and inline HTML is allowed.
   - `icon` (string, optional, default `''`): library texture name (`'tick'`, `'cross'`, `'warning'`, `'lock'` ...), a FontAwesome-style name, or a full `nui://` / http image URL; empty shows no icon.
+  - `image` (string, optional): a picture shown in place of the icon, for example an item's own image (`nui://vorp_inventory/html/img/items/<name>.png`). When it is set, the icon slot shows the picture only, and no state icon is added for the notice. If the picture fails to load it is hidden and the text is shown on its own.
   - `placement` (`'top-left'|'top-center'|'top-right'|'middle-left'|'middle-center'|'middle-right'|'bottom-left'|'bottom-center'|'bottom-right'`, optional, default `'middle-right'`): where the notice appears; several placements can hold notices at once; ignored when `variant = 'law'` (always top-center).
   - `duration` (number, optional, default 5000): milliseconds on screen.
   - `useBackground` (boolean, optional, default false): `true` draws a plate behind the text (the banner look) and switches the default sound to the menu-open cue.
@@ -1976,7 +1977,7 @@ w.notify(data: table)
 Side: client
 
 Parameters:
-- `data` (table, required): exactly the `NotifyRaw` table (title, description, icon, placement, duration, useBackground, variant, meta, contentAlignment, isRTL, titleColor, descriptionColor, sound, soundSet).
+- `data` (table, required): exactly the `NotifyRaw` table (title, description, icon, image, placement, duration, useBackground, variant, meta, contentAlignment, isRTL, titleColor, descriptionColor, sound, soundSet).
 
 Returns: nothing
 
@@ -6471,9 +6472,9 @@ Parameters:
 - `currencyType` (integer, required) - `0` = VORP money / RSG cash, `1` = VORP gold / RSG bloodmoney (always bloodmoney offline, no gold check), `2` = VORP rol / RSG blkbank.
 - `amount` (number, required) - amount to add.
 
-Returns: `boolean success, string|nil error` (`'invalid_data'` for an unknown type, `'unknown_framework'`).
+Returns: `boolean success, string|nil error`. Error codes: `'invalid_amount'` (amount missing, not a number, NaN, infinite or not above 0; outside the direct SQL path also a currency type other than 0 or 1), `'invalid_data'` (unknown currency type on the direct SQL path) and `'economy_unavailable'` (w_centralbank is not started or not ready; this code also covers a host with no w_centralbank whose framework is neither VORP nor RSG). On the w_centralbank path the result is whatever `AdjustPlayer` answers.
 
-Direct SQL: VORP `UPDATE characters SET <col> = <col> + ? WHERE identifier = ?`; RSG `JSON_SET` on `players.money WHERE citizenid = ?`. Offline players only.
+Two paths. When w_centralbank is started (Wraith Core, where w_core runs), the change goes through `exports.w_centralbank:AdjustPlayer(identifier, 'cash'|'gold', amount, 'offline-framework-currency')`, so only types 0 and 1 are accepted. Without w_centralbank, on a host with no w_core resource at all, it writes the framework table directly: VORP `UPDATE characters SET <col> = <col> + ? WHERE identifier = ?`; RSG `JSON_SET` on `players.money WHERE citizenid = ?`. Offline players only.
 
 ```lua
 exports.w_lib:FwAddCurrencyOffline('steam:110000112345678', 0, 100)
@@ -6492,9 +6493,9 @@ Parameters:
 - `currencyType` (integer, required) - `0` = money/cash, `1` = VORP gold / RSG bloodmoney, `2` = rol/blkbank.
 - `amount` (number, required) - amount to subtract; the balance is clamped at 0 with `GREATEST`.
 
-Returns: `boolean success, string|nil error` (`'invalid_data'`, `'unknown_framework'`).
+Returns: `boolean success, string|nil error` (`'invalid_amount'`, `'invalid_data'`, `'economy_unavailable'`, or `AdjustPlayer`'s answer on the w_centralbank path; same meanings as `FwAddCurrencyOffline`).
 
-Same as `FwAddCurrencyOffline` with subtraction clamped at zero.
+Same as `FwAddCurrencyOffline` with subtraction: through w_centralbank `AdjustPlayer` with a negative amount when it is started; without it (no w_core on the host) a direct write to VORP `characters` or RSG `players`, clamped at zero.
 
 ```lua
 exports.w_lib:FwRemoveCurrencyOffline('steam:110000112345678', 1, 5)
@@ -7698,14 +7699,14 @@ Class of per-player objects returned by `UserClass:get(source)` / `w.framework:g
 | method | parameters | returns | notes |
 |---|---|---|---|
 | `user:getMoney(moneyType?)` | `moneyType` (integer, optional, default 0): 0 dollars, 1 gold, 2 rol | number - balance (0 for an unknown type) | VORP: `data.money` / `gold` / `rol` |
-| `user:addMoney(amount, moneyType?)` | `amount` (number, required); `moneyType` (integer, optional, default 0) | any - core result (VORP `data.addCurrency(moneyType, amount)`) | Adds currency through the core |
-| `user:removeMoney(amount, moneyType?)` | `amount` (number, required); `moneyType` (integer, optional, default 0) | any - core result (VORP `data.removeCurrency`) | No balance check |
+| `user:addMoney(amount, moneyType?)` | `amount` (number, required); `moneyType` (integer, optional, default 0) | boolean on VORP - `true` once `data.addCurrency(moneyType, amount)` was called (VORP's own function answers nothing); `false` when `data.addCurrency` is missing or returns an explicit `false`. Other adapters return their core's result | Adds currency through the core |
+| `user:removeMoney(amount, moneyType?)` | `amount` (number, required); `moneyType` (integer, optional, default 0) | boolean on VORP - `true` once `data.removeCurrency(moneyType, amount)` was called; `false` when it is missing or returns an explicit `false`. Other adapters return their core's result | No balance check. `canBuy(..., removeIfCan)` charges only when this returns `true` |
 | `user:getIdentifiers()` | none | `{ identifier = string, charid = number|string }` | VORP: `data.identifier`, `data.charIdentifier` |
 | `user:getJob()` | none | string - job name | VORP: `data.job` |
 | `user:getJobGrade()` | none | number - job grade | VORP: `data.jobGrade` |
 | `user:setJob(job, grade)` | `job` (string, required); `grade` (number, required) | any - VORP: `data.setJob(job)` and `data.setJobGrade(grade)` (truthy when both succeed) | Sets job and grade through the core |
 | `user:getRPName()` | none | string - `"firstname lastname"` | Roleplay name |
-| `user:giveGold(amount)` | `amount` (number, required) | any - result of `addMoney(amount, 1)` | Shortcut for money type 1 |
+| `user:giveGold(amount)` | `amount` (number, required) | result of `addMoney(amount, 1)` (boolean on VORP, as above) | Shortcut for money type 1 |
 
 ```lua
 local user = w.framework.UserClass:get(source)
@@ -7764,8 +7765,8 @@ Returns: see table
 | `getUserIdentifiers` | `table|nil` - `{ identifier = string, charid = number|string }`, or nil when the user does not exist | Shortcut for `UserClass:getIdentifiers()`. On VORP `identifier` is the account identifier and `charid` is `charIdentifier`. Returns nil (not false) when the user is missing. Also served to the client through the callback `<resource>:server:framework:getPlayerIdentifiers`. |
 | `getJob` | string - job name | Raises an error if the user does not exist |
 | `getRPName` | string - `"firstname lastname"` | Raises an error if the user does not exist |
-| `addMoney` | any - the core's result (VORP: return value of `character.addCurrency`); annotation says boolean | Raises an error if the user does not exist |
-| `removeMoney` | any - the core's result (VORP: return value of `character.removeCurrency`) | Raises an error if the user does not exist |
+| `addMoney` | boolean on VORP - `true` once `character.addCurrency` was called, `false` when it is missing or returns an explicit `false` (other adapters: their core's result) | Shortcut for `UserClass:addMoney`. Raises an error if the user does not exist |
+| `removeMoney` | boolean on VORP - `true` once `character.removeCurrency` was called, `false` when it is missing or returns an explicit `false` (other adapters: their core's result) | Shortcut for `UserClass:removeMoney`. Raises an error if the user does not exist |
 
 Only `getUserIdentifiers` tolerates a missing user; guard the others with `getUser` first if the player may not have a character yet.
 
@@ -8774,8 +8775,8 @@ Returns: see table
 | `FwRemoveItemOffline(charId, itemName, count?)` | `boolean, string?` | Removes an item offline |
 | `FwAddWeaponOffline(charId, weaponName, ammo?)` | `boolean, string?` | Adds a weapon offline |
 | `FwRemoveWeaponOffline(charId, weaponId, weaponName?)` | boolean | Removes a weapon offline |
-| `FwAddCurrencyOffline(identifier, currencyType, amount)` | `boolean, string?` - false, `"invalid_data"` or `"unknown_framework"` | SQL update on the offline character rows (VORP: every character of the identifier) |
-| `FwRemoveCurrencyOffline(identifier, currencyType, amount)` | `boolean, string?` | SQL update removing currency offline |
+| `FwAddCurrencyOffline(identifier, currencyType, amount)` | `boolean, string?` - false plus `"invalid_amount"`, `"invalid_data"` or `"economy_unavailable"` (also returned when no framework was detected), or `AdjustPlayer`'s answer | Through w_centralbank `AdjustPlayer` when it is started; without w_centralbank on a host with no w_core, a direct write to VORP `characters` (every character of the identifier) or RSG `players` |
+| `FwRemoveCurrencyOffline(identifier, currencyType, amount)` | `boolean, string?` - same codes as `FwAddCurrencyOffline` | Same two paths, removing currency offline; the direct write is clamped at zero |
 | `FwSetJobFullOffline(identifier, jobName, jobGrade)` | boolean | Sets job and grade offline (VORP: all characters of the identifier) |
 | `FwSetJobLabelOffline(identifier, jobLabel)` | boolean | Sets the job label offline |
 | `FwSetJobGradeOffline(identifier, jobGrade)` | boolean | Sets the job grade offline |
