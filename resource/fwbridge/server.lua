@@ -1200,8 +1200,40 @@ end
 -- ── العملة أوفلاين ──
 local VORP_CUR = { [0] = 'money', [1] = 'gold', [2] = 'rol' }
 local RSG_CUR  = { [0] = 'cash', [1] = 'bloodmoney', [2] = 'blkbank' }
+
+-- بلا w_centralbank (خادم فورب/RSG بلا w_core): جدول الفريمورك مباشرةً كما في 3.39 —
+-- فورب characters (money/gold/rol) و RSG players (JSON money)، والخصم لا ينزل تحت الصفر.
+-- مضيف Wraith Core لا يدخل هنا أبدًا (w_core يعلن rsgcore واقتصاده البنك المركزيّ وحده).
+-- nil = لا مسار مباشر لهذا الفريمورك → يكمل المسار الأصليّ بجوابه كما هو.
+local function frameworkCurrencyOffline(identifier, currencyType, amount, action)
+    if WFW.Host == 'w_core' or GetResourceState('w_core') ~= 'missing' then return nil end
+    if WFW.Name == 'vorp' then
+        local col = VORP_CUR[tonumber(currencyType)]; if not col then return false, 'invalid_data' end
+        if action == 'add' then
+            MySQL.update.await("UPDATE characters SET " .. col .. " = " .. col .. " + ? WHERE identifier = ?", { amount, identifier })
+        else
+            MySQL.update.await("UPDATE characters SET " .. col .. " = GREATEST(" .. col .. " - ?, 0) WHERE identifier = ?", { amount, identifier })
+        end
+        return true
+    elseif WFW.Name == 'rsgcore' then
+        local key = RSG_CUR[tonumber(currencyType)]; if not key then return false, 'invalid_data' end
+        if action == 'add' then
+            MySQL.update.await("UPDATE players SET money = JSON_SET(money, '$." .. key .. "', CAST(JSON_EXTRACT(money, '$." .. key .. "') AS SIGNED) + ?) WHERE citizenid = ?", { amount, identifier })
+        else
+            MySQL.update.await("UPDATE players SET money = JSON_SET(money, '$." .. key .. "', GREATEST(CAST(JSON_EXTRACT(money, '$." .. key .. "') AS SIGNED) - ?, 0)) WHERE citizenid = ?", { amount, identifier })
+        end
+        return true
+    end
+    return nil
+end
+
 local function currencyOffline(identifier, currencyType, amount, action)
     amount = tonumber(amount)
+    if GetResourceState('w_centralbank') ~= 'started'
+        and amount and amount == amount and amount > 0 and amount ~= math.huge then
+        local ok, reason = frameworkCurrencyOffline(identifier, currencyType, amount, action)
+        if ok ~= nil then return ok, reason end
+    end
     local currency = ({ [0] = 'cash', [1] = 'gold' })[tonumber(currencyType)]
     if not currency or not amount or amount ~= amount or amount <= 0 or amount == math.huge then return false, 'invalid_amount' end
     if GetResourceState('w_centralbank') ~= 'started' then return false, 'economy_unavailable' end

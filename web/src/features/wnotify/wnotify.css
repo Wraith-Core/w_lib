@@ -236,6 +236,22 @@
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.9));
 }
 
+/* ★ An item's picture in the icon slot (NoticeImage in index.tsx) -- vorp_inventory's toast for
+   every item gained or lost. Larger than a state icon because it IS the news, on a faint dark pad
+   so a pale item still reads over a pale sky.
+   ⚠️ It does not breathe. The pulse is for a state icon; a picture fading in and out looks like a
+      picture that is failing to load. */
+.wn-img {
+  width: clamp(34px, 4.6vh, 52px);
+  height: clamp(34px, 4.6vh, 52px);
+  object-fit: contain;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 2px;
+  animation: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9));
+}
+
 /* The one place the locale still decides something: the text's own direction and alignment. */
 .wn-body {
   display: flex;
@@ -432,4 +448,13 @@ body[data-store-theme=library] .wn-note.has-plate .wn-desc {
 
 body[data-store-theme=library] .wn-note.has-plate.is-law .wn-desc {
   font-size: calc(clamp(calc(15 * var(--lb-px)), 2vh, calc(21 * var(--lb-px))) * var(--w-k-action));
+}
+
+/* ⚠️ The item picture keeps its own size. That sheet sizes EVERY .wn-icon at icon size
+      (body[data-store-theme=library] .wn-icon, 20-28px), and it outranks a bare .wn-img, so
+      without this the picture shrinks to a state icon. On a plate the plate's icon size still
+      wins (its selector is longer), as it does for any icon there. */
+body[data-store-theme=library] .wn-img {
+  width: clamp(calc(34 * var(--lb-px)), 4.6vh, calc(52 * var(--lb-px)));
+  height: clamp(calc(34 * var(--lb-px)), 4.6vh, calc(52 * var(--lb-px)));
 }

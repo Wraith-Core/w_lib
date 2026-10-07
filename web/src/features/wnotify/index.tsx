@@ -27,6 +27,12 @@ interface NotifyData {
   title?: string;
   description?: string;
   icon?: string;
+  /**
+   * A picture for the icon slot, in place of the icon -- an item's own image, as vorp_inventory's
+   * ItemToast sends it (nui://vorp_inventory/html/img/items/<name>.png) for every item gained or
+   * lost. See NoticeImage below.
+   */
+  image?: string;
   placement?: string;
   duration?: number;
   useBackground?: boolean;
@@ -146,6 +152,27 @@ const Typed: React.FC<{ html: string; className?: string; style?: React.CSSPrope
   return <span className={className} style={style} dangerouslySetInnerHTML={{ __html: html.slice(0, cut) }} />;
 };
 
+/**
+ * The item's picture, in the slot the icon would take.
+ *
+ * ⚠️ Gone, not broken, when it fails to load. Not every item has a picture on disk, and the
+ *    browser's broken-image box beside the name would read as the notice failing; the text is the
+ *    notice, so it stays on its own. The slot is NOT handed the state icon instead: Lua gives a
+ *    notice with a picture no state icon (resource/wnotify/client.lua), and a tick or a cross
+ *    beside an item's name would say something about the item that nobody meant.
+ *
+ * ★ Drawn as it is, in its own colours, like every picture the frame shows (wc/Icon draws a url
+ *   as a plain <img>). The palette clamps what a script COLOURS -- the title, the readings -- and a
+ *   picture is not a colour a script chose. .wn-img (wnotify.css) sizes it and stops the pulse.
+ */
+const NoticeImage: React.FC<{ src: string }> = ({ src }) => {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) return null;
+
+  return <img src={src} alt="" className="wn-icon wn-img" onError={() => setFailed(true)} />;
+};
+
 const WNotify: React.FC = () => {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [text2D, setText2D] = useState<string | null>(null);
@@ -259,7 +286,12 @@ const WNotify: React.FC = () => {
                 )}
               </span>
 
-              {toast.icon && <Icon icon={toast.icon} className="wn-icon" />}
+              {/* ★ A picture takes the icon's place; the two never share the slot. */}
+              {typeof toast.image === 'string' && toast.image ? (
+                <NoticeImage src={toast.image} />
+              ) : (
+                toast.icon && <Icon icon={toast.icon} className="wn-icon" />
+              )}
             </div>
           ))}
         </div>

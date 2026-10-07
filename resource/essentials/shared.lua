@@ -10,7 +10,19 @@
                   binoculars / 'dual' items (the first did nothing, the second handed out weapons
                   outside the inventory)
 
-    Every switch is below; a feature set to false does nothing at all.
+    The host switch sits above every switch below: essentials runs only where the host is
+    Wraith Core. A VORP host without w_core (MajestyRP) gets none of it.
+
+      set w_lib:essentials "on" | "off"   (server.cfg) wins over the rule below
+      not set                             ON when a resource named w_core exists, else OFF
+
+    The server decides at start, again when w_core starts / stops or the convar changes, and
+    replicates the answer as GlobalState['w_lib:essentials'] (true / false). A client starts
+    nothing until it reads true (nil / false = off); when it turns false, the client ends its
+    loops, lifts its control blocks, disables its keybinds and puts the PLAYER relationship
+    back. Server side, OFF kicks nobody and cancels no spawn.
+
+    Every switch is below and applies only under ON; a feature set to false does nothing at all.
 ]]
 
 WEssentials = {

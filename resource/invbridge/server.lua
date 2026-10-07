@@ -81,6 +81,12 @@ Adapters['vorp_inventory'] = {
             for _, w in pairs(ws) do if tostring(w.name):upper() == tostring(item):upper() then c = c + 1 end end
             return c
         end
+        -- getItemCount(source, callback, item, metadata) sums EVERY stack of the item: getItem answers one
+        -- stack only (inventoryApiService.lua GET_ITEM "we get a random item") while subItem takes from all
+        -- of them, so a player whose item is split (decay, metadata) was refused what they hold.
+        -- An older vorp_inventory without getItemCount answers through getItem as before.
+        local n = await1(function(cb) return exports.vorp_inventory:getItemCount(src, cb, item, meta) end)
+        if type(n) == 'number' then return n end
         -- getItem(source, item, callback, metadata) — الكولباك هو الوسيط الثالث
         local it = await1(function(cb) exports.vorp_inventory:getItem(src, item, cb, meta) end)
         if type(it) ~= 'table' then return 0 end

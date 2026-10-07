@@ -281,17 +281,28 @@ end
 
 ---@param amount number amount to add
 ---@param moneyType integer 0: money, 1: gold, 2: rol, 3: blackmoney (dirty money)
+---@return boolean added `true` once VORP's addCurrency was called
 function w.framework.UserClass:addMoney(amount, moneyType)
   moneyType = GetValue(moneyType, 0)
-  return self.data.addCurrency(moneyType, amount)
+  local addCurrency = self.data and self.data.addCurrency
+  if not addCurrency then return false end
+  -- VORP's addCurrency answers nothing (vorp_core character.lua): the call is the credit.
+  -- Only an explicit false (a core that refuses) is a failure.
+  return addCurrency(moneyType, amount) ~= false
 end
 
 ---Remove the amount of player's money
 ---@param amount number amount to remove
 ---@param moneyType? integer 0: money, 1: gold, 2: rol, 3: blackmoney (dirty money)
+---@return boolean removed `true` once VORP's removeCurrency was called
 function w.framework.UserClass:removeMoney(amount, moneyType)
   moneyType = GetValue(moneyType, 0)
-  return self.data.removeCurrency(moneyType, amount)
+  local removeCurrency = self.data and self.data.removeCurrency
+  if not removeCurrency then return false end
+  -- VORP's removeCurrency answers nothing (vorp_core character.lua userData.removeCurrency): the
+  -- call is the debit. Handing its nil through made canBuy(removeIfCan), which charges only on
+  -- `== true`, answer false AFTER the money was already taken.
+  return removeCurrency(moneyType, amount) ~= false
 end
 
 function w.framework.UserClass:getIdentifiers()

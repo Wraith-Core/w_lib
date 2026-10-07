@@ -43,6 +43,10 @@ export const debugWNotifyVariants = () => {
   show({ title: 'إشعار عربي', description: 'من اليمين إلى اليسار', icon: 'lock', placement: 'middle-left', isRTL: true }, 300);
   show({ title: 'Refused', description: 'Not enough on you.', icon: 'cross', placement: 'bottom-center', titleColor: '#CB0101' }, 600);
   show({ description: 'No title, no icon — description only.', placement: 'top-left' }, 900);
+  // ★ The item toast (vorp_inventory ItemToast): a picture in the icon slot. The second one
+  //   points at a picture that is not there -- its slot must come out empty, the text kept.
+  show({ title: 'Gold', description: '+3', image: './assets/images/gold.png', placement: 'bottom-right', isRTL: true, titleColor: '#34b895' }, 1200);
+  show({ title: 'No picture on disk', description: '-1', image: './assets/images/no_such_item.png', placement: 'bottom-left', titleColor: '#e0b050' }, 1500);
 };
 
 /**

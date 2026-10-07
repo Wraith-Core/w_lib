@@ -113,7 +113,10 @@ local function build()
     local out = {}
     local rows = loadTable(INVENTORY, 'data/items.lua')
     if type(rows) ~= 'table' then
-        if IsDuplicityVersion() or GetResourceState(INVENTORY) == 'started' then
+        -- A server with neither w_inventory nor w_core (plain VORP / RSG) has no catalogue to
+        -- miss: the empty answer is not cached, so the warning would repeat on every call.
+        local wraithHost = GetResourceState(INVENTORY) ~= 'missing' or GetResourceState('w_core') ~= 'missing'
+        if wraithHost and (IsDuplicityVersion() or GetResourceState(INVENTORY) == 'started') then
             print('^1[w_lib] CompatItems: w_inventory/data/items.lua is unavailable - the core has no items^0')
         end
         return out
