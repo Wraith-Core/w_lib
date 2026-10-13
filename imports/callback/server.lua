@@ -11,9 +11,13 @@ local cbEvent = '__ox_cb_%s'
 local callbackTimeout = GetConvarInt('w_lib:callbackTimeout', 300000)
 
 RegisterNetEvent(cbEvent:format(cache.resource), function(key, ...)
+    if type(key) ~= 'string' then return end
     local cb = pendingCallbacks[key]
 
     if not cb then return end
+
+    -- ★ Wraith: the key ends with the asked player's id; an answer from anyone else is not his answer
+    if tonumber(key:match(':(%d+)$')) ~= tonumber(source) then return end
 
     pendingCallbacks[key] = nil
 

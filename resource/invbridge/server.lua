@@ -52,7 +52,11 @@ Adapters['w_inventory'] = {
     CanCarry = function(src, item, count) return exports.w_inventory:CanCarryItem(src, item, count) == true end,
     AddItem = function(src, item, count, meta) return exports.w_inventory:AddItem(src, item, count, meta) == true end,
     RemoveItem = function(src, item, count, meta, slot) return exports.w_inventory:RemoveItem(src, item, count, meta, slot) == true end,
-    RegisterStash = function(id, label, slots, maxWeight) exports.w_inventory:RegisterStash(id, label, slots, maxWeight); return true end,
+    RegisterStash = function(id, label, slots, maxWeight, options)
+        options = type(options) == 'table' and options or {}
+        exports.w_inventory:RegisterStash(id, label, slots, maxWeight, options.owner, options.groups, options.coords)
+        return true
+    end,
     AddItemToStash = function(stashId, item, count, meta) return exports.w_inventory:AddItem(stashId, item, count, meta) == true end,
     OpenStash = function(src, stashId) exports.w_inventory:forceOpenInventory(src, 'stash', stashId); return true end,
     RegisterUsable = function(item, closeAfterUsed, callback)
@@ -538,7 +542,11 @@ exports('InvGetItemCount', function(src, item, meta) return ensure() and (A.GetI
 exports('InvCanCarry', function(src, item, count) return ensure() and A.CanCarry(src, item, count) == true or false end)
 exports('InvAddItem', function(src, item, count, meta) return ensure() and A.AddItem(src, item, count, meta) == true or false end)
 exports('InvRemoveItem', function(src, item, count, meta, slot) return ensure() and A.RemoveItem(src, item, count, meta, slot) == true or false end)
-exports('InvRegisterStash', function(id, label, slots, maxWeight)
+--- options (optional): { owner = ..., groups = { [job] = minGrade }, coords = vector3 }, handed on to an
+--- inventory that knows them (w_inventory). ⚠️ Until 2026-10-14 this export dropped them: boss_<job>
+--- and gang_<name> were registered with no groups and no coords, and w_inventory's client open lets
+--- anyone into a stash with neither -- from anywhere on the map.
+exports('InvRegisterStash', function(id, label, slots, maxWeight, options)
     id = tostring(id or '')
     if id == '' then return false end
 
@@ -550,7 +558,7 @@ exports('InvRegisterStash', function(id, label, slots, maxWeight)
     }
 
     return ensure() and A.RegisterStash(id, label or id,
-        StashDefinitions[id].slots, StashDefinitions[id].maxweight) or false
+        StashDefinitions[id].slots, StashDefinitions[id].maxweight, options) or false
 end)
 exports('InvAddItemToStash', function(stashId, item, count, meta) return ensure() and A.AddItemToStash(stashId, item, count, meta) == true or false end)
 exports('InvOpenStash', function(src, stashId) return ensure() and A.OpenStash(src, stashId) or false end)

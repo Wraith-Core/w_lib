@@ -54,6 +54,23 @@ end
 -- ── hands up (w_policejob checks this very clip before a search / cuffs) ──
 if E.handsUp.enabled then
     local dict, clip = 'script_proc@robberies@homestead@lonnies_shack@deception', 'hands_up_loop'
+    -- ★ The server cannot see an animation: the player's own client says whether his hands are up
+    --   (his own consent to a search), so w_inventory can refuse a search of a man who is not down,
+    --   not cuffed and not holding them up -- that check used to live on the searcher's client only.
+    feature(function(r)
+        CreateThread(function()
+            local up = nil
+            while alive(r) do
+                local now = IsEntityPlayingAnim(ped(), dict, clip, 3) == true
+                if now ~= up then
+                    up = now
+                    LocalPlayer.state:set('handsUp', now, true)
+                end
+                Wait(500)
+            end
+            LocalPlayer.state:set('handsUp', false, true)
+        end)
+    end)
     feature(function() -- the label is a locale string: see L above
         keybind({
             name = 'handsup',

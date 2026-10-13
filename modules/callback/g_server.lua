@@ -140,8 +140,15 @@ function w.callback.triggerClient(name, source, cb, ...)
     responseCallback = promise.new()
   end
 
+  -- ★ The answer counts only from the player who was asked. The event name is a sequential number any
+  --   client can guess, and `source` is shadowed by this function's parameter, so the sender is read
+  --   from _G.source. Without this a seller answered 'confirm' for the buyer (w_stables trade offer)
+  --   and the buyer was charged before ever seeing the dialog. A stranger's answer is dropped and the
+  --   handler stays registered for the real one.
+  local target = tonumber(source)
   local handler
   handler = RegisterNetEvent(generateEventName("response", currentRequestId), function(fromResource, ...)
+    if tonumber(_G.source) ~= target then return end
     dprint("Response received for request ID: %d from resource: %s", currentRequestId, fromResource)
     if isAFunction(responseCallback) then
       responseCallback(...)
