@@ -444,10 +444,12 @@ local function applyMetabolism(source)
     -- here
 end
 
--- ★ The RSG-family medic: w_ambulancejob on this server (it listens on hospital:client:*). The
+-- ★ The RSG-family medic: w_medic on this server (w_ambulancejob before 2026-10-14; both listen on hospital:client:*). The
 --   rsg-medic:client:* events went to a resource that does not exist here, so the website's
 --   revive / heal / respawn / kill (w_connector) reported success and did nothing.
 local MEDIC_EVENTS = {
+    w_medic = { revive = 'hospital:client:Revive', heal = 'hospital:client:adminHeal',
+        respawn = 'hospital:client:RespawnAtHospital', kill = 'hospital:client:KillPlayer' },
     w_ambulancejob = { revive = 'hospital:client:Revive', heal = 'hospital:client:adminHeal',
         respawn = 'hospital:client:RespawnAtHospital', kill = 'hospital:client:KillPlayer' },
     ['rsg-medic'] = { revive = 'rsg-medic:client:adminRevive', heal = 'rsg-medic:client:adminHeal',
@@ -456,7 +458,7 @@ local MEDIC_EVENTS = {
 
 --- Send the RSG medic's client event for `action`; false when no medic resource runs.
 local function rsgMedic(source, action)
-    for _, resource in ipairs({ 'w_ambulancejob', 'rsg-medic' }) do
+    for _, resource in ipairs({ 'w_medic', 'w_ambulancejob', 'rsg-medic' }) do
         if GetResourceState(resource) == 'started' then
             TriggerClientEvent(MEDIC_EVENTS[resource][action], source)
             return true
