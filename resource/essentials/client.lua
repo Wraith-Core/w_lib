@@ -275,12 +275,12 @@ if #E.teleports > 0 then
                     local here = vector3(point.coords.x, point.coords.y, point.coords.z)
                     local busy, inside = false, false
                     local p = lib.points.new({ coords = here, distance = 1.2 })
-                    function p:onEnter() inside = true lib.showTextUI('[E] ' .. locale(point.label)) end
+                    function p:onEnter() inside = true lib.showTextUI('[J] ' .. locale(point.label)) end
                     function p:onExit() inside = false lib.hideTextUI() end
                     function p:nearby()
                         Citizen.InvokeNative(0x2A32FAA57B937173, 0x6903B113, here.x, here.y, here.z - 0.98, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
                             1.0, 1.0, 0.9, 242, 242, 242, 155, false, false, 2, false, 0, 0, false) -- paper (tokens.css), was yellow
-                        if not busy and IsControlJustReleased(0, 0xCEFD9220) then -- E
+                        if not busy and IsControlJustReleased(0, 0xF3830D8E) then -- J (INPUT_OPEN_JOURNAL)
                             busy = true
                             SetEntityCoords(ped(), target.coords.x, target.coords.y, target.coords.z)
                             if target.coords.w then SetEntityHeading(ped(), target.coords.w) end

@@ -10,7 +10,7 @@
 --     textPosition = 'bottom-center', keyPosition = 'bottom-right', fov = 42.0,
 --     confirm      = true,                       -- a last "check, then save" step (default true)
 --     cancelHold   = 1000,                       -- ms the cancel key is held
---     keys   = { place = 'E', skip = 'G', remove = 'DELETE', back = 'BACK', cancel = 'X', look = 'C' },
+--     keys   = { place = 'J', skip = 'G', remove = 'DELETE', back = 'BACK', cancel = 'X', look = 'C' },
 --     labels = { place, skip, keep, remove, back, cancel, look, save, rotate, confirm,
 --                step = 'Step %d/%d - %s' | fn(n, total, text), tooFar = '... %d m ...' },
 --     steps  = { {
@@ -52,7 +52,7 @@ w.createModule("placer")
 local ENTITY_KINDS = { ped = true, object = true, vehicle = true }
 local KINDS        = { ped = true, object = true, vehicle = true, point = true, camera = true }
 
-local DEFAULT_KEYS = { place = "E", skip = "G", remove = "DELETE", back = "BACK", cancel = "X", look = "C" }
+local DEFAULT_KEYS = { place = "J", skip = "G", remove = "DELETE", back = "BACK", cancel = "X", look = "C" }
 
 -- The caller normally passes its own translated labels; these only keep an unlabelled
 -- caller readable in the library's two languages.
@@ -76,7 +76,7 @@ local DEFAULT_LABELS = {
 -- control on each key the editor uses is disabled every frame (w_core/shared/keybinds.lua).
 local KEY_CONTROLS = {
   A = 0x7065027D, B = 0x4CC0E2FE, C = 0x9959A6F0, D = 0xB4E465B4, E = 0xCEFD9220, F = 0xB2F377E8,
-  G = 0x760A9C6F, H = 0x24978A28, Q = 0xDE794E3E, R = 0xE30CD707, V = 0x7F8D09B8, X = 0x8CC9CD42,
+  G = 0x760A9C6F, H = 0x24978A28, J = 0xF3830D8E, Q = 0xDE794E3E, R = 0xE30CD707, V = 0x7F8D09B8, X = 0x8CC9CD42,
   Z = 0x26E9DC00, BACK = 0x156F7119, BACKSPACE = 0x156F7119, DELETE = 0x4AF4D473, DEL = 0x4AF4D473,
   RETURN = 0xC7B5340A, ENTER = 0xC7B5340A,
 }

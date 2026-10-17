@@ -4,7 +4,7 @@
 --
 --   local rec = w.prompt.at({
 --     coords = vector3(x, y, z), distance = 2.0, title = 'Bank' | false, position = 'bottom-right',
---     prompts = { { key = 'E', label = 'Open', hold = false | true | 1500, onComplete = function(rec) end,
+--     prompts = { { key = 'J', label = 'Open', hold = false | true | 1500, onComplete = function(rec) end,
 --                   enabled = true, visible = true } },
 --     canInteract = function() return true end,   -- optional, checked every frame
 --     onEnter = function(rec) end, onExit = function(rec) end,
@@ -47,7 +47,7 @@ local function holdTime(hold)
 end
 
 local function keyOf(key)
-  return tostring(key or "E"):upper()
+  return tostring(key or "J"):upper()   -- J, not E: E grabs the nearby player (owner, 2026-10-17)
 end
 
 local function walkupHide(rec)
