@@ -43,6 +43,90 @@ local context = IsDuplicityVersion() and 'server' or 'client'
 
 function noop() end
 
+-- ══════════════════════════════════════════════════════════════════════════
+-- Client script errors -> w_logs (w_logs 1.2.0, w_logs/docs/client-error-hook.md)
+--   The runtime catches a client thread's / handler's error itself and only prints it
+--   (citizen scheduler.lua: CreateThread / SetTimeout are native, event handlers run in
+--   Citizen.CreateThreadNow, NUI callbacks are pcall'd). The function handed to each is wrapped:
+--   the error is printed exactly as before, and a short report goes to w_logs (its room
+--   'أخطاء-العميل'): the same error once a minute, 5 reports a minute per resource at most.
+--   Client only. w_lib's own resource is not covered (this file returns early inside w_lib).
+-- ══════════════════════════════════════════════════════════════════════════
+if context == 'client' and not rawget(_ENV, 'WErrorHook') then
+    local SAME_MS, PER_MINUTE, MAX_TEXT, MAX_TRACE, MAX_FRAMES = 60000, 5, 400, 1200, 12
+
+    WErrorHook = true
+
+    local RESOURCE    = GetCurrentResourceName()
+    local SELF_SOURCE = debug.getinfo(1, 'S').source
+    local sentAt, sentCount, minuteAt, minuteCount = {}, 0, 0, 0
+
+    local function frames()
+        local out = {}
+        for level = 2, 60 do
+            local info = debug.getinfo(level, 'Sln')
+            if not info then break end
+            local src = info.source or ''
+            if src:sub(1, 1) == '@' and src ~= SELF_SOURCE and src:sub(1, 10) ~= '@citizen:/' then
+                out[#out + 1] = ('> %s (%s:%d)'):format(info.name or '[global chunk]', src:sub(2), info.currentline or 0)
+                if #out >= MAX_FRAMES then break end
+            end
+        end
+        return table.concat(out, '\n')
+    end
+
+    local function report(err)
+        pcall(function()
+            local text, trace = tostring(err), frames()
+            Citizen.Trace(('^1SCRIPT ERROR: %s^7\n%s\n'):format(text, trace))
+
+            if GetResourceState('w_logs') ~= 'started' then return end
+            local now, key = GetGameTimer(), text:sub(1, 200)
+            if sentAt[key] and now - sentAt[key] < SAME_MS then return end
+            if now - minuteAt >= 60000 then minuteAt, minuteCount = now, 0 end
+            if minuteCount >= PER_MINUTE then return end
+            minuteCount = minuteCount + 1
+
+            if sentCount >= 50 then sentAt, sentCount = {}, 0 end
+            if not sentAt[key] then sentCount = sentCount + 1 end
+            sentAt[key] = now
+
+            TriggerServerEvent('w_logs:server:clientError', {
+                resource = RESOURCE,
+                message  = text:sub(1, MAX_TEXT),
+                trace    = trace:sub(1, MAX_TRACE),
+            })
+        end)
+        return err
+    end
+
+    local function pass(ok, ...)
+        if ok then return ... end
+    end
+
+    local function guard(fn)
+        if type(fn) ~= 'function' then return fn end
+        return function(...) return pass(xpcall(fn, report, ...)) end
+    end
+
+    local function wrapArg(original, index)
+        if type(original) ~= 'function' then return original end
+        return function(...)
+            local args = table.pack(...)
+            args[index] = guard(args[index])
+            return original(table.unpack(args, 1, args.n))
+        end
+    end
+
+    Citizen.CreateThread    = wrapArg(Citizen.CreateThread, 1)
+    Citizen.CreateThreadNow = wrapArg(Citizen.CreateThreadNow, 1)
+    Citizen.SetTimeout      = wrapArg(Citizen.SetTimeout, 2)
+    CreateThread, SetTimeout = Citizen.CreateThread, Citizen.SetTimeout
+    RegisterCommand     = wrapArg(RegisterCommand, 2)
+    RegisterNUICallback = wrapArg(RegisterNUICallback, 2)
+    RegisterNuiCallback = wrapArg(RegisterNuiCallback, 2)
+end
+
 local function loadModule(self, module)
     local dir = ('imports/%s'):format(module)
     local chunk = LoadResourceFile(w_lib, ('%s/%s.lua'):format(dir, context))
