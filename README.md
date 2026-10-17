@@ -6,6 +6,10 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.0.2 (2026-10-17)
+
+- قائمة w_lib (registerMenu / showMenu): مرور الفأرة فوق سطر يُضيئه بإطار فقط ولا يغيّر السطر المختار؛ Enter والأسهم تعمل على السطر المختار، والنقر يختار السطر وينفّذه كما كان.
+
 ## Quick start
 
 ### Requirements

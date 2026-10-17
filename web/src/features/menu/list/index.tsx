@@ -34,6 +34,9 @@ const posClass = (position?: string) => (position || 'top-left').replace(/[^a-z-
 const ListMenu: React.FC = () => {
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [index, setIndex] = useState(0);
+  // 4.0.2: the row under the mouse is only LIT (is-hover); it never moves the selected row (index), so Enter and the
+  // arrows act on what was selected, not on the last row the mouse crossed. A click still picks and confirms its row.
+  const [hover, setHover] = useState(-1);
   const [scroll, setScroll] = useState<Record<number, number>>({});
 
   /* The key handler is registered once; it reads through refs so it never goes stale. */
@@ -50,6 +53,7 @@ const ListMenu: React.FC = () => {
   useNuiEvent<MenuState>('setMenu', (data) => {
     setMenu(data);
     setIndex(data.startItemIndex ?? 0);
+    setHover(-1);
     setScroll({});
     play('open');
   });
@@ -151,8 +155,9 @@ const ListMenu: React.FC = () => {
               <button
                 type="button"
                 key={i}
-                className={`lb-menu-item${i === index ? ' is-active' : ''}`}
-                onMouseEnter={() => setIndex(i)}
+                className={`lb-menu-item${i === index ? ' is-active' : ''}${i === hover && i !== index ? ' is-hover' : ''}`}
+                onMouseEnter={() => setHover(i)}
+                onMouseLeave={() => setHover((h) => (h === i ? -1 : h))}
                 onClick={() => {
                   setIndex(i);
                   // The click lands before the state does, so confirm reads the ref we just set.

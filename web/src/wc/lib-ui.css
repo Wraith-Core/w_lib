@@ -1439,6 +1439,18 @@ body[data-store-theme] .lb-menu-item.wst-card.is-active:active::before {
   background: var(--w-paper-dim) !important;
 }
 
+/* 4.0.2: a menu row under the mouse that is NOT the selected one: a paper frame, paper text - never the band (the band
+   is the selection). store-adapters.css paints .is-hover like .is-active; this wins by specificity. */
+body[data-store-theme] .lb-menu-item.wst-card.is-hover:not(.is-active) {
+  color: var(--w-paper) !important;
+}
+body[data-store-theme] .lb-menu-item.wst-card.is-hover:not(.is-active)::before {
+  background: transparent !important;
+  box-shadow: inset 0 0 0 1px var(--w-paper-dim) !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+}
+
 /* a disabled row never takes the band, and reads at 40% */
 body[data-store-theme] .lb-item.wst-card:disabled,
 body[data-store-theme] .lb-item.wst-card.is-disabled {
