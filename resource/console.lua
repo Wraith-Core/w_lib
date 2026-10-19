@@ -60,6 +60,9 @@ if IsDuplicityVersion() and GetResourceMetadata(resource, 'w_banner', 0) ~= 'own
     local line = ('^5%s^7'):format(resource)
     if version and version ~= '' then line = line .. (' ^2v%s^7'):format(version) end
     local desc = GetResourceMetadata(resource, 'description', 0)
+    -- the console shows English only (the server console cannot draw Arabic): an Arabic description is left out
+    -- (UTF-8 lead bytes 0xD8-0xDB = U+0600-U+06FF, 0xDD = the Arabic supplement)
+    if desc and desc:find('[\216-\219\221]') then desc = nil end
     if desc and desc ~= '' then
         desc = desc:gsub('%s+', ' ')
         local len = utf8.len(desc)
