@@ -31,6 +31,14 @@ local status = export.hasLoaded()
 
 if status ~= true then error(status, 2) end
 
+-- 2026-10-19 (owner): the quiet console in this resource -- routine print() lines dropped, faults kept, one start
+-- banner on the server (resource/console.lua; `setr w_lib:consoleDebug 1` brings every line back)
+do
+    local chunk = LoadResourceFile(w_lib, 'resource/console.lua')
+    local fn = chunk and load(chunk, '@@w_lib/resource/console.lua')
+    if fn then fn() end
+end
+
 -- Ignore invalid types during msgpack.pack (e.g. userdata)
 msgpack.setoption('ignore_invalid', true)
 

@@ -6,7 +6,7 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 
 name 'w_lib'
 author 'Wraith Studio'
-version '4.0.4'
+version '4.0.5'
 -- Includes adaptations from ox_lib and jo_libs; preserve their original notices.
 -- See CREDITS.md and LICENSES/ for upstream attribution and license copies.
 license 'LGPL-3.0-or-later'
@@ -23,6 +23,7 @@ ui_page 'nui://w_lib/web/build/index.html'
 files {
     -- ── w_lib imports / resource core / web NUI / locales ──
     'init.lua',
+    'resource/console.lua',
     'resource/settings.lua',
     'imports/**/client.lua',
     'imports/**/shared.lua',
@@ -70,6 +71,7 @@ escrow_ignore {
     'imports/**/*.lua',
     'modules/**/*.lua',
     'resource/settings.lua',
+    'resource/console.lua',
     'locales/*.json',
     'locales_modules/*.json',
     'web/build/**/*',
@@ -84,6 +86,7 @@ w_module {
 }
 
 -- ── w_lib core ──
+shared_script 'resource/console.lua' -- first: the quiet console in w_lib itself (init.lua loads it into every consumer)
 shared_script 'resource/init.lua'
 
 shared_scripts {
