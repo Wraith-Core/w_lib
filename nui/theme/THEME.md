@@ -65,6 +65,8 @@ Never define these names in a resource: `--w-ui-scale`, `--w-ui-px`, `--w-lib-px
 
 Arabic is never letter-spaced, uppercased, small-capped, slanted or faux-bold. Numbers use Western digits and are isolated left-to-right (`.w-num`, `.w-fig`).
 
+**One Arabic face on the whole server (owner, 2026-10-22): Lalezar.** The role names below (Amiri, Tajawal, Aref Ruqaa, Noto Sans Arabic) stay as CSS names, so every stack and size factor keeps working, but their Arabic faces in `fonts.css` load Lalezar's file. Each name keeps the weights of its Latin faces (Amiri 400/700, Tajawal 400/500/700): Chromium joins unicode-range faces only inside one weight bucket, so an Arabic face declared 100-900 beside a Latin face declared 700 is never picked, and Noto draws instead. The kit pages (main.tsx), w_admin, w_loading and w_logs declare the same mapping in their own faces.
+
 | Role | Arabic | Latin | Class | Arabic size factor | Arabic line height |
 |---|---|---|---|---|---|
 | Wordmark / masthead | Lalezar | RDR Lino | `.w-t-display` | 1.03 | 1.2 |
@@ -78,7 +80,7 @@ Arabic is never letter-spaced, uppercased, small-capped, slanted or faux-bold. N
 | Figures in text | EB Garamond, lining and tabular | EB Garamond | `.w-fig` | - | - |
 
 - Fallback: `W Noto Arabic`, the Noto file with its line box tamed. After it come Segoe UI and Times New Roman, which every Windows client has.
-- `Noto Sans Arabic` is also declared unchanged, because w_chat and w_baloot use it as their main face.
+- `Noto Sans Arabic` is also declared, because w_chat and w_baloot use it as their main face. Since 2026-10-22 it draws Lalezar too; only `W Noto Arabic` is still the real Noto file.
 - Do not use Cairo, Changa, Roboto or Arial for Arabic. The one exception is w_map's user-selectable map-label faces.
 - A single-weight face (Lalezar, Aref Ruqaa, the RDR faces) is declared over a weight range, so a bold request never synthesises a smeared bold.
 - To resize a role on one element, set its variable, for example `style="--w-fs-text:18px"`. The Arabic factor still applies.
