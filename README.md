@@ -6,6 +6,12 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.1.3 (2026-10-24)
+
+- **سبب «القطيع» (توقف السيرفر) في ريد ريفر:** فحص صلاحية الأدمن في المكتبة كان ينسخ كائن النظام كله (w_core) في كل
+  فحص، حوالي 30 ملي ثانية للفحص. لوحة الأدمن تفحص عشرات المرات، فيتوقف السيرفر ثانية أو أكثر. أداة القياس (profiler)
+  أثبتت ذلك: 130 فحصًا في 30 ثانية = 1.7 ثانية توقف. صار الكائن يُجلب مرة واحدة ويُحفظ.
+
 ## 4.1.2 (2026-10-24)
 
 - طلب المالك: «إذا جيت أحدد من فوق ما أعرف الحدود، تختفي». اللمعة نقاط صغيرة لا تظهرها اللعبة من الارتفاع، فصار للأشكال خيار
