@@ -29,7 +29,13 @@
       lib.glow.arrow(at, { heading = nil, size = 1.2, look = 3 })      down at `at`; with a heading: flat, pointing it
       lib.glow.remove(id) · lib.glow.clear() · lib.glow.looks (the table above) · lib.glow.count()
       common opts: look (1-5), color {r,g,b} 0-255 (a tint; not every effect takes it), alpha 0-1, scale, lift
-                   (metres above the point / ground), range (metres, default 60), ground (true/false), id
+                   (metres above the point / ground), range (metres, default 60), ground (true/false), id,
+                   solid (true | { color = {r,g,b}, alpha = 0-255, height = m, size = m }): see below
+    4.1.2 (the owner 2026-10-24: "when I draw from above I cannot see the borders, I want to see them from far, only I
+    see them"): the glitter is tiny sparkles the game does not show from high up, so `solid` adds, every frame while the
+    shape is within its range, a see-through wall along a wall / line (DrawPoly both sides, a line at its foot and top,
+    `height` default the top row + 0.8) or a flat ring under a point / circle / arrow (DrawMarker, `size` the ring's
+    radius for a point). Local like the glitter. The editors from above pass it; a player on foot does not need it.
     Budget: convar `w_lib:glowBudget` (default 300 spots per resource), range `w_lib:glowRange` (60).
     4.1.1 (the owner 2026-10-23: "all of them: taller, denser, bigger"): a wall has three rows (0, 0.8, 1.6 m), a spot
     every 0.5 m, look 5 drawn 1.5 times its size; the budget went 150 -> 300 so about 50 m of such a wall stands round
@@ -61,12 +67,14 @@ local FRAME_LIFE = 350
 local BUDGET = math.max(1, GetConvarInt('w_lib:glowBudget', 300))
 local RANGE = math.max(5, GetConvarInt('w_lib:glowRange', 60))
 local RING = 0x6903B113   -- the fallback: a flat ground cylinder (modules/placer MARKER_GROUND)
+local DRAW_LINE = 0x6B7256074AE34680
+local GOLD = { 224, 184, 74 }
 
 local shapes = {}    -- id -> { id, spots = { { x, y, z, lift, ground, look, scale, color, ckey, alpha, gz }, ... }, range, frame, at, sig }
 local active = {}    -- spot key -> { h, x, y, z, look, scale, ckey }
 local assets = {}    -- look number -> 'loading' | 'ready' | 'failed'
 local fallback = {}  -- spot key -> { x, y, z }: drawn with DrawMarker (a look the game refused)
-local nextId, running, drawing = 0, false, false
+local nextId, running, drawing, solidRunning = 0, false, false, false
 
 local function native(name, hash, ...)
     local fn = _G[name]
@@ -218,6 +226,79 @@ function BUILD.arrow(at, _, opts)
     return list
 end
 
+-- ── 4.1.2: the solid part (seen from any distance) ────────────────────────────
+local function solidOf(kind, a, b, opts)
+    local s = opts.solid
+    if not s then return nil end
+    s = type(s) == 'table' and s or {}
+    local c = type(s.color) == 'table' and s.color or (type(opts.color) == 'table' and opts.color) or GOLD
+    local out = { c = { num(c.r or c[1], 224), num(c.g or c[2], 184), num(c.b or c[3], 74) } }
+    if kind == 'wall' or kind == 'line' then
+        local pts = points(a)
+        if #pts < 2 then return nil end
+        local rows = type(opts.rows) == 'table' and #opts.rows > 0 and opts.rows or (kind == 'wall' and { 0.0, 0.8, 1.6 } or { 0.0 })
+        local top = 0.0
+        for _, h in ipairs(rows) do top = math.max(top, num(h, 0.0)) end
+        local closed = opts.closed
+        if closed == nil then closed = kind == 'wall' and #pts >= 3 end
+        out.pts, out.h, out.closed, out.a = pts, num(s.height, top + 0.8), closed == true, math.floor(num(s.alpha, 60))
+    else
+        local p = vec(a)
+        if not p then return nil end
+        out.at = { x = p.x, y = p.y, z = p.z + num(opts.lift, 0.0) }
+        out.r = kind == 'circle' and num(b, 1.0) or num(s.size, kind == 'arrow' and 0.4 or 0.5)
+        out.a = math.floor(num(s.alpha, 170))
+    end
+    return out
+end
+
+local function drawSolid(s)
+    local c, al = s.c, s.a
+    if s.pts then
+        local pts = s.pts
+        local n = #pts
+        for i = 1, s.closed and n or n - 1 do
+            local p, q = pts[i], pts[i % n + 1]
+            local az, bz, at, bt = p.z - 0.2, q.z - 0.2, p.z + s.h, q.z + s.h
+            -- both sides of each quad (a face is drawn from one side only)
+            DrawPoly(p.x, p.y, az, q.x, q.y, bz, q.x, q.y, bt, c[1], c[2], c[3], al)
+            DrawPoly(q.x, q.y, bt, q.x, q.y, bz, p.x, p.y, az, c[1], c[2], c[3], al)
+            DrawPoly(p.x, p.y, az, q.x, q.y, bt, p.x, p.y, at, c[1], c[2], c[3], al)
+            DrawPoly(p.x, p.y, at, q.x, q.y, bt, p.x, p.y, az, c[1], c[2], c[3], al)
+            Citizen.InvokeNative(DRAW_LINE, p.x + 0.0, p.y + 0.0, p.z + 0.1, q.x + 0.0, q.y + 0.0, q.z + 0.1, c[1], c[2], c[3], 235)
+            Citizen.InvokeNative(DRAW_LINE, p.x + 0.0, p.y + 0.0, at + 0.0, q.x + 0.0, q.y + 0.0, bt + 0.0, c[1], c[2], c[3], 235)
+        end
+    else
+        local d = s.r * 2.0
+        DrawMarker(RING, s.at.x, s.at.y, s.at.z + 0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d, d, 0.2, c[1], c[2], c[3], s.a,
+            false, false, 2, false, nil, nil, false)
+    end
+end
+
+--- Every frame while a shape with a solid part exists; draws those within their range
+local function runSolid()
+    if solidRunning then return end
+    solidRunning = true
+    CreateThread(function()
+        while true do
+            local any, drew = false, false
+            for _, sh in pairs(shapes) do
+                if sh.solid then
+                    any = true
+                    if sh.seen then
+                        drew = true
+                        local ok, err = pcall(drawSolid, sh.solid)
+                        if not ok then sh.solid = nil print(('^1w_lib glow: solid draw error %s^7'):format(tostring(err))) end
+                    end
+                end
+            end
+            if not any then break end
+            Wait(drew and 0 or 250)
+        end
+        solidRunning = false
+    end)
+end
+
 -- ── the particles ─────────────────────────────────────────────────────────────
 --- Where a spot burns: on the ground under it once the ground is loaded (kept), else at its own height
 local function heightOf(s)
@@ -278,11 +359,16 @@ local function tick()
     local cand = {}
     for id, sh in pairs(shapes) do
         local r2 = sh.range * sh.range
+        local seen = false
         for i, s in ipairs(sh.spots) do
             local dx, dy = s.x - at.x, s.y - at.y
             local d2 = dx * dx + dy * dy
-            if d2 <= r2 then cand[#cand + 1] = { key = id .. ':' .. i, d2 = d2, s = s } end
+            if d2 <= r2 then
+                seen = true
+                cand[#cand + 1] = { key = id .. ':' .. i, d2 = d2, s = s }
+            end
         end
+        sh.seen = seen
     end
     table.sort(cand, function(a, b) return a.d2 < b.d2 end)
     local keep, fb = {}, {}
@@ -347,8 +433,10 @@ local function put(kind, a, b, opts)
     if range > RANGE then
         for _, s in ipairs(spots) do s.far = range end
     end
-    shapes[id] = { id = id, spots = spots, range = range, frame = opts.frame == true, at = GetGameTimer() }
+    local solid = solidOf(kind, a, b, opts)
+    shapes[id] = { id = id, spots = spots, range = range, frame = opts.frame == true, at = GetGameTimer(), solid = solid, seen = true }
     run()
+    if solid then runSolid() end
     return id
 end
 
@@ -389,6 +477,14 @@ local function signature(kind, a, b, opts)
     parts[#parts + 1] = tostring(b)
     for _, k in ipairs({ 'look', 'scale', 'size', 'heading', 'step', 'lift', 'range', 'closed', 'ground', 'alpha' }) do
         parts[#parts + 1] = tostring(opts[k])
+    end
+    local sd = opts.solid
+    if type(sd) == 'table' then
+        local sc = type(sd.color) == 'table' and sd.color or {}
+        parts[#parts + 1] = ('solid:%s,%s,%s,%s,%s,%s'):format(tostring(sc.r or sc[1]), tostring(sc.g or sc[2]), tostring(sc.b or sc[3]),
+            tostring(sd.alpha), tostring(sd.height), tostring(sd.size))
+    elseif sd then
+        parts[#parts + 1] = 'solid'
     end
     local c = opts.color
     if type(c) == 'table' then parts[#parts + 1] = tostring(c.r or c[1]) .. ',' .. tostring(c.g or c[2]) .. ',' .. tostring(c.b or c[3]) end

@@ -6,6 +6,12 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.1.2 (2026-10-24)
+
+- طلب المالك: «إذا جيت أحدد من فوق ما أعرف الحدود، تختفي». اللمعة نقاط صغيرة لا تظهرها اللعبة من الارتفاع، فصار للأشكال خيار
+  `solid`: جدار شفاف ملوّن على طول السور أو المسار، أو دائرة مسطحة تحت النقطة، يُرى من أي مسافة (يراه اللاعب نفسه فقط).
+  محررات الرسم من الأعلى تستعمله.
+
 ## 4.1.1 (2026-10-23)
 
 - السور اللامع (اللمعة 5) صار **أطول** (ثلاثة صفوف: على الأرض، وفوقها بـ 80 سم، وبـ 160 سم)، و**أكثف** (لمعة كل نصف متر)،
@@ -12125,7 +12131,10 @@ Ground shapes (wall, line, circle) sit on the ground once it is loaded. A look t
 
 Options (all optional): `look` (1-5), `color` ({r,g,b} 0-255, a tint; not every effect takes it), `alpha` (0-1), `scale`,
 `lift` (metres above the point or the ground), `range` (metres, default `w_lib:glowRange` = 60), `ground` (true/false),
-`id` (redraw that shape in place: its particles move instead of starting again). Per shape: `wall` `closed`, `step` (0.5),
+`id` (redraw that shape in place: its particles move instead of starting again), `solid` (4.1.2: `true` or
+`{ color, alpha, height, size }`: beside the glitter, every frame while the shape is in range, a see-through wall along a
+wall / line or a flat ring under a point / circle / arrow, seen from any distance -- the glitter is not seen from high up,
+so the top-down editors pass it). Per shape: `wall` `closed`, `step` (0.5),
 `rows` ({0.0, 0.8, 1.6}: heights of the wall's rows; look 5 is drawn 1.5 times its size since 4.1.1); `line` `step` (2.0), `closed`; `circle` `step` (0.8); `arrow` `size` (1.2),
 `heading`, `step`.
 
