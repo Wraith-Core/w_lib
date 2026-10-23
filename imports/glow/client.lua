@@ -22,7 +22,7 @@
       frame: lib.glow.frame(key, 'circle', center, radius, opts) every frame, like DrawMarker: the shape lives while it
              is drawn and goes 350 ms after the last call; a moved shape keeps its particles and moves them.
 
-      lib.glow.wall(points, { closed = true, step = 1.0, rows = { 0.0, 0.85 }, look = 5 })   a wall along a border
+      lib.glow.wall(points, { closed = true, step = 0.5, rows = { 0.0, 0.8, 1.6 }, look = 5 })   a wall along a border
       lib.glow.line(points, { step = 2.0, look = 1 })                 a path (open unless closed = true)
       lib.glow.circle(center, radius, { step = 0.8, look = 4 })        a ring on the ground
       lib.glow.point(at, { look = 2, ground = false })                 one spot
@@ -30,7 +30,10 @@
       lib.glow.remove(id) · lib.glow.clear() · lib.glow.looks (the table above) · lib.glow.count()
       common opts: look (1-5), color {r,g,b} 0-255 (a tint; not every effect takes it), alpha 0-1, scale, lift
                    (metres above the point / ground), range (metres, default 60), ground (true/false), id
-    Budget: convar `w_lib:glowBudget` (default 150 spots per resource), range `w_lib:glowRange` (60).
+    Budget: convar `w_lib:glowBudget` (default 300 spots per resource), range `w_lib:glowRange` (60).
+    4.1.1 (the owner 2026-10-23: "all of them: taller, denser, bigger"): a wall has three rows (0, 0.8, 1.6 m), a spot
+    every 0.5 m, look 5 drawn 1.5 times its size; the budget went 150 -> 300 so about 50 m of such a wall stands round
+    the camera (6 spots a metre).
 
     ★ natives (hashes for when the name is missing): REQUEST_NAMED_PTFX_ASSET 0xF2B2353BBC0D4E8F,
       HAS_NAMED_PTFX_ASSET_LOADED 0x65BB72F29138F5D6, USE_PARTICLE_FX_ASSET 0xA10DB07FC234DD12,
@@ -49,13 +52,13 @@ Glow.looks = {
     { dict = 'eagle_eye', name = 'eagle_eye_clue', job = 'point', scale = 1.0 },
     { dict = 'eagle_eye', name = 'eagle_eye_entity', job = 'arrow', scale = 1.0 },
     { dict = 'eagle_eye', name = 'eagle_eye_lootable_plant', job = 'circle', scale = 1.0 },
-    { dict = 'scr_net_fire_smoke', name = 'scr_mp_item_pickup_highlight', job = 'wall', scale = 1.0 },
+    { dict = 'scr_net_fire_smoke', name = 'scr_mp_item_pickup_highlight', job = 'wall', scale = 1.5 },
 }
 local LOOK_OF = { line = 1, point = 2, arrow = 3, circle = 4, wall = 5 }
 
 local TICK = 200
 local FRAME_LIFE = 350
-local BUDGET = math.max(1, GetConvarInt('w_lib:glowBudget', 150))
+local BUDGET = math.max(1, GetConvarInt('w_lib:glowBudget', 300))
 local RANGE = math.max(5, GetConvarInt('w_lib:glowRange', 60))
 local RING = 0x6903B113   -- the fallback: a flat ground cylinder (modules/placer MARKER_GROUND)
 
@@ -152,8 +155,8 @@ function BUILD.wall(pointsIn, _, opts)
     local list = {}
     local closed = opts.closed
     if closed == nil then closed = #pts >= 3 end
-    local rows = type(opts.rows) == 'table' and #opts.rows > 0 and opts.rows or { 0.0, 0.85 }
-    along(list, pts, closed, math.max(0.3, num(opts.step, 1.0)), rows, opts.ground ~= false, lookOf('wall', opts), opts)
+    local rows = type(opts.rows) == 'table' and #opts.rows > 0 and opts.rows or { 0.0, 0.8, 1.6 }
+    along(list, pts, closed, math.max(0.3, num(opts.step, 0.5)), rows, opts.ground ~= false, lookOf('wall', opts), opts)
     return list
 end
 

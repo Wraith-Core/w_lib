@@ -6,6 +6,11 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.1.1 (2026-10-23)
+
+- السور اللامع (اللمعة 5) صار **أطول** (ثلاثة صفوف: على الأرض، وفوقها بـ 80 سم، وبـ 160 سم)، و**أكثف** (لمعة كل نصف متر)،
+  و**أكبر** (اللمعة مرة ونصف حجمها). حد اللمعات لكل سكربت صار 300 (كان 150)، فيظهر حوالي 50 مترًا من السور حول اللاعب.
+
 ## 4.1.0 (2026-10-23)
 
 - **لمعة اللعبة بدل الدرو ماركر** (طلب المالك): وحدة جديدة `lib.glow` (`w.glow`) ترسم أشكالًا بلمعة اللعبة نفسها:
@@ -12114,14 +12119,14 @@ Side: client (w_lib 4.1.0). The owner chose these five looks of the game's own p
 | 5 | `scr_net_fire_smoke/scr_mp_item_pickup_highlight` | walls, borders | `wall` |
 
 A shape is a set of spots, one looped particle each. Every 200 ms the spots nearest the camera within `range` burn, at most
-`w_lib:glowBudget` (convar, default 150) per resource; the rest are put out, so a long border costs no more than a short one.
+`w_lib:glowBudget` (convar, default 300 since 4.1.1) per resource; the rest are put out, so a long border costs no more than a short one.
 Ground shapes (wall, line, circle) sit on the ground once it is loaded. A look the game refuses falls back to a small
 `DrawMarker` ring. Particles are local: only this player sees them. They stop when the resource stops.
 
 Options (all optional): `look` (1-5), `color` ({r,g,b} 0-255, a tint; not every effect takes it), `alpha` (0-1), `scale`,
 `lift` (metres above the point or the ground), `range` (metres, default `w_lib:glowRange` = 60), `ground` (true/false),
-`id` (redraw that shape in place: its particles move instead of starting again). Per shape: `wall` `closed`, `step` (1.0),
-`rows` ({0.0, 0.85}: heights of the wall's rows); `line` `step` (2.0), `closed`; `circle` `step` (0.8); `arrow` `size` (1.2),
+`id` (redraw that shape in place: its particles move instead of starting again). Per shape: `wall` `closed`, `step` (0.5),
+`rows` ({0.0, 0.8, 1.6}: heights of the wall's rows; look 5 is drawn 1.5 times its size since 4.1.1); `line` `step` (2.0), `closed`; `circle` `step` (0.8); `arrow` `size` (1.2),
 `heading`, `step`.
 
 ```lua
