@@ -6,6 +6,13 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.1.0 (2026-10-23)
+
+- **لمعة اللعبة بدل الدرو ماركر** (طلب المالك): وحدة جديدة `lib.glow` (`w.glow`) ترسم أشكالًا بلمعة اللعبة نفسها:
+  السور `wall` (اللمعة 5)، والمسار `line` (1)، والنقطة `point` (2)، والسهم `arrow` (3)، والدائرة `circle` (4). أي شكل يأخذ أي لمعة.
+- أداة وضع الأشياء (`w.placer`)، ونقاط الانتقال (essentials)، و`lib.marker` صارت ترسم باللمعة بدل الدرو ماركر.
+- الأمر `/glow` يعرض الأشكال كلها أمام اللاعب، و`/glow wall 5` يعرض شكلًا واحدًا بلمعة معيّنة (دقيقة، يراه هو فقط).
+
 ## 4.0.4 (2026-10-17)
 
 - مفتاح التفاعل الافتراضي صار J بدل E (أزرار التفاعل التي لا تحدد مفتاحًا، وزر «ضع» في أداة وضع الأشياء)، لأن E يمسك اللاعب القريب. وأداة الوضع تعطّل فعل J الأصلي في اللعبة أثناء العمل.
@@ -605,6 +612,7 @@ Each section below covers one part of the library. Within a section, every call 
   - [lib.zones.getAllZones, getCurrentZones, getNearbyZones](#libzonesgetallzones-getcurrentzones-getnearbyzones)
   - [lib.raycast.fromCoords](#libraycastfromcoords)
   - [lib.raycast.fromCamera](#libraycastfromcamera)
+  - [lib.glow (the game's glitter as shapes)](#libglow-the-games-glitter-as-shapes)
   - [lib.marker.new](#libmarkernew)
   - [Marker:draw](#markerdraw)
   - [lib.dui:new](#libduinew)
@@ -12082,6 +12090,51 @@ Casts from `GetFinalRenderedCamCoord` along the final rendered camera forward ve
 ```lua
 local hit, entity, coords = lib.raycast.fromCamera(511, 4, 20.0)
 ```
+
+### lib.glow (the game's glitter as shapes)
+
+```lua
+local id = lib.glow.wall(points, opts)        -- a wall along a border (closed when 3+ points)
+local id = lib.glow.line(points, opts)        -- a path
+local id = lib.glow.circle(center, radius, opts)
+local id = lib.glow.point(at, opts)
+local id = lib.glow.arrow(at, opts)           -- down at `at`; opts.heading = a flat arrow on the ground pointing there
+lib.glow.remove(id) · lib.glow.clear() · lib.glow.count() · lib.glow.looks
+lib.glow.frame(key, kind, ...)                -- every frame, like DrawMarker (the shape goes 350 ms after the last call)
+```
+
+Side: client (w_lib 4.1.0). The owner chose these five looks of the game's own particle glitter to replace `DrawMarker` (2026-10-23):
+
+| look | effect (dictionary/name) | job | default of |
+|---|---|---|---|
+| 1 | `eagle_eye/eagle_eye_trail` | paths, routes | `line` |
+| 2 | `eagle_eye/eagle_eye_clue` | a point to use (a board, a door) | `point` |
+| 3 | `eagle_eye/eagle_eye_entity` | arrows | `arrow` |
+| 4 | `eagle_eye/eagle_eye_lootable_plant` | circles on the ground | `circle` |
+| 5 | `scr_net_fire_smoke/scr_mp_item_pickup_highlight` | walls, borders | `wall` |
+
+A shape is a set of spots, one looped particle each. Every 200 ms the spots nearest the camera within `range` burn, at most
+`w_lib:glowBudget` (convar, default 150) per resource; the rest are put out, so a long border costs no more than a short one.
+Ground shapes (wall, line, circle) sit on the ground once it is loaded. A look the game refuses falls back to a small
+`DrawMarker` ring. Particles are local: only this player sees them. They stop when the resource stops.
+
+Options (all optional): `look` (1-5), `color` ({r,g,b} 0-255, a tint; not every effect takes it), `alpha` (0-1), `scale`,
+`lift` (metres above the point or the ground), `range` (metres, default `w_lib:glowRange` = 60), `ground` (true/false),
+`id` (redraw that shape in place: its particles move instead of starting again). Per shape: `wall` `closed`, `step` (1.0),
+`rows` ({0.0, 0.85}: heights of the wall's rows); `line` `step` (2.0), `closed`; `circle` `step` (0.8); `arrow` `size` (1.2),
+`heading`, `step`.
+
+```lua
+-- a farm's border as a wall while the player is near it
+local border = lib.glow.wall(farm.poly, { range = 80.0 })
+-- a spot to use, drawn every frame like a marker
+CreateThread(function()
+    while near do lib.glow.frame('shop', 'circle', shop.coords, 0.8) Wait(0) end
+end)
+```
+
+`/glow` (w_lib itself) shows every shape in front of the player for a minute; `/glow wall 5` one shape in one look; `/glow off`.
+`lib.marker`, the placer (`w.placer`) and the essentials teleports draw with `lib.glow` since 4.1.0.
 
 ### lib.marker.new
 

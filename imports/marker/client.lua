@@ -105,15 +105,16 @@ local marker_mt = {
 }
 marker_mt.__index = marker_mt
 
+-- ★ w_lib 4.1.0 (the owner 2026-10-23): the game's glitter instead of DrawMarker (imports/glow), in its own colour
+--   (the paper rule above: no hue). A wide marker is a ring of look 4 (its width = the ring), a small one a point of
+--   look 2. Same call every frame as before.
 function marker_mt:draw()
-  DrawMarker(
-    self.type,
-    self.coords.x, self.coords.y, self.coords.z,
-    self.direction.x, self.direction.y, self.direction.z,
-    self.rotation.x, self.rotation.y, self.rotation.z,
-    self.width, self.width, self.height,
-    self.color.r, self.color.g, self.color.b, self.color.a,
-    self.bobUpAndDown, self.faceCamera, 2, self.rotate, self.textureDict, self.textureName, self.invert)
+  local c = self.coords
+  if self.width >= 0.6 then
+    lib.glow.frame(self, 'circle', c, self.width / 2.0, { look = 4, ground = false })
+  else
+    lib.glow.frame(self, 'point', c, { look = 2 })
+  end
 end
 
 ---@param options MarkerProps

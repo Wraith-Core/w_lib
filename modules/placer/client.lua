@@ -171,9 +171,17 @@ local function groundZ(x, y, z)
   return z
 end
 
-local function mark(kind, pos, size, height, color)
-  DrawMarker(kind, pos.x, pos.y, pos.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, size, size, height,
-    color[1], color[2], color[3], color[4], false, false, 2, false, nil, nil, false)
+--- 4.1.0 (the owner 2026-10-23): the game's glitter instead of DrawMarker (imports/glow): a spot = look 2, the
+--- reach ring = look 4 round the player; out of reach the spot is tinted the theme's red. `key` names the mark.
+local function mark(key, kind, pos, size, color)
+  local opts = { look = (kind == MARKER_GROUND and size > 1.2) and 4 or 2, range = 150.0,
+    color = color == COLOR.far and { color[1], color[2], color[3] } or nil }
+  if kind == MARKER_GROUND and size > 1.2 then
+    opts.step = 1.5
+    lib.glow.frame("placer:" .. key, "circle", pos, size / 2.0, opts)
+  else
+    lib.glow.frame("placer:" .. key, "point", pos, opts)
+  end
 end
 
 local function player()
@@ -718,24 +726,24 @@ local function drawStep(s, step, pos, far, p)
 
   if tonumber(step.ring) then
     local feet = vector3(p.coords.x, p.coords.y, groundZ(p.coords.x, p.coords.y, p.coords.z) + 0.02)
-    mark(MARKER_GROUND, feet, step.ring * 2.0, 0.15, COLOR.ring)
+    mark("ring", MARKER_GROUND, feet, step.ring * 2.0, COLOR.ring)
   end
 
   local current = vec3of(step.current)
   if current then
-    if step.kind == "camera" then mark(MARKER_SPHERE, current, 0.3, 0.3, COLOR.current)
-    else mark(MARKER_GROUND, current, 0.9, 0.2, COLOR.current) end
+    if step.kind == "camera" then mark("current", MARKER_SPHERE, current, 0.3, COLOR.current)
+    else mark("current", MARKER_GROUND, current, 0.9, COLOR.current) end
   end
 
   if step.kind == "camera" then
-    if not s.looking then mark(MARKER_SPHERE, pos, 0.22, 0.22, color) end
+    if not s.looking then mark("cursor", MARKER_SPHERE, pos, 0.22, color) end
     local target, entity = lookTarget(s, step)
     if target then
       local at = lookPoint(step, target, entity)
       DrawLine(pos.x, pos.y, pos.z, at.x, at.y, at.z, color[1], color[2], color[3], 230)
     end
   else
-    mark(MARKER_GROUND, vector3(pos.x, pos.y, pos.z + 0.02), ENTITY_KINDS[step.kind] and 0.7 or 0.5, 0.2, color)
+    mark("cursor", MARKER_GROUND, vector3(pos.x, pos.y, pos.z + 0.02), ENTITY_KINDS[step.kind] and 0.7 or 0.5, color)
   end
 end
 
@@ -746,7 +754,7 @@ local function drawResolved(s)
     local step = s.steps[i]
     if o and o.position and o.kind ~= "auto" and not ENTITY_KINDS[step.kind] then
       if step.kind == "camera" then
-        mark(MARKER_SPHERE, o.position, 0.22, 0.22, COLOR.placed)
+        mark("placed:" .. i, MARKER_SPHERE, o.position, 0.22, COLOR.placed)
         local target, entity = lookTarget(s, step)
         if target then
           local at = lookPoint(step, target, entity)
@@ -754,7 +762,7 @@ local function drawResolved(s)
             COLOR.placed[1], COLOR.placed[2], COLOR.placed[3], 200)
         end
       else
-        mark(MARKER_GROUND, o.position, 0.5, 0.2, COLOR.placed)
+        mark("placed:" .. i, MARKER_GROUND, o.position, 0.5, COLOR.placed)
       end
     end
   end

@@ -278,8 +278,8 @@ if #E.teleports > 0 then
                     function p:onEnter() inside = true lib.showTextUI('[J] ' .. locale(point.label)) end
                     function p:onExit() inside = false lib.hideTextUI() end
                     function p:nearby()
-                        Citizen.InvokeNative(0x2A32FAA57B937173, 0x6903B113, here.x, here.y, here.z - 0.98, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                            1.0, 1.0, 0.9, 242, 242, 242, 155, false, false, 2, false, 0, 0, false) -- paper (tokens.css), was yellow
+                        -- 4.1.0 (the owner): the game's glitter instead of DrawMarker, a ring of look 4 (imports/glow)
+                        lib.glow.frame(('teleport:%d:%d'):format(i, k), 'circle', vector3(here.x, here.y, here.z - 0.98), 0.5, { look = 4 })
                         if not busy and IsControlJustReleased(0, 0xF3830D8E) then -- J (INPUT_OPEN_JOURNAL)
                             busy = true
                             SetEntityCoords(ped(), target.coords.x, target.coords.y, target.coords.z)
