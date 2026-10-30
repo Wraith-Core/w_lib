@@ -49,7 +49,12 @@ export interface Field {
   min?: number;
   max?: number;
   step?: number;
-  options?: Array<{ value: string; label: string }>;
+  /** a select's choices; `image` is drawn small before the label (a blip, an icon) */
+  options?: Array<{ value: string; label: string; image?: string }>;
+  /** a select: a search box over its list (on by itself past 12 choices); `placeholder` is the search box's */
+  searchable?: boolean;
+  /** a select: open as a menu of tiles in this many columns (picture, name below) with a search bar */
+  grid?: number;
   disabled?: boolean;
 }
 
@@ -139,6 +144,8 @@ export interface Block {
   image?: string;
   /** image: the tallest it is drawn, in px (default 120). */
   height?: number;
+  /** image: drawn at `height` even when the picture is smaller (scaled up), the width to fit */
+  fill?: boolean;
   icon?: string;
   /** hero: a colour behind the emblem, for a crest or a house colour (drawn as its nearest palette tone). */
   color?: string;
@@ -420,6 +427,9 @@ const FormField: React.FC<{ field: FormFieldSpec; ctx: Ctx }> = ({ field, ctx })
           options={field.options ?? []}
           disabled={field.disabled}
           ariaLabel={field.label}
+          searchable={field.searchable}
+          searchPlaceholder={field.placeholder}
+          grid={field.grid}
           onChange={(v) => {
             setText(v);
             ctx.onField(field.id, v);
@@ -634,7 +644,10 @@ const BODY: Record<Block['type'], React.FC<{ block: Block; ctx: Ctx }>> = {
   image: ({ block }) =>
     block.image ? (
       <div className="wl-panel-image">
-        <img src={block.image} alt={block.value ?? ''} style={{ maxHeight: `${Math.max(24, Math.min(400, block.height ?? 120))}px` }} />
+        {/* fill: drawn AT that height (a small picture scaled up -- an SVG stays sharp), not merely kept under it */}
+        <img src={block.image} alt={block.value ?? ''} style={block.fill
+          ? { height: `${Math.max(24, Math.min(400, block.height ?? 120))}px`, width: 'auto', maxWidth: '100%' }
+          : { maxHeight: `${Math.max(24, Math.min(400, block.height ?? 120))}px` }} />
       </div>
     ) : null,
 };

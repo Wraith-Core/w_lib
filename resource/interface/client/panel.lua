@@ -111,6 +111,8 @@ function lib.showPanel(data)
     end
 
     panel = data
+    -- TEMP TRACE (the open sound heard every few minutes): who draws a panel
+    print(('[w_lib trace] showPanel id=%s from %s'):format(tostring(data.id), tostring(GetInvokingResource())))
 
     -- ⚠️ The callbacks are stripped before the table crosses to the frame. json.encode turns a
     --    function into null and the UI would receive three dead keys; keeping them here means
@@ -160,6 +162,7 @@ function lib.showPanel(data)
             --    the description already said what the sections are. `onTab` still fires for a
             --    script that wants to load a tab's rows on demand; ignoring it is normal.
             nav = data.nav,
+            navFit = data.navFit,   -- the side column only as wide as its widest row
             activeNav = data.activeNav,
             navCountLabel = data.navCountLabel,
             blocks = data.blocks,

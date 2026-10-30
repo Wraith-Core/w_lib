@@ -501,15 +501,52 @@ body[data-store-theme] .wl-panel-chip.wst-tab.is-active::before {
 
 .wl-panel-hero .wc-slot { width: clamp(72px, 11vh, 104px); }
 
-/* A side-list row's wide picture (item.picture): its own line under the icon and the text, the row's full width. */
-.wc-card .wl-nav-picture {
-  grid-column: 1 / -1;
+/* A side-list row that is a picture (item.picture -- only w_playernames' name plates use it): only the picture,
+   with no icon, no text and no paper band behind it, not even the store theme's (hence the !important and the
+   theme's own selector). The chosen row is the one at full strength; the others are dimmed. */
+.wc-card.is-picture,
+body[data-store-theme] .wc-card.wst-card.is-picture {
   display: block;
-  width: 100%;
-  height: clamp(52px, 9vh, 80px);
+  padding: 2px 4px;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.wc-card.is-picture::before,
+.wc-card.is-picture::after,
+body[data-store-theme] .wc-card.wst-card.is-picture::before,
+body[data-store-theme] .wc-card.wst-card.is-picture::after {
+  display: none !important;
+}
+/* at the picture's own size: the script sets it, so rows of different heights (a plate with a badge) still show
+   their pictures at one scale */
+.wc-card .wl-nav-picture {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  margin-inline: auto;
   object-fit: contain;
   pointer-events: none;
-  margin-top: -4px;
+  opacity: 0.5;
+  transition: opacity 0.12s ease;
+}
+.wc-card.is-picture:hover .wl-nav-picture,
+.wc-card.is-picture:focus-visible .wl-nav-picture { opacity: 0.8; }
+.wc-card.is-picture.is-active .wl-nav-picture { opacity: 1; }
+
+/* navFit: the side column only as wide as its widest row (and the search box above it), not the fixed share. */
+.wc-browser.is-fit {
+  width: max-content;
+  min-width: 190px;
+  max-width: 45%;
+}
+.wc-browser.is-fit .wc-category-items .wc-card { margin-inline-start: 0; }
+
+/* A group's countInline: "(31)" beside its name, quieter than the name -- it is the least important thing there. */
+.wl-count-inline {
+  margin-inline-start: 0.4em;
+  opacity: 0.5;
+  font-weight: 400;
 }
 
 /* A foldable block's heading: the same ruled heading, as a button, with an arrow before the title */

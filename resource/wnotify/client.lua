@@ -1,5 +1,8 @@
 local activeTexts = {}
 local active2DText = false
+-- a 2D text is on screen: only then does the sweeper below have one to take away (it sent removeText2D ten
+-- times a second for ever, with nothing drawn)
+local shown2DText = false
 
 
 function DrawText3D(x, y, z, text, customId)
@@ -28,6 +31,7 @@ function DrawText2D(text)
         data = { text = text }
     })
     active2DText = true
+    shown2DText = true
 end
 
 --- الصوت الافتراضي للإشعار — من أصوات اللعبة نفسها
@@ -190,6 +194,9 @@ function Notify(data)
 
         PlaySoundFrontend(data.sound or sound, data.soundSet or soundSet, true, 0)
     end
+    -- TEMP TRACE (the open sound heard every few minutes): every notice, its sound and who sent it
+    print(('[w_lib trace] notify from %s sound=%s/%s text=%s'):format(tostring(GetInvokingResource()),
+        tostring(data.sound ~= false and (data.sound or 'default') or 'off'), tostring(data.soundSet or ''), tostring(data.description or data.title or ''):sub(1, 60)))
 
     -- The caller's readings line, if it sent one.
     local meta = data.meta
@@ -252,10 +259,11 @@ CreateThread(function()
             end
         end
 
-        if not active2DText then
+        if not active2DText and shown2DText then
             SendNUIMessage({
                 action = "removeText2D"
             })
+            shown2DText = false
         end
         active2DText = false
     end
