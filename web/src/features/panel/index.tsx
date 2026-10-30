@@ -189,6 +189,8 @@ interface NavGroup {
     description?: string;
     /** A wide picture under the text, the row's full width (w_playernames: each player's name plate). */
     picture?: string;
+    /** A row with a picture: a small line under it (w_playernames' /nameplate: the plate's name). */
+    caption?: string;
     /**
      * ★ Extra text the search matches but never draws.
      *
@@ -766,7 +768,10 @@ const Panel: React.FC = () => {
                                 {/* A row with a picture IS the picture (w_playernames: a list of name plates); the
                                     label still names it for search and the tooltip. */}
                                 {item.picture ? (
-                                  <img className="wl-nav-picture" src={item.picture} alt="" draggable={false} />
+                                  <>
+                                    <img className="wl-nav-picture" src={item.picture} alt="" draggable={false} />
+                                    {item.caption && <span className="wl-nav-caption">{item.caption}</span>}
+                                  </>
                                 ) : (
                                   <>
                                     <span className="wc-slot">

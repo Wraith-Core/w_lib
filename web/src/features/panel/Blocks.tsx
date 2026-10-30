@@ -529,21 +529,35 @@ const FormField: React.FC<{ field: FormFieldSpec; ctx: Ctx }> = ({ field, ctx })
   );
 };
 
+/* ★ A form may carry a picture above its fields (`image`, drawn at `height` like an image block's `fill`) and its
+     own buttons below them (`actions`), so a section and what acts on it fold away together. */
 const Form: React.FC<{ block: Block; ctx: Ctx }> = ({ block, ctx }) => (
-  <div className="wl-panel-form">
-    {block.fields?.map((field) => {
-      // ⚠️ A colour row is not a <label>: a click on a label's text is forwarded to the first
-      //    control inside it, which for the swatches would pick the first tone on its own.
-      // a <label> would pass a click on the wheel's ▲ to the box: those two are rows, not labels
-      const Row = field.type === 'color' || field.type === 'hexcolor' ? 'div' : 'label';
-      return (
-        <Row className={`wl-panel-field${field.type === 'checkbox' ? ' is-check' : ''}`} key={field.id}>
-          {field.label && <span className="wl-panel-row-label">{field.label}</span>}
-          <FormField field={field} ctx={ctx} />
-        </Row>
-      );
-    })}
-  </div>
+  <>
+    {block.image && (
+      <div className="wl-panel-image">
+        <img src={block.image} alt="" style={{ height: `${Math.max(24, Math.min(400, block.height ?? 90))}px`, width: 'auto', maxWidth: '100%' }} />
+      </div>
+    )}
+    <div className="wl-panel-form">
+      {block.fields?.map((field) => {
+        // ⚠️ A colour row is not a <label>: a click on a label's text is forwarded to the first
+        //    control inside it, which for the swatches would pick the first tone on its own.
+        // a <label> would pass a click on the wheel's ▲ to the box: those two are rows, not labels
+        const Row = field.type === 'color' || field.type === 'hexcolor' ? 'div' : 'label';
+        return (
+          <Row className={`wl-panel-field${field.type === 'checkbox' ? ' is-check' : ''}`} key={field.id}>
+            {field.label && <span className="wl-panel-row-label">{field.label}</span>}
+            <FormField field={field} ctx={ctx} />
+          </Row>
+        );
+      })}
+    </div>
+    {block.actions?.length ? (
+      <div className="wl-panel-buttons">
+        <ActionButtons actions={block.actions} ctx={ctx} />
+      </div>
+    ) : null}
+  </>
 );
 
 const Requirements: React.FC<{ block: Block }> = ({ block }) => (
