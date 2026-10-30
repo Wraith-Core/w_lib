@@ -110,4 +110,15 @@
     }).observe(document.body, { childList:true, subtree:true, attributes:true, attributeFilter:['class'], attributeOldValue:true });
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once:true }); else start();
+  /* A frame on a panel that scrolls stays over the visible part (store-frame.js, the same lines). */
+  if (!window.__wstFrameFollow) {
+    window.__wstFrameFollow = true;
+    document.addEventListener('scroll', (event) => {
+      const panel = event.target;
+      if (!(panel instanceof Element)) return;
+      for (const node of panel.children) {
+        if (node.matches('.wst-frame,.wc-frame,.ws-frame')) node.style.transform = panel.scrollTop ? `translateY(${panel.scrollTop}px)` : '';
+      }
+    }, { capture: true, passive: true });
+  }
 })();
