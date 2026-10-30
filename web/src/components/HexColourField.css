@@ -2,6 +2,7 @@
    wheel pops up over the page in Wraith's ink. */
 .w-hex { display: flex; align-items: center; gap: 8px; width: 100%; }
 .w-hex input { flex: 1; min-width: 0; font-family: var(--w-f-mono, Consolas, monospace); }
+body[data-store-theme=library] .w-hex input { font-size: calc(15 * var(--lb-px) * var(--w-k-input)); }
 .w-hex-chip {
   flex: none; width: 16px; height: 16px; border-radius: 50%;
   box-shadow: 0 0 0 1px rgba(242, 242, 242, 0.45), inset 0 0 0 1px rgba(10, 10, 10, 0.5);

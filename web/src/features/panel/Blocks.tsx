@@ -449,7 +449,7 @@ const FormField: React.FC<{ field: FormFieldSpec; ctx: Ctx }> = ({ field, ctx })
 
   if (field.type === 'textarea') {
     return (
-      <span className="lb-input">
+      <span className="lb-input is-area">
         <textarea
           value={text}
           placeholder={field.placeholder}

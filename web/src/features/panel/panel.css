@@ -282,6 +282,26 @@ body[data-store-theme] .wl-panel-list .lb-item.wst-card.is-active::before,
 /* A checkbox sits BESIDE its label, not under it -- it is a word with a box, not a field.
    ⚠️ .is-check, set by Blocks.tsx: it was :has(.wl-panel-check), which the game's Chromium
       (87) does not have, so in game the box always fell under its label. */
+/* ★ Every box of a form one height: a text box, a number, a dropdown (WSelect) and a hex colour field sat at
+     three different heights side by side (the dropdown button had no padding, the hex field had its swatch and
+     ▲). The box is fixed and what is inside fills it. A textarea keeps its own height. */
+.wl-panel-form .lb-input:not(.is-area) {
+  height: var(--wl-field-h, 40px);
+  box-sizing: border-box;
+}
+.wl-panel-form .lb-input:not(.is-area) > input,
+.wl-panel-form .lb-input > .w-select,
+.wl-panel-form .lb-input > .w-hex {
+  align-self: stretch;
+  height: 100%;
+  box-sizing: border-box;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.wl-panel-form .lb-input > .w-select { padding-inline: 12px; }
+.wl-panel-form .lb-input > .w-hex { padding-inline: 10px 6px; }
+.wl-panel-form .lb-input > .w-hex input { height: 100%; padding: 0 4px; }
+
 .wl-panel-field.is-check {
   flex-direction: row-reverse;
   align-items: center;
