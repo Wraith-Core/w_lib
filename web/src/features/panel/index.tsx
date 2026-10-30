@@ -521,8 +521,13 @@ const Panel: React.FC = () => {
   useNuiEvent<PanelState | false | null>('showPanel', (data) => {
     if (!data) return close();
 
+    /* ⚠️ The open sound for an OPENING only. A script redraws its open panel with lib.showPanel on every
+          change (a saved field, a nav) -- and a colour wheel or a slider being dragged changes it several
+          times a second, so the sound played in a loop for as long as the mouse was held. A redraw of the
+          panel already on screen (same id) is silent; a new panel, or another one replacing it, still plays it. */
+    const redraw = !!stateRef.current && stateRef.current.id === data.id;
     setState(data);
-    play('open');
+    if (!redraw) play('open');
     setElapsed(0);
     setAmounts(
       Object.fromEntries(
