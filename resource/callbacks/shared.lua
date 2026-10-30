@@ -50,15 +50,15 @@ function lib.isCallbackValid(callbackName)
     return registeredCallbacks[callbackName] == (GetInvokingResource() or cache.resource)
 end
 
--- ★ The library's own name on the wire. Both ends of this event are w_lib's own code, and
---   nothing outside the library ever writes the name, so it is ours to choose.
---
--- ⚠️ Changing it means every resource using w_lib must restart, not w_lib alone: a resource
---    still running the old prefix would talk past one running the new, and a callback that is
---    never answered simply hangs rather than erroring.
-local cbEvent = '__w_cb_%s'
+-- Validation replies must match the existing imports/callback channel on both sides.
+-- Registered callback event names are unchanged; full restart reloads consumers together.
+local cbEvent = '__ox_cb_%s'
 
 RegisterNetEvent('w_lib:validateCallback', function(callbackName, invokingResource, key)
+    if type(callbackName) ~= 'string' or #callbackName > 192
+        or type(invokingResource) ~= 'string' or #invokingResource > 128
+        or not invokingResource:match('^[%w_%.%-]+$')
+        or type(key) ~= 'string' or #key > 256 then return end
     if registeredCallbacks[callbackName] then return end
 
     local event = cbEvent:format(invokingResource)

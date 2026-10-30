@@ -6,6 +6,14 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.1.4 (2026-10-30)
+
+- حماية طلبات الاستدعاء بميزانية لكل لاعب وحد للطلبات الجارية، ورفض الأسماء غير المسجلة فورًا.
+- إنهاء سؤال العميل عند انقطاعه أو انتهاء المهلة، وتنظيف المستمع حتى لا تتراكم الطلبات.
+- إصلاح قناة رفض الاستدعاء غير المسجل وإظهار عنوان «الإعدادات» بالعربية.
+- مهلة سؤال العميل خمس ثوان افتراضيًا؛ يمكن ضبط `w_lib:clientCallbackTimeout` بين ثانية ودقيقتين.
+- يلزم اختبار القوائم وطلبات التأكيد بعد إعادة تشغيل كاملة في وقت خلو السيرفر.
+
 ## 4.1.3 (2026-10-24)
 
 - **سبب «القطيع» (توقف السيرفر) في ريد ريفر:** فحص صلاحية الأدمن في المكتبة كان ينسخ كائن النظام كله (w_core) في كل

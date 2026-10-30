@@ -1,5 +1,32 @@
 local nextRequestId = 0
-local responseCallback = {}
+-- 4.1.4: pending client replies are bounded and settled exactly once.
+local pendingClient = {}
+local requestBudgets = {}
+-- Startup may initialize several dozen resources together; allow that bounded burst.
+local CALLBACK_BURST = math.max(30, math.min(240, GetConvarInt('w_lib:callbackBurst', 120)))
+local CALLBACK_RATE = math.max(10, math.min(120, GetConvarInt('w_lib:callbackRate', 60)))
+local CALLBACK_IN_FLIGHT = math.max(8, math.min(64, GetConvarInt('w_lib:callbackInFlight', 32)))
+
+local function requestBudget(player)
+  local now = GetGameTimer()
+  local budget = requestBudgets[player]
+  if not budget then
+    budget = { tokens = CALLBACK_BURST, at = now, active = 0, requests = {} }
+    requestBudgets[player] = budget
+  end
+  budget.tokens = math.min(CALLBACK_BURST, budget.tokens + math.max(0, now - budget.at) * CALLBACK_RATE / 1000)
+  budget.at = now
+  if budget.tokens < 1 then return nil end
+  budget.tokens = budget.tokens - 1
+  return budget
+end
+
+local function validRequest(name, requestId, resource)
+  return type(name) == 'string' and #name > 0 and #name <= 192 and not name:find('%c')
+    and type(requestId) == 'number' and requestId >= 0 and requestId <= 65535 and requestId % 1 == 0
+    and type(resource) == 'string' and #resource > 0 and #resource <= 128
+    and resource:match('^[%w_%.%-]+$') ~= nil
+end
 local registeredCallback = {}
 local promise = promise
 local pack = table.pack
@@ -69,8 +96,6 @@ local function executeCallback(name, ...)
 end
 
 local function doesCallbackExist(name)
-  if registeredCallback[name] ~= nil then return true end
-  Wait(5000)
   return registeredCallback[name] ~= nil
 end
 
@@ -96,14 +121,19 @@ end
 
 RegisterServerEvent("w_lib:triggerCallback", function(name, requestId, fromRessource, ...)
   local source = source
-  if not doesCallbackExist(name) then
+  if not validRequest(name, requestId, fromRessource) or select('#', ...) > 64 then return end
+  local budget = requestBudget(source)
+  if not budget then return end
+  if budget.requests[requestId] then return end
+  if budget.active >= CALLBACK_IN_FLIGHT or not doesCallbackExist(name) then
     TriggerClientEvent(generateEventName("response", requestId), source, fromRessource, nil)
-    return eprint("Event: No server callback for:", name, fromRessource)
+    return
   end
 
   local trigger = registeredCallback[name].latent and w.emit.triggerClient.latent or TriggerClientEvent
-
+  budget.requests[requestId], budget.active = true, budget.active + 1
   local result = pack(pcall(executeCallback, name, source, ...))
+  budget.requests[requestId], budget.active = nil, budget.active - 1
   if result[1] then
     trigger(generateEventName("response", requestId), source, fromRessource, unpack(result, 2, result.n))
   else
@@ -128,6 +158,10 @@ function w.callback.triggerClient(name, source, cb, ...)
   local cbType = isAFunction(cb) and "function" or "other"
 
   local currentRequestId = nextRequestId
+  while pendingClient[currentRequestId] do
+    currentRequestId = (currentRequestId + 1) % 65536
+    if currentRequestId == nextRequestId then return nil end
+  end
   local args = { ... }
   local responseCallback
 
@@ -147,26 +181,57 @@ function w.callback.triggerClient(name, source, cb, ...)
   --   handler stays registered for the real one.
   local target = tonumber(source)
   local handler
-  handler = RegisterNetEvent(generateEventName("response", currentRequestId), function(fromResource, ...)
-    if tonumber(_G.source) ~= target then return end
-    dprint("Response received for request ID: %d from resource: %s", currentRequestId, fromResource)
+  local finished = false
+  local resource = GetInvokingResource() or "unknown"
+  local function finish(...)
+    if finished then return end
+    finished = true
+    pendingClient[currentRequestId] = nil
+    if handler then RemoveEventHandler(handler) end
     if isAFunction(responseCallback) then
-      responseCallback(...)
+      local ok, err = pcall(responseCallback, ...)
+      if not ok then print(('^1[w_lib]^7 Client callback response failed: %s'):format(tostring(err))) end
     else
       responseCallback:resolve(pack(...))
     end
-    RemoveEventHandler(handler)
+  end
+  pendingClient[currentRequestId] = { target = target, resource = resource, finish = finish }
+  handler = RegisterNetEvent(generateEventName("response", currentRequestId), function(fromResource, ...)
+    if tonumber(_G.source) ~= target then return end
+    dprint("Response received for request ID: %d from resource: %s", currentRequestId, fromResource)
+    finish(...)
+  end)
+  SetTimeout(math.min(120000, math.max(1000, GetConvarInt('w_lib:clientCallbackTimeout', 5000))), function()
+    if not finished then finish(nil) end
   end)
 
-
-  TriggerClientEvent("w_lib:triggerCallback", source, name, currentRequestId, GetInvokingResource() or "unknown", unpack(args))
-
-  nextRequestId = nextRequestId < 65535 and nextRequestId + 1 or 0
+  nextRequestId = (currentRequestId + 1) % 65536
+  TriggerClientEvent("w_lib:triggerCallback", source, name, currentRequestId, resource, unpack(args))
   if cbType == "function" then
     return
   end
   return unpack(Await(responseCallback) or {})
 end
+
+AddEventHandler('playerDropped', function()
+  local player = tonumber(source)
+  requestBudgets[source] = nil
+  requestBudgets[player] = nil
+  local settling = {}
+  for _, pending in pairs(pendingClient) do
+    if pending.target == player then settling[#settling + 1] = pending end
+  end
+  -- A consumer callback may create another request. Never mutate this iteration via user code.
+  for _, pending in ipairs(settling) do pending.finish(nil) end
+end)
+
+AddEventHandler('onResourceStop', function(resource)
+  local settling = {}
+  for _, pending in pairs(pendingClient) do
+    if pending.resource == resource then settling[#settling + 1] = pending end
+  end
+  for _, pending in ipairs(settling) do pending.finish(nil) end
+end)
 
 --- Server mirror of the client's w.callback.await: ask a client and wait for its answer.
 ---@param name string (The name of the client callback)
