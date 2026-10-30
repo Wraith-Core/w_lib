@@ -501,6 +501,17 @@ body[data-store-theme] .wl-panel-chip.wst-tab.is-active::before {
 
 .wl-panel-hero .wc-slot { width: clamp(72px, 11vh, 104px); }
 
+/* A side-list row's wide picture (item.picture): its own line under the icon and the text, the row's full width. */
+.wc-card .wl-nav-picture {
+  grid-column: 1 / -1;
+  display: block;
+  width: 100%;
+  height: clamp(52px, 9vh, 80px);
+  object-fit: contain;
+  pointer-events: none;
+  margin-top: -4px;
+}
+
 /* A foldable block's heading: the same ruled heading, as a button, with an arrow before the title */
 .wl-panel-fold { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%; cursor: pointer; }
 .wl-panel-fold:focus-visible { outline: 1px solid var(--w-rule-3, rgba(242, 242, 242, 0.5)); outline-offset: 2px; }

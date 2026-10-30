@@ -183,6 +183,8 @@ interface NavGroup {
     count?: number | string;
     /** A second line under the label -- what the row makes, what it costs. */
     description?: string;
+    /** A wide picture under the text, the row's full width (w_playernames: each player's name plate). */
+    picture?: string;
     /**
      * ★ Extra text the search matches but never draws.
      *
@@ -760,6 +762,7 @@ const Panel: React.FC = () => {
                                   {item.description && <span className="lb-item-desc">{item.description}</span>}
                                 </span>
                                 {item.count != null && <span className="wc-category-count">{item.count}</span>}
+                                {item.picture && <img className="wl-nav-picture" src={item.picture} alt="" draggable={false} />}
                               </button>
                             ))}
                           </div>
