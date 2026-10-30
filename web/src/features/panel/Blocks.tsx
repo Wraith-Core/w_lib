@@ -2,6 +2,7 @@ import React from 'react';
 import Icon from '../../wc/Icon';
 import DateFields from '../../components/DateFields';
 import PaletteField from '../../components/PaletteField';
+import WSelect from '../../components/WSelect';
 import { READING_TONES, toPalette } from '../../utils/palette';
 import { Bar, Glyph } from '../../wc/Panel';
 
@@ -385,20 +386,17 @@ const FormField: React.FC<{ field: FormFieldSpec; ctx: Ctx }> = ({ field, ctx })
   if (field.type === 'select') {
     return (
       <span className="lb-input">
-        <select
+        {/* the page's own dropdown: a native <select> opens a popup the game paints as noise (components/WSelect) */}
+        <WSelect
           value={text}
+          options={field.options ?? []}
           disabled={field.disabled}
-          onChange={(e) => {
-            setText(e.target.value);
-            ctx.onField(field.id, e.target.value);
+          ariaLabel={field.label}
+          onChange={(v) => {
+            setText(v);
+            ctx.onField(field.id, v);
           }}
-        >
-          {field.options?.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        />
       </span>
     );
   }

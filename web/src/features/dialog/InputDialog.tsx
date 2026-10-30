@@ -6,6 +6,7 @@ import { Glyph, Head, Layer, Panel, play } from '../../wc/Panel';
 import Icon from '../../wc/Icon';
 import DateFields from '../../components/DateFields';
 import PaletteField from '../../components/PaletteField';
+import WSelect from '../../components/WSelect';
 import { useLocales } from '../../providers/LocaleProvider';
 
 type Row = InputProps['rows'][number] & Record<string, any>;
@@ -137,27 +138,42 @@ const InputDialog: React.FC = () => {
                 <div className="lb-field" key={i}>
                   <FieldLabel row={row} />
                   <div className="lb-input">
-                    <select
-                      ref={first}
-                      multiple={multi}
-                      size={multi ? 4 : undefined}
-                      disabled={row.disabled}
-                      required={row.required}
-                      value={values[i] ?? (multi ? [] : '')}
-                      onChange={(e) =>
-                        set(i, multi ? Array.from(e.target.selectedOptions, (o) => o.value) : e.target.value)
-                      }
-                    >
-                      {!multi && <option value="" />}
-                      {(row.options || []).map((o: any, k: number) => {
-                        const value = o?.value != null ? o.value : o;
-                        return (
-                          <option key={k} value={value}>
-                            {o?.label != null ? o.label : value}
-                          </option>
-                        );
-                      })}
-                    </select>
+                    {multi ? (
+                      // a multi-select is drawn open in the page (size=4): no popup, so the native one stays
+                      <select
+                        ref={first}
+                        multiple
+                        size={4}
+                        disabled={row.disabled}
+                        required={row.required}
+                        value={values[i] ?? []}
+                        onChange={(e) => set(i, Array.from(e.target.selectedOptions, (o) => o.value))}
+                      >
+                        {(row.options || []).map((o: any, k: number) => {
+                          const value = o?.value != null ? o.value : o;
+                          return (
+                            <option key={k} value={value}>
+                              {o?.label != null ? o.label : value}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    ) : (
+                      // the page's own dropdown: a native <select> opens a popup the game paints as noise
+                      <WSelect
+                        buttonRef={first}
+                        value={String(values[i] ?? '')}
+                        allowEmpty
+                        placeholder=""
+                        disabled={row.disabled}
+                        ariaLabel={row.label}
+                        options={(row.options || []).map((o: any) => {
+                          const value = o?.value != null ? o.value : o;
+                          return { value: String(value), label: String(o?.label != null ? o.label : value) };
+                        })}
+                        onChange={(v) => set(i, v)}
+                      />
+                    )}
                   </div>
                 </div>
               );

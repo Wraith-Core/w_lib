@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import WSelect from './WSelect';
 
 /**
  * ============================================================================
@@ -113,20 +114,16 @@ const DateFields: React.FC<{
       </span>
 
       <span className="lb-input lb-date-month">
-        <select
-          aria-label={named(words.month)}
+        {/* the page's own dropdown: a native <select> opens a popup the game paints as noise (WSelect) */}
+        <WSelect
+          ariaLabel={named(words.month)}
           disabled={disabled}
-          required={required}
           value={parts.month}
-          onChange={(e) => set({ month: e.target.value })}
-        >
-          <option value="">{words.month}</option>
-          {months.map((name, i) => (
-            <option key={name} value={String(i + 1)}>
-              {name}
-            </option>
-          ))}
-        </select>
+          allowEmpty
+          placeholder={words.month}
+          options={months.map((name, i) => ({ value: String(i + 1), label: name }))}
+          onChange={(v) => set({ month: v })}
+        />
       </span>
 
       <span className="lb-input lb-date-year">

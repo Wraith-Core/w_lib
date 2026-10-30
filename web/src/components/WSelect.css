@@ -1,0 +1,53 @@
+/* WSelect: the dropdown the page draws (components/WSelect.tsx). The button sits where the <select> sat, inside
+   .lb-input, which already gives the field its plate; the list is Wraith ink with the paper band under the cursor. */
+.w-select {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 100%;
+  padding: inherit;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+}
+.w-select:disabled { cursor: default; opacity: 0.5; }
+.w-select:focus-visible { outline: 1px solid var(--w-rule-3, rgba(242, 242, 242, 0.5)); outline-offset: 2px; }
+.w-select.is-empty .w-select-label { color: var(--w-paper-faint, #7a7a7a); }
+.w-select-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.w-select-caret {
+  flex: none; width: 0; height: 0;
+  border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor;
+  opacity: 0.7; transition: transform 120ms ease;
+}
+.w-select.is-open .w-select-caret { transform: rotate(180deg); }
+
+.w-select-list {
+  position: fixed;
+  z-index: 10000;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  overflow-y: auto;
+  box-sizing: border-box;
+  background: var(--w-ink-2, #111111);
+  border: 1px solid var(--w-rule-2, rgba(242, 242, 242, 0.32));
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.7);
+  font-family: var(--w-f-input, 'Tajawal', 'Segoe UI', sans-serif);
+  font-size: 14px;
+  color: var(--w-paper, #f2f2f2);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(242, 242, 242, 0.3) transparent;
+}
+.w-select-option {
+  padding: 7px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.w-select-option.is-selected { color: var(--w-paper-lit, #ffffff); font-weight: 700; }
+.w-select-option.is-hot { background: var(--w-paper, #f2f2f2); color: var(--w-ink, #0a0a0a); }
