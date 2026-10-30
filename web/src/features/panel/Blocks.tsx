@@ -43,7 +43,7 @@ export interface Field {
    */
   type?: 'text' | 'number' | 'select' | 'checkbox' | 'textarea' | 'color' | 'hexcolor' | 'time' | 'date';
   /** hexcolor: the wheel's words ({ brightness, opacity, wheel }) in the reader's language */
-  labels?: { brightness?: string; opacity?: string; wheel?: string };
+  labels?: { brightness?: string; opacity?: string; wheel?: string; move?: string };
   value?: string | number | boolean;
   placeholder?: string;
   min?: number;

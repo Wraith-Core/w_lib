@@ -15,6 +15,9 @@ import './HexColourField.css';
  */
 type HSVA = { h: number; s: number; v: number; a: number };
 
+/* Where the reader last dragged the wheel (its top-left corner): it opens there again until the page reloads. */
+let dragged: { left: number; top: number } | null = null;
+
 const hex2 = (n: number) => Math.round(Math.max(0, Math.min(255, n))).toString(16).padStart(2, '0');
 
 function hsvToRgb(h: number, s: number, v: number): [number, number, number] {
@@ -49,7 +52,7 @@ const HexColourField: React.FC<{
   disabled?: boolean;
   placeholder?: string;
   ariaLabel?: string;
-  labels?: { brightness?: string; opacity?: string; wheel?: string };
+  labels?: { brightness?: string; opacity?: string; wheel?: string; move?: string };
 }> = ({ value, onChange, disabled, placeholder, ariaLabel, labels }) => {
   const [text, setText] = React.useState(value);
   const [open, setOpen] = React.useState(false);
@@ -92,10 +95,17 @@ const HexColourField: React.FC<{
     if (next) { setC(next); send(t.toLowerCase()); }
   };
 
+  const W = 236;
+  const keepIn = (left: number, top: number) => ({
+    left: Math.max(0, Math.min(window.innerWidth - W, left)),
+    top: Math.max(0, Math.min(window.innerHeight - 40, top)),
+  });
+
   const place = () => {
+    if (dragged) { setBox(keepIn(dragged.left, dragged.top)); return; }
     const r = btn.current?.getBoundingClientRect();
     if (!r) return;
-    const H = 300, W = 236;
+    const H = 330;
     const left = Math.max(8, Math.min(window.innerWidth - W - 8, r.right - W));
     setBox(r.top > H + 12 || r.top > window.innerHeight - r.bottom
       ? { left, bottom: window.innerHeight - r.top + 6 }     // up, as the arrow says (when there is room)
@@ -122,6 +132,23 @@ const HexColourField: React.FC<{
       window.removeEventListener('resize', resized);
     };
   }, [open]);
+
+  /* the grab bar: drag the window anywhere on the screen (kept inside it); remembered for the next opening */
+  const grab = React.useRef<{ dx: number; dy: number } | null>(null);
+  const startDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    const r = pop.current?.getBoundingClientRect();
+    if (!r || e.button !== 0) return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    grab.current = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+  };
+  const moveDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!grab.current) return;
+    const at = keepIn(e.clientX - grab.current.dx, e.clientY - grab.current.dy);
+    dragged = at;
+    setBox(at);
+  };
+  const endDrag = () => { grab.current = null; };
 
   const pick = (e: React.PointerEvent<HTMLDivElement>) => {
     const r = disc.current?.getBoundingClientRect();
@@ -163,6 +190,17 @@ const HexColourField: React.FC<{
       </button>
       {open && box && createPortal(
         <div ref={pop} className="w-hex-pop" style={{ left: box.left, top: box.top, bottom: box.bottom }}>
+          <div
+            className="w-hex-grab"
+            title={labels?.move ?? 'Drag to move'}
+            onPointerDown={startDrag}
+            onPointerMove={moveDrag}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+          >
+            <span>{labels?.wheel ?? 'Colour wheel'}</span>
+            <i aria-hidden="true" />
+          </div>
           <div
             ref={disc}
             className="w-hex-disc"
