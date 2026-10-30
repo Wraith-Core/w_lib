@@ -3,6 +3,7 @@ import Icon from '../../wc/Icon';
 import DateFields from '../../components/DateFields';
 import PaletteField from '../../components/PaletteField';
 import WSelect from '../../components/WSelect';
+import HexColourField from '../../components/HexColourField';
 import { READING_TONES, toPalette } from '../../utils/palette';
 import { Bar, Glyph } from '../../wc/Panel';
 
@@ -35,7 +36,14 @@ export interface Field {
    *   showing at a time. A text field for either asks the player to type a hex code or '19:30'
    *   correctly, which is a worse control, not a simpler one.
    */
-  type?: 'text' | 'number' | 'select' | 'checkbox' | 'textarea' | 'color' | 'time' | 'date';
+  /**
+   * 'hexcolor': a colour that is the script's DATA (a name plate, a crest), shown elsewhere in full colour --
+   * a hex box with a ▲ inside it that opens a colour wheel (components/HexColourField). Reports '#rrggbb' or
+   * '#rrggbbaa'. 'color' stays the theme's eight paper tones.
+   */
+  type?: 'text' | 'number' | 'select' | 'checkbox' | 'textarea' | 'color' | 'hexcolor' | 'time' | 'date';
+  /** hexcolor: the wheel's words ({ brightness, opacity, wheel }) in the reader's language */
+  labels?: { brightness?: string; opacity?: string; wheel?: string };
   value?: string | number | boolean;
   placeholder?: string;
   min?: number;
@@ -71,6 +79,12 @@ export interface Block {
     | 'image';
   /** A ruled heading above the block. */
   title?: string;
+  /**
+   * The heading becomes a button with an arrow that folds the block away (needs a title). `collapsed`: how it
+   * starts the first time; after that the reader's choice is kept while the panel is open, across redraws.
+   */
+  collapsible?: boolean;
+  collapsed?: boolean;
   /** Shown at the far end of that heading -- a count, a total. */
   note?: string;
   /** How much of the row this block takes when blocks sit side by side. Defaults to all of it. */
@@ -146,14 +160,28 @@ interface Ctx {
 
 /* ── the ruled heading every block may carry ──────────────────────────────── */
 
-const Heading: React.FC<{ title?: string; note?: string }> = ({ title, note }) =>
+const Heading: React.FC<{ title?: string; note?: string; fold?: { open: boolean; toggle: () => void } }> = ({ title, note, fold }) =>
   title ? (
-    <div className="wc-section-title">
-      <span>{title}</span>
-      <span className="wc-hr-thin" />
-      {note && <span className="wc-section-count">{note}</span>}
-    </div>
+    fold ? (
+      /* a foldable block: the whole heading is the button, the arrow says which way it goes */
+      <button type="button" className="wc-section-title wl-panel-fold" aria-expanded={fold.open} onClick={fold.toggle}>
+        <span className={`wl-panel-fold-arrow${fold.open ? ' is-open' : ''}`} aria-hidden="true" />
+        <span>{title}</span>
+        <span className="wc-hr-thin" />
+        {note && <span className="wc-section-count">{note}</span>}
+      </button>
+    ) : (
+      <div className="wc-section-title">
+        <span>{title}</span>
+        <span className="wc-hr-thin" />
+        {note && <span className="wc-section-count">{note}</span>}
+      </div>
+    )
   ) : null;
+
+/* ★ Which foldable blocks the reader closed, by title. Kept here, outside the panel's own state: the script
+     redraws the panel on every change (a nav, a save) and a fold must not spring open each time. */
+const folded = new Map<string, boolean>();
 
 const ActionButtons: React.FC<{ actions?: BlockAction[]; itemId?: string | number; ctx: Ctx }> = ({
   actions,
@@ -401,6 +429,24 @@ const FormField: React.FC<{ field: FormFieldSpec; ctx: Ctx }> = ({ field, ctx })
     );
   }
 
+  if (field.type === 'hexcolor') {
+    return (
+      <span className="lb-input">
+        <HexColourField
+          value={text}
+          placeholder={field.placeholder}
+          disabled={field.disabled}
+          ariaLabel={field.label}
+          labels={field.labels}
+          onChange={(v) => {
+            setText(v);
+            ctx.onField(field.id, v);
+          }}
+        />
+      </span>
+    );
+  }
+
   if (field.type === 'textarea') {
     return (
       <span className="lb-input">
@@ -478,7 +524,8 @@ const Form: React.FC<{ block: Block; ctx: Ctx }> = ({ block, ctx }) => (
     {block.fields?.map((field) => {
       // ⚠️ A colour row is not a <label>: a click on a label's text is forwarded to the first
       //    control inside it, which for the swatches would pick the first tone on its own.
-      const Row = field.type === 'color' ? 'div' : 'label';
+      // a <label> would pass a click on the wheel's ▲ to the box: those two are rows, not labels
+      const Row = field.type === 'color' || field.type === 'hexcolor' ? 'div' : 'label';
       return (
         <Row className={`wl-panel-field${field.type === 'checkbox' ? ' is-check' : ''}`} key={field.id}>
           {field.label && <span className="wl-panel-row-label">{field.label}</span>}
@@ -593,12 +640,16 @@ const BODY: Record<Block['type'], React.FC<{ block: Block; ctx: Ctx }>> = {
 };
 
 const Blocks: React.FC<{ blocks?: Block[]; ctx: Ctx }> = ({ blocks, ctx }) => {
+  const [, redraw] = React.useReducer((n: number) => n + 1, 0);
   if (!blocks?.length) return null;
 
   return (
     <div className="wl-panel-blocks wc-scroll">
       {blocks.map((block, i) => {
         const Body = BODY[block.type] ?? (() => null);
+        const foldKey = block.collapsible && block.title ? block.title : null;
+        const open = foldKey ? !(folded.get(foldKey) ?? !!block.collapsed) : true;
+        const fold = foldKey ? { open, toggle: () => { folded.set(foldKey, open); redraw(); } } : undefined;
 
         return (
           /* ⚠️ span is a grid column count, defaulting to the full width. It is what lets a
@@ -608,8 +659,8 @@ const Blocks: React.FC<{ blocks?: Block[]; ctx: Ctx }> = ({ blocks, ctx }) => {
             key={i}
             style={{ gridColumn: `span ${Math.min(12, Math.max(1, block.span ?? 12))}` }}
           >
-            <Heading title={block.title} note={block.note} />
-            <Body block={block} ctx={ctx} />
+            <Heading title={block.title} note={block.note} fold={fold} />
+            {open && <Body block={block} ctx={ctx} />}
           </section>
         );
       })}

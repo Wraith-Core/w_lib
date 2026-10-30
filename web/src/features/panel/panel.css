@@ -481,6 +481,19 @@ body[data-store-theme] .wl-panel-chip.wst-tab.is-active::before {
 
 .wl-panel-hero .wc-slot { width: clamp(72px, 11vh, 104px); }
 
+/* A foldable block's heading: the same ruled heading, as a button, with an arrow before the title */
+.wl-panel-fold { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%; cursor: pointer; }
+.wl-panel-fold:focus-visible { outline: 1px solid var(--w-rule-3, rgba(242, 242, 242, 0.5)); outline-offset: 2px; }
+.wl-panel-fold:hover > span:not(.wc-hr-thin) { color: var(--w-paper-lit, #ffffff); }
+.wl-panel-fold-arrow {
+  flex: none; width: 0; height: 0;
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  border-inline-start: 6px solid currentColor;      /* points forward (left in Arabic): folded */
+  transition: transform 120ms ease;
+}
+.wl-panel-fold-arrow.is-open { transform: rotate(90deg); }   /* points down: open */
+[dir='rtl'] .wl-panel-fold-arrow.is-open { transform: rotate(-90deg); }
+
 /* A picture shown whole (a script's preview): centred in its block, never wider than it */
 .wl-panel-image { display: flex; align-items: center; justify-content: center; height: 100%; min-height: clamp(72px, 11vh, 104px); }
 .wl-panel-image img { display: block; max-width: 100%; width: auto; height: auto; object-fit: contain; }

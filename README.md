@@ -2748,6 +2748,7 @@ Parameters:
   - `blocks` (`Block[]`, optional): composed content replacing the detail pane. Each `Block`:
     - `type` (required): `'section'`, `'stats'`, `'bars'`, `'rows'`, `'table'`, `'cards'`, `'text'`, `'form'`, `'actions'`, `'requirements'`, `'chips'`, `'hero'` or `'image'` (a picture shown whole, as wide as its block: a preview the script drew -- put it beside a `hero` with `span`, e.g. hero 5 + image 7)
     - `title` (string, optional): ruled heading
+    - `collapsible` (boolean, optional): the heading gets an arrow and folds the block away (needs `title`); `collapsed` (boolean) is how it starts the first time, then the reader's choice is kept while the panel is open
     - `note` (string, optional): text at the end of the heading
     - `span` (number, optional): share of the row when blocks sit side by side
     - `items` (table[], optional): `label`, `value?`, `sub?`, `icon?`, `image?`, `progress?`, `id?`, `disabled?`, `danger?`, `actions?` (`BlockAction[]`), `input?` (`{id (required), value?, min?, max?, step?}`, reported through `onField`), `dot?` (CSS colour or `'ok'`, `'warn'`, `'bad'`)
@@ -2759,7 +2760,7 @@ Parameters:
     - `icon` (string, optional)
     - `color` (string, for `hero`)
     - `subtitle` (string, optional)
-    - `fields` (`Field[]`, for `form`): `id` (required), `label?`, `type?` (`'text'`, `'number'`, `'select'`, `'checkbox'`, `'textarea'`, `'color'`, `'time'`, `'date'`), `value?`, `placeholder?`, `min?`, `max?`, `step?`, `options?` (`{value, label}[]`), `disabled?`
+    - `fields` (`Field[]`, for `form`): `id` (required), `label?`, `type?` (`'text'`, `'number'`, `'select'`, `'checkbox'`, `'textarea'`, `'color'` (the theme's eight tones), `'hexcolor'` (any colour as `#rrggbb` / `#rrggbbaa`: a hex box with a ▲ inside that opens a colour wheel with brightness and opacity; `labels? {brightness, opacity, wheel}`), `'time'`, `'date'`), `value?`, `placeholder?`, `min?`, `max?`, `step?`, `options?` (`{value, label}[]`), `disabled?`
     - `actions` (`BlockAction[]`): `id` (required), `label` (required), `icon?`, `disabled?`, `danger?` (red)
   - `onSelect` (string event name, optional): fired as `(itemId)` when a browser row is picked (not fired when the same row is picked again).
   - `onAction` (string event name, optional): fired as `(actionId, itemId|nil, amount|nil)`; `itemId` is the selected row (or the block row's id for a row action), `amount` only when the action has `input`.

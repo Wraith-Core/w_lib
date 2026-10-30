@@ -1,0 +1,43 @@
+/* HexColourField: the hex box (inside .lb-input), a swatch before it and a ▲ inside it at the far end; the
+   wheel pops up over the page in Wraith's ink. */
+.w-hex { display: flex; align-items: center; gap: 8px; width: 100%; }
+.w-hex input { flex: 1; min-width: 0; font-family: var(--w-f-mono, Consolas, monospace); }
+.w-hex-chip {
+  flex: none; width: 16px; height: 16px; border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(242, 242, 242, 0.45), inset 0 0 0 1px rgba(10, 10, 10, 0.5);
+}
+.w-hex-open {
+  all: unset; box-sizing: border-box; flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 22px; cursor: pointer; border-radius: 2px;
+  background: rgba(242, 242, 242, 0.08);
+}
+.w-hex-open:hover:not(:disabled), .w-hex-open.is-open { background: var(--w-paper, #f2f2f2); color: var(--w-ink, #0a0a0a); }
+.w-hex-open:disabled { opacity: 0.4; cursor: default; }
+.w-hex-open > span {                          /* ▲ */
+  width: 0; height: 0;
+  border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 6px solid currentColor;
+}
+.w-hex-open.is-open > span { transform: rotate(180deg); }
+
+.w-hex-pop {
+  position: fixed; z-index: 10000; width: 236px; box-sizing: border-box; padding: 12px;
+  display: flex; flex-direction: column; gap: 9px;
+  background: var(--w-ink-2, #111111);
+  border: 1px solid var(--w-rule-2, rgba(242, 242, 242, 0.32));
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.7);
+  font-family: var(--w-f-label, 'Tajawal', 'Segoe UI', sans-serif); font-size: 12px; color: var(--w-paper-dim, #b4b4b4);
+}
+.w-hex-disc {
+  position: relative; width: 168px; height: 168px; margin: 0 auto; border-radius: 50%; cursor: crosshair; touch-action: none;
+  background: radial-gradient(circle closest-side, #fff, rgba(255, 255, 255, 0)), conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+}
+.w-hex-dot {
+  position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; pointer-events: none;
+  border: 2px solid #f2f2f2; box-shadow: 0 0 0 1px #0a0a0a;
+}
+.w-hex-slider { display: flex; flex-direction: column; gap: 4px; }
+.w-hex-slider input { width: 100%; accent-color: var(--w-paper, #f2f2f2); }
+.w-hex-preview { display: flex; align-items: center; gap: 8px; }
+.w-hex-preview span { flex: 1; height: 18px; box-shadow: inset 0 0 0 1px rgba(242, 242, 242, 0.3); }
+.w-hex-preview b { font-family: var(--w-f-mono, Consolas, monospace); color: var(--w-paper, #f2f2f2); font-weight: 400; }
