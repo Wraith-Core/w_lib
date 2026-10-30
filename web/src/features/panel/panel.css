@@ -481,6 +481,10 @@ body[data-store-theme] .wl-panel-chip.wst-tab.is-active::before {
 
 .wl-panel-hero .wc-slot { width: clamp(72px, 11vh, 104px); }
 
+/* A picture shown whole (a script's preview): centred in its block, never wider than it */
+.wl-panel-image { display: flex; align-items: center; justify-content: center; height: 100%; min-height: clamp(72px, 11vh, 104px); }
+.wl-panel-image img { display: block; max-width: 100%; width: auto; height: auto; object-fit: contain; }
+
 /* The crest colour tints the plate behind the emblem, not the emblem itself -- a house colour
    is the field it is painted on. */
 .wl-panel-crest:before { background-color: var(--wl-crest, var(--wc-accent)); }

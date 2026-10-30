@@ -66,7 +66,8 @@ export interface Block {
     | 'actions'
     | 'requirements'
     | 'chips'
-    | 'hero';
+    | 'hero'
+    | 'image';
   /** A ruled heading above the block. */
   title?: string;
   /** Shown at the far end of that heading -- a count, a total. */
@@ -113,10 +114,16 @@ export interface Block {
   columns?: Array<{ key: string; label: string; align?: 'start' | 'end' }>;
   rows?: Array<Record<string, string | number>>;
 
-  // text / hero
+  // text / hero / image
   value?: string;
-  /** hero: the emblem beside the name -- a crest, a screen, a maker's mark. */
+  /**
+   * hero: the emblem beside the name -- a crest, a screen, a maker's mark.
+   * image: a picture shown whole, as wide as its block (a preview a script drew: a name plate, a card) --
+   *        any url, nui:// or a data: url (an SVG the script builds). value is its alt text.
+   */
   image?: string;
+  /** image: the tallest it is drawn, in px (default 120). */
+  height?: number;
   icon?: string;
   /** hero: a colour behind the emblem, for a crest or a house colour (drawn as its nearest palette tone). */
   color?: string;
@@ -576,6 +583,15 @@ const BODY: Record<Block['type'], React.FC<{ block: Block; ctx: Ctx }>> = {
   requirements: ({ block }) => <Requirements block={block} />,
   chips: Chips,
   hero: ({ block }) => <Hero block={block} />,
+  /* ★ A picture shown whole, not an icon in a slot: a slot is a small square and a script's preview (a name
+     plate, a card face) is wide. Put it beside a hero with `span` (hero 5, image 7) to show the subject and
+     its preview on one line. */
+  image: ({ block }) =>
+    block.image ? (
+      <div className="wl-panel-image">
+        <img src={block.image} alt={block.value ?? ''} style={{ maxHeight: `${Math.max(24, Math.min(400, block.height ?? 120))}px` }} />
+      </div>
+    ) : null,
 };
 
 const Blocks: React.FC<{ blocks?: Block[]; ctx: Ctx }> = ({ blocks, ctx }) => {

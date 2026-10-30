@@ -2746,15 +2746,16 @@ Parameters:
   - `activeNav` (string, optional): id of the highlighted nav row; Up/Down walk the rows of open groups and fire `onNav` for the next one.
   - `navCountLabel` (string, optional): unit printed under the tabs with the visible-row tally; omitted, no tally.
   - `blocks` (`Block[]`, optional): composed content replacing the detail pane. Each `Block`:
-    - `type` (required): `'section'`, `'stats'`, `'bars'`, `'rows'`, `'table'`, `'cards'`, `'text'`, `'form'`, `'actions'`, `'requirements'`, `'chips'` or `'hero'`
+    - `type` (required): `'section'`, `'stats'`, `'bars'`, `'rows'`, `'table'`, `'cards'`, `'text'`, `'form'`, `'actions'`, `'requirements'`, `'chips'`, `'hero'` or `'image'` (a picture shown whole, as wide as its block: a preview the script drew -- put it beside a `hero` with `span`, e.g. hero 5 + image 7)
     - `title` (string, optional): ruled heading
     - `note` (string, optional): text at the end of the heading
     - `span` (number, optional): share of the row when blocks sit side by side
     - `items` (table[], optional): `label`, `value?`, `sub?`, `icon?`, `image?`, `progress?`, `id?`, `disabled?`, `danger?`, `actions?` (`BlockAction[]`), `input?` (`{id (required), value?, min?, max?, step?}`, reported through `onField`), `dot?` (CSS colour or `'ok'`, `'warn'`, `'bad'`)
     - `columns` (`{key, label, align? ('start'|'end')}[]`, for `table`)
     - `rows` (`Record<string, string|number>[]`, for `table`)
-    - `value` (string, for `text` / `hero`)
-    - `image` (string, for `hero`)
+    - `value` (string, for `text` / `hero`; the alt text for `image`)
+    - `image` (string, for `hero` / `image`: any url, `nui://`, or a `data:` url such as an SVG the script builds)
+    - `height` (number, for `image`: the tallest it is drawn in px, default 120)
     - `icon` (string, optional)
     - `color` (string, for `hero`)
     - `subtitle` (string, optional)
