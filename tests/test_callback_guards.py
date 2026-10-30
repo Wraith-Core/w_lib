@@ -26,7 +26,16 @@ class CallbackGuards(unittest.TestCase):
             function GetInvokingResource()return 'fixture' end
             function GetConvarInt(_,default)return default end
             function GetGameTimer()return CLOCK end
-            function SetTimeout(ms,fn)table.insert(TIMERS,{ms=ms,fn=fn})end
+            function SetTimeout(ms,fn)table.insert(TIMERS,{ms=ms,dueAt=CLOCK+ms,fn=fn})end
+            function runDueTimers()
+                local due={}
+                for _,timer in ipairs(TIMERS)do
+                    if not timer.fired and timer.dueAt<=CLOCK then
+                        timer.fired=true;table.insert(due,timer.fn)
+                    end
+                end
+                for _,fn in ipairs(due)do fn()end
+            end
             function Wait()WAITS=WAITS+1 end
             function Await(p)
                 if p.value then return p.value end
@@ -92,9 +101,32 @@ class CallbackGuards(unittest.TestCase):
 
     def test_timeout_settles_and_cleans_once(self):
         self.start_client_request()
-        self.assertEqual(self.lua.eval('TIMERS[1].ms'),5000)
+        self.assertEqual(self.lua.eval('TIMERS[1].ms'),15000)
         self.lua.execute('TIMERS[1].fn();TIMERS[1].fn()')
         self.assertEqual(self.lua.eval('ANSWERS'),1)
+        self.assertIsNone(self.lua.eval("HANDLERS['response:0']"))
+
+    def test_default_deadline_fires_only_at_fifteen_seconds(self):
+        self.start_client_request()
+        self.lua.execute('CLOCK=5000;runDueTimers();CLOCK=14999;runDueTimers()')
+        self.assertEqual(self.lua.eval('ANSWERS'),0)
+        self.assertIsNotNone(self.lua.eval("HANDLERS['response:0']"))
+        self.lua.execute('CLOCK=15000;runDueTimers();runDueTimers()')
+        self.assertEqual(self.lua.eval('ANSWERS'),1)
+        self.assertIsNone(self.lua.eval('ANSWER[1]'))
+        self.assertIsNone(self.lua.eval("HANDLERS['response:0']"))
+
+    def test_legitimate_eight_second_reply_wins_deadline(self):
+        self.start_client_request()
+        self.lua.execute('CLOCK=8000;runDueTimers()')
+        self.assertEqual(self.lua.eval('ANSWERS'),0)
+        self.assertIsNotNone(self.lua.eval("HANDLERS['response:0']"))
+        self.lua.execute("source=1;HANDLERS['response:0']('fixture',true)")
+        self.assertEqual(self.lua.eval('ANSWERS'),1)
+        self.assertTrue(self.lua.eval('ANSWER[1]'))
+        self.lua.execute('CLOCK=15000;runDueTimers()')
+        self.assertEqual(self.lua.eval('ANSWERS'),1)
+        self.assertTrue(self.lua.eval('ANSWER[1]'))
         self.assertIsNone(self.lua.eval("HANDLERS['response:0']"))
 
     def test_forged_reply_is_ignored_and_real_reply_wins_timeout(self):

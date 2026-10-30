@@ -5,7 +5,7 @@ w.createModule("callback")
 ---@param name string (The name of the client callback)
 ---@param source integer (The player to ask)
 ---@param ... any (The arguments)
----@return any (The values the client callback returned; nil after the 5 s timeout)
+---@return any (The values the client callback returned; nil after the default 15 s timeout)
 function w.callback.await(name, source, ...)
   return w.callback.triggerClient(name, source, nil, ...)
 end

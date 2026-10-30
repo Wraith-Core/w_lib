@@ -11,7 +11,7 @@ This document describes the public surface of the library as seen from another r
 - حماية طلبات الاستدعاء بميزانية لكل لاعب وحد للطلبات الجارية، ورفض الأسماء غير المسجلة فورًا.
 - إنهاء سؤال العميل عند انقطاعه أو انتهاء المهلة، وتنظيف المستمع حتى لا تتراكم الطلبات.
 - إصلاح قناة رفض الاستدعاء غير المسجل وإظهار عنوان «الإعدادات» بالعربية.
-- مهلة سؤال العميل خمس ثوان افتراضيًا؛ يمكن ضبط `w_lib:clientCallbackTimeout` بين ثانية ودقيقتين.
+- مهلة سؤال العميل 15 ثانية افتراضيًا؛ يمكن ضبط `w_lib:clientCallbackTimeout` بين ثانية ودقيقتين.
 - يلزم اختبار القوائم وطلبات التأكيد بعد إعادة تشغيل كاملة في وقت خلو السيرفر.
 
 ## 4.1.3 (2026-10-24)
@@ -4387,7 +4387,7 @@ The second system is `w.callback` (also reachable as `jo.callback`, since `jo` i
 
 Because the whole table crosses the export boundary as function references, Lua functions can be passed to `w.callback.register` and as the `cb` argument of `triggerServer`/`triggerClient`. The library detects a "function" by testing for a callable table, which is exactly what a cross-resource function reference is. Arguments and return values are msgpack-serialised, so send plain data (numbers, strings, tables, vectors), not userdata or closures inside tables. Server handlers receive `source` first.
 
-The `cb` slot is optional: if the second argument is not a function it is treated as the first data argument and the call becomes synchronous (it yields and returns the handler's return values). There is no timeout in `w.callback`. If the server has no callback of that name it waits 5 seconds, prints an error and never answers, so the client thread waits forever. Register server callbacks at file load, before any client can ask. Names beginning with `w_lib:` survive resource stops; every other name is dropped automatically when the registering resource stops, and re-registering an existing name is refused with an error print. A "latent" registration (`w.callback.register.latent` / `registerLatentCallback`) sends the reply through the bandwidth-limited latent event path governed by the convar `w_lib:emit:bps`.
+The `cb` slot is optional: if the second argument is not a function it is treated as the first data argument and the call becomes synchronous (it yields and returns the handler's return values). Server-to-client `w.callback.triggerClient` and server-side `w.callback.await` settle once on the response, player disconnect, calling resource stop, or a default 15000 ms deadline (`w_lib:clientCallbackTimeout`, clamped to 1000-120000 ms). A timeout returns nil and removes the reply listener; it does not prove the client action was not performed. Client-to-server requests have a separate default 30000 ms timeout (`w_lib:callbackTimeout`). The server rejects unregistered names immediately and limits requests and in-flight handlers per player. Register server callbacks at file load, before any client can ask. Names beginning with `w_lib:` survive resource stops; every other name is dropped automatically when the registering resource stops, and re-registering an existing name is refused with an error print. A "latent" registration (`w.callback.register.latent` / `registerLatentCallback`) sends the reply through the bandwidth-limited latent event path governed by the convar `w_lib:emit:bps`.
 
 ### Event helpers and scoped modules
 

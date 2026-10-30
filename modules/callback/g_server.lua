@@ -201,7 +201,7 @@ function w.callback.triggerClient(name, source, cb, ...)
     dprint("Response received for request ID: %d from resource: %s", currentRequestId, fromResource)
     finish(...)
   end)
-  SetTimeout(math.min(120000, math.max(1000, GetConvarInt('w_lib:clientCallbackTimeout', 5000))), function()
+  SetTimeout(math.min(120000, math.max(1000, GetConvarInt('w_lib:clientCallbackTimeout', 15000))), function()
     if not finished then finish(nil) end
   end)
 
