@@ -42,6 +42,21 @@ export function setMuted(value: boolean): void {
   muted = value;
 }
 
+/* ★ The frame's focus, as the Lua side reports it (lib.setNuiFocus / lib.resetNuiFocus -> 'wl:focus').
+     Every window of the library takes focus while it is open, so no focus means no window: the clicks
+     (hover, select, deny) are silent then, whatever the pointer crosses - an alt-tabbed game window, or
+     another resource's page on top. The lifecycle cues (open, close, finish) still sound: they are rung as
+     a window opens or closes, around the moment its focus changes. */
+let focused = false;
+const LIFECYCLE: ReadonlySet<Sfx> = new Set<Sfx>(['open', 'close', 'finish']);
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('message', (event: MessageEvent) => {
+    const msg = event.data as { action?: string; data?: unknown } | null;
+    if (msg && msg.action === 'wl:focus') focused = msg.data === true;
+  });
+}
+
 /* One warm element per sound, cloned on play so rapid repeats overlap instead of cutting each
    other off -- a list navigated quickly should tick per row, not stutter on one. */
 const cache: Partial<Record<Sfx, HTMLAudioElement>> = {};
@@ -64,6 +79,7 @@ let lastHover = 0;
 
 export function play(name: Sfx): void {
   if (muted) return;
+  if (!focused && !LIFECYCLE.has(name)) return;
 
   const source = warm(name);
   if (!source) return;
