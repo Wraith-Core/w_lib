@@ -111,8 +111,6 @@ function lib.showPanel(data)
     end
 
     panel = data
-    -- TEMP TRACE (the open sound heard every few minutes): who draws a panel
-    print(('[w_lib trace] showPanel id=%s from %s'):format(tostring(data.id), tostring(GetInvokingResource())))
 
     -- ⚠️ The callbacks are stripped before the table crosses to the frame. json.encode turns a
     --    function into null and the UI would receive three dead keys; keeping them here means

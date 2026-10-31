@@ -62,24 +62,7 @@ function warm(name: Sfx): HTMLAudioElement | null {
 
 let lastHover = 0;
 
-/* TEMP TRACE (the open sound heard every few minutes): which message reached the page last, so the
-   game's log shows what each sound followed. Remove with the fix. */
-let lastAction = '(none)';
-if (typeof window !== 'undefined') {
-  console.log('[w_lib trace] page loaded');
-  window.addEventListener('message', (event: MessageEvent) => {
-    const action = event.data && (event.data as { action?: unknown }).action;
-    // the per-frame text messages are not what a sound follows: left out of the trace
-    if (typeof action === 'string' && !/Text[23]D$/.test(action)) {
-      lastAction = action;
-      if (action !== 'showPanel' || !(event.data as { data?: unknown }).data) console.log(`[w_lib trace] message ${action}`);
-      else console.log(`[w_lib trace] message showPanel id=${String(((event.data as { data: { id?: unknown } }).data).id)}`);
-    }
-  });
-}
-
 export function play(name: Sfx): void {
-  if (name !== 'hover') console.log(`[w_lib trace] sound ${name} (after message ${lastAction})`);
   if (muted) return;
 
   const source = warm(name);

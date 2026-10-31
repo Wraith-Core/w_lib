@@ -194,9 +194,6 @@ function Notify(data)
 
         PlaySoundFrontend(data.sound or sound, data.soundSet or soundSet, true, 0)
     end
-    -- TEMP TRACE (the open sound heard every few minutes): every notice, its sound and who sent it
-    print(('[w_lib trace] notify from %s sound=%s/%s text=%s'):format(tostring(GetInvokingResource()),
-        tostring(data.sound ~= false and (data.sound or 'default') or 'off'), tostring(data.soundSet or ''), tostring(data.description or data.title or ''):sub(1, 60)))
 
     -- The caller's readings line, if it sent one.
     local meta = data.meta
