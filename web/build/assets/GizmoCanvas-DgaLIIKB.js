@@ -1,8 +1,12 @@
 <<<<<<<< HEAD:web/build/assets/GizmoCanvas-DgaLIIKB.js
+<<<<<<<< HEAD:web/build/assets/GizmoCanvas-DgaLIIKB.js
 import{r as we,g as ux,j as cn,_ as iv,u as Md,p as hx}from"./index-7Lj_Vi4T.js";/**
 ========
 import{r as we,g as ux,j as cn,_ as iv,u as Md,p as hx}from"./index-Dj6Dd8Fr.js";/**
 >>>>>>>> 8bc1d34 (panel: side-list rows can show a wide picture (item.picture)):web/build/assets/GizmoCanvas-CoXKvKV4.js
+========
+import{r as we,g as ux,j as cn,_ as iv,u as Md,p as hx}from"./index-CYHlH8ou.js";/**
+>>>>>>>> 587aa5c (inputDialog: 'allow' - a text field takes only the characters given (dropped as typed or pasted)):web/build/assets/GizmoCanvas-B1ikQU5Z.js
  * @license
  * Copyright 2010-2024 Three.js Authors
  * SPDX-License-Identifier: MIT

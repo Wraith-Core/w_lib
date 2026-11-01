@@ -11,6 +11,19 @@ import { useLocales } from '../../providers/LocaleProvider';
 
 type Row = InputProps['rows'][number] & Record<string, any>;
 
+/** `allow` (a character class body, 'A-Za-z0-9 '): a text field drops every other character as it is typed or
+ *  pasted - a script that needs a name in Latin letters only says so, and the field cannot take anything else. */
+const allowCache = new Map<string, RegExp | null>();
+const onlyAllowed = (allow: unknown, value: string): string => {
+  if (typeof allow !== 'string' || allow === '') return value;
+  let re = allowCache.get(allow);
+  if (re === undefined) {
+    try { re = new RegExp(`[^${allow}]`, 'gu'); } catch { re = null; }
+    allowCache.set(allow, re);
+  }
+  return re ? value.replace(re, '') : value;
+};
+
 const sizeClass = (size?: string) =>
   size === 'lg' || size === 'xl' ? ' is-lg' : size === 'xs' || size === 'sm' ? ' is-sm' : '';
 
@@ -282,7 +295,8 @@ const InputDialog: React.FC = () => {
                     minLength={type !== 'number' ? row.minLength : undefined}
                     maxLength={type !== 'number' ? row.maxLength : undefined}
                     value={values[i] ?? ''}
-                    onChange={(e) => set(i, type === 'number' ? e.target.value : e.target.value)}
+                    dir={type !== 'number' && row.allow ? 'ltr' : undefined}
+                    onChange={(e) => set(i, type === 'number' ? e.target.value : onlyAllowed(row.allow, e.target.value))}
                   />
 
                   {type === 'number' && (
