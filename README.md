@@ -6,6 +6,10 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.1.5 (2026-11-01)
+
+- إصلاح زر الاستسلام X: يرفع اللاعب يديه ويخفضهما، ويعرف السيرفر أنه مستسلم فيمكن تفتيشه وسرقته.
+
 ## 4.1.4 (2026-10-30)
 
 - حماية طلبات الاستدعاء بميزانية لكل لاعب وحد للطلبات الجارية، ورفض الأسماء غير المسجلة فورًا.

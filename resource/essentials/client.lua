@@ -61,7 +61,9 @@ if E.handsUp.enabled then
         CreateThread(function()
             local up = nil
             while alive(r) do
-                local now = IsEntityPlayingAnim(ped(), dict, clip, 3) == true
+                -- a named BOOL native answers 1 / false here: `== true` alone never saw the hands up (4.1.5)
+                local playing = IsEntityPlayingAnim(ped(), dict, clip, 3)
+                local now = playing == true or playing == 1
                 if now ~= up then
                     up = now
                     LocalPlayer.state:set('handsUp', now, true)
@@ -78,9 +80,12 @@ if E.handsUp.enabled then
             defaultKey = E.handsUp.key,
             onPressed = function()
                 local p = ped()
-                if IsEntityDead(p) or IsPedOnMount(p) or IsPedInAnyVehicle(p, false) then return end
-                if IsPedLassoed(p) then return end
-                if not IsEntityPlayingAnim(p, dict, clip, 3) then
+                -- a BOOL native may answer 0 / 1: 0 is truthy in Lua, so every check compares with 1 / true (4.1.5)
+                local function yes(v) return v == true or v == 1 end
+                if yes(IsEntityDead(p)) or yes(IsPedOnMount(p)) or yes(IsPedInAnyVehicle(p, false)) then return end
+                -- IsPedLassoed is bound _ri: a free ped answers 0, which is truthy, so X never raised the hands (4.1.5)
+                if yes(IsPedLassoed(p)) then return end
+                if not yes(IsEntityPlayingAnim(p, dict, clip, 3)) then
                     lib.requestAnimDict(dict)
                     TaskPlayAnim(p, dict, clip, 2.0, -2.0, -1, 67109393, 0.0, false, 1245184, false, 'UpperbodyFixup_filter', false)
                 else
