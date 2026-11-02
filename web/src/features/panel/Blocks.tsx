@@ -553,7 +553,7 @@ const Form: React.FC<{ block: Block; ctx: Ctx }> = ({ block, ctx }) => (
       })}
     </div>
     {block.actions?.length ? (
-      <div className="wl-panel-buttons">
+      <div className="wl-panel-buttons is-form">
         <ActionButtons actions={block.actions} ctx={ctx} />
       </div>
     ) : null}

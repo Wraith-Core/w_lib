@@ -355,9 +355,11 @@ body[data-store-theme] .wl-panel-list .lb-item.wst-card.is-active::before,
   align-items: center;
   gap: clamp(8px, 0.9vw, 14px);
 }
-/* a form's own buttons (its `actions`): a clear gap under the fields, and the size of the fields' text */
-.wl-panel-form + .wl-panel-buttons { margin-top: clamp(10px, 1.4vh, 16px); }
-.wl-panel-form + .wl-panel-buttons .wc-manage-btn {
+/* a form's own buttons (its `actions`): a clear gap under the fields, and the size of the fields' text
+   ⚠️ .is-form, set by Blocks.tsx, not `.wl-panel-form + .wl-panel-buttons`: in game the buttons sat flush
+      against the last dropdown, so the gap is tied to the buttons themselves and not to what precedes them. */
+.wl-panel-buttons.is-form { margin-top: clamp(14px, 1.8vh, 20px); }
+.wl-panel-buttons.is-form .wc-manage-btn {
   padding: clamp(8px, 1.1vh, 11px) clamp(12px, 1.2vw, 18px);
   font-size: calc(clamp(12px, 1.6vh, 14px) * var(--w-k-label, 1));
 }
