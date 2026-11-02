@@ -108,12 +108,31 @@ marker_mt.__index = marker_mt
 -- ★ w_lib 4.1.0 (the owner 2026-10-23): the game's glitter instead of DrawMarker (imports/glow), in its own colour
 --   (the paper rule above: no hue). A wide marker is a ring of look 4 (its width = the ring), a small one a point of
 --   look 2. Same call every frame as before.
+-- ★ 4.2.0 (the owner 2026-11-02: polygons, not particles, to mark places): a marker given one of the game's marker
+--   hashes (e.g. w_baloot's seat arrow 0x07DCE236) is drawn with DrawMarker again, as before 4.1.0; the others go
+--   through lib.glow, which draws its polygon look (a flat ring / a sphere) since 4.2.0.
 function marker_mt:draw()
   local c = self.coords
+  local kind = self.type
+  if type(kind) == 'number' and (kind > 43 or kind < 0) then
+    local col = self.color
+    DrawMarker(
+      kind,
+      c.x, c.y, c.z,
+      self.direction.x, self.direction.y, self.direction.z,
+      self.rotation.x, self.rotation.y, self.rotation.z,
+      self.width, self.width, self.height,
+      col.r, col.g, col.b, col.a,
+      self.bobUpAndDown, self.faceCamera, 2, self.rotate, self.textureDict, self.textureName, self.invert)
+    return
+  end
+  local col = self.color
+  local solid = { color = { col.r, col.g, col.b }, alpha = col.a, size = self.width / 2.0 }
   if self.width >= 0.6 then
-    lib.glow.frame(self, 'circle', c, self.width / 2.0, { look = 4, ground = false })
+    lib.glow.frame(self, 'circle', c, self.width / 2.0, { look = 4, ground = false, solid = solid })
   else
-    lib.glow.frame(self, 'point', c, { look = 2 })
+    solid.shape = 'sphere'
+    lib.glow.frame(self, 'point', c, { look = 2, solid = solid })
   end
 end
 

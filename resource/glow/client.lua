@@ -1,9 +1,12 @@
--- w_lib 4.1.0 · /glow: the shapes of imports/glow in front of the player, to see the five looks and choose (owner 2026-10-23)
---   /glow                    every shape in its own look: a wall (5) round a square ahead, a path (1) to it, a point
---                            (2), an arrow (3) and a circle (4) in a row; a minute long
---   /glow <shape> [look]     one shape (wall · line · point · arrow · circle) in look 1-5
+-- w_lib 4.1.0 · /glow: the shapes of imports/glow in front of the player, to see the looks and choose (owner 2026-10-23)
+-- 4.2.0 (the owner 2026-11-02: polygons by default, particles only on request): without a look number the shapes are
+-- drawn as lib.glow draws them now (polygons); with a look number (or `fx`) as the game's glitter (opts.particle).
+--   /glow                    every shape as a polygon: a wall round a square ahead, a path to it, a point, an arrow
+--                            and a circle in a row; a minute long
+--   /glow fx                 the same in the game's glitter, each shape in its own look
+--   /glow <shape> [look]     one shape (wall · line · point · arrow · circle); with a look 1-5: that glitter
 --   /glow off                hides them
--- Only the player who types it sees them (particles are local).
+-- Only the player who types it sees them (they are drawn on his screen only).
 
 local SHAPES = { wall = true, line = true, point = true, arrow = true, circle = true }
 local shown, seq = {}, 0
@@ -24,8 +27,8 @@ local function at(origin, h, ahead, side)
     return vector3(x, y, (found == true or found == 1) and gz or origin.z - 1.0)
 end
 
-local function draw(shape, look, origin, h)
-    local opts = { look = look, range = 120.0 }
+local function draw(shape, look, origin, h, particle)
+    local opts = { look = look, range = 120.0, particle = particle or look ~= nil }
     if shape == 'wall' then
         local c = { at(origin, h, 14.0, -4.0), at(origin, h, 14.0, 4.0), at(origin, h, 22.0, 4.0), at(origin, h, 22.0, -4.0) }
         return lib.glow.wall(c, opts)
@@ -53,11 +56,11 @@ RegisterCommand('glow', function(_, args)
     end
     local ped = PlayerPedId()
     local origin, h = GetEntityCoords(ped), GetEntityHeading(ped)
-    if first == '' then
+    if first == '' or first == 'fx' then
         for _, shape in ipairs({ 'wall', 'line', 'point', 'arrow', 'circle' }) do
-            shown[#shown + 1] = draw(shape, nil, origin, h)
+            shown[#shown + 1] = draw(shape, nil, origin, h, first == 'fx')
         end
-        lib.notify({ description = L('all'), type = 'inform', duration = 10000 })
+        lib.notify({ description = L(first == 'fx' and 'all_fx' or 'all'), type = 'inform', duration = 10000 })
     elseif SHAPES[first] then
         local look = math.floor(tonumber(args[2]) or 0)
         if look < 1 or look > #lib.glow.looks then look = nil end

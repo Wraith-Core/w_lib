@@ -173,11 +173,16 @@ end
 
 --- 4.1.0 (the owner 2026-10-23): the game's glitter instead of DrawMarker (imports/glow): a spot = look 2, the
 --- reach ring = look 4 round the player; out of reach the spot is tinted the theme's red. `key` names the mark.
+--- 4.2.0 (the owner 2026-11-02: polygons, no particles when placing): lib.glow draws the polygon look by default; the
+--- mark is again what it was before 4.1.0 -- a flat ring on the ground or a sphere, `size` across, in its own colour.
 local function mark(key, kind, pos, size, color)
-  local opts = { look = (kind == MARKER_GROUND and size > 1.2) and 4 or 2, range = 150.0,
-    color = color == COLOR.far and { color[1], color[2], color[3] } or nil }
-  if kind == MARKER_GROUND and size > 1.2 then
+  local ground = kind == MARKER_GROUND
+  local opts = { look = (ground and size > 1.2) and 4 or 2, range = 150.0,
+    color = color == COLOR.far and { color[1], color[2], color[3] } or nil,
+    solid = { shape = ground and "ring" or "sphere", color = { color[1], color[2], color[3] }, alpha = color[4], size = size / 2.0 } }
+  if ground and size > 1.2 then
     opts.step = 1.5
+    opts.ground = false -- the ring's centre is already on the ground (groundZ)
     lib.glow.frame("placer:" .. key, "circle", pos, size / 2.0, opts)
   else
     lib.glow.frame("placer:" .. key, "point", pos, opts)

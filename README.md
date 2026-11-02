@@ -6,6 +6,17 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.2.0 (2026-11-02)
+
+- طلب المالك: «أبي أشكال مرسومة بدل اللمعة، واللمعة للوجهة فقط على شكل سهم». صارت كل أشكال `lib.glow` (`w.glow`) تُرسم
+  **أشكالًا مرسومة** بلا لمعة: السور جدار شفاف يتبع الأرض، والدائرة حلقة على الأرض، والنقطة كرة صغيرة، والسهم سهم اللعبة
+  الذي كان فوق الأغراض المرمية. لا تحتاج السكربتات أي تعديل.
+- لمعة اللعبة لا تظهر إلا إذا طلبها السكربت بنفسه (`particle = true`)، ويطلبها أثر الطريق في w_map فقط.
+- أداة وضع الأشياء ترسم علاماتها كما كانت قبل اللمعة (حلقة على الأرض أو كرة)، و`lib.marker` يرسم علامة اللعبة التي يُعطاها
+  (مثل سهم المقاعد في البلوت).
+- `/glow` يعرض الأشكال المرسومة، و`/glow fx` يعرضها باللمعة.
+- يُختبر في اللعبة: أداة وضع الأشياء، ومحررات الحدود من الأعلى، وسهم الأغراض المرمية، واختيار الأبواب والكراسي، ونقاط الانتقال.
+
 ## 4.1.5 (2026-11-01)
 
 - إصلاح زر الاستسلام X: يرفع اللاعب يديه ويخفضهما، ويعرف السيرفر أنه مستسلم فيمكن تفتيشه وسرقته.
@@ -641,7 +652,7 @@ Each section below covers one part of the library. Within a section, every call 
   - [lib.zones.getAllZones, getCurrentZones, getNearbyZones](#libzonesgetallzones-getcurrentzones-getnearbyzones)
   - [lib.raycast.fromCoords](#libraycastfromcoords)
   - [lib.raycast.fromCamera](#libraycastfromcamera)
-  - [lib.glow (the game's glitter as shapes)](#libglow-the-games-glitter-as-shapes)
+  - [lib.glow (shapes on the world: polygons, or the game's glitter)](#libglow-shapes-on-the-world-polygons-or-the-games-glitter)
   - [lib.marker.new](#libmarkernew)
   - [Marker:draw](#markerdraw)
   - [lib.dui:new](#libduinew)
@@ -12120,7 +12131,7 @@ Casts from `GetFinalRenderedCamCoord` along the final rendered camera forward ve
 local hit, entity, coords = lib.raycast.fromCamera(511, 4, 20.0)
 ```
 
-### lib.glow (the game's glitter as shapes)
+### lib.glow (shapes on the world: polygons, or the game's glitter)
 
 ```lua
 local id = lib.glow.wall(points, opts)        -- a wall along a border (closed when 3+ points)
@@ -12132,7 +12143,25 @@ lib.glow.remove(id) · lib.glow.clear() · lib.glow.count() · lib.glow.looks
 lib.glow.frame(key, kind, ...)                -- every frame, like DrawMarker (the shape goes 350 ms after the last call)
 ```
 
-Side: client (w_lib 4.1.0). The owner chose these five looks of the game's own particle glitter to replace `DrawMarker` (2026-10-23):
+Side: client (w_lib 4.1.0; 4.2.0 polygons by default). **Since 4.2.0 (the owner 2026-11-02) every shape is drawn as a
+polygon and burns no particle** unless the caller passes `particle = true`. The polygon of each shape:
+
+| shape | polygon (default) |
+|---|---|
+| `wall` | a see-through wall along the border (`DrawPoly` both faces, a line at its foot and top), 2.4 m high; on the ground it is cut every 2 m so it follows the land |
+| `line` | the same, 0.8 m high |
+| `circle` | a flat ring on the ground (`DrawMarker` 0x6903B113), its radius; wider than 3 m a see-through wall round it, 1 m high (`solid.shape = 'ring'` keeps the flat ring) |
+| `point` | a small sphere (`DrawMarker` 0x50638AB9), radius 0.125 x `scale`; a flat ring with `solid.shape = 'ring'`, `ground = true`, or when the caller passes `solid` himself (the 4.1.2 ring) |
+| `arrow` | the game's arrow pointing down (`DrawMarker` 0x07DCE236, w_inventory's drop arrow), `size` long; with `heading` a flat `DrawPoly` arrow on the ground whose tip is `at` |
+
+`solid` (optional): `true` or `{ shape, color = {r,g,b[,a]}, alpha = 0-255, height, size, step }`. Colour: `solid.color`, else
+`color`, else the theme's paper (242); a 4th colour value is the alpha. Every 200 ms the pieces nearest the camera within
+`range` are chosen, at most `w_lib:solidBudget` (convar, default 150) a resource (a wall piece = 4 polygons + 2 lines; a
+point / ring / arrow = 1 marker), and drawn every frame. A `frame` shape not drawn again within 150 ms is not drawn.
+Polygons are local: only this player sees them.
+
+**The glitter** (`particle = true`; w_map's waypoint trail is the only user since 4.2.0). The owner chose these five looks of
+the game's own particle glitter (2026-10-23):
 
 | look | effect (dictionary/name) | job | default of |
 |---|---|---|---|
@@ -12142,31 +12171,31 @@ Side: client (w_lib 4.1.0). The owner chose these five looks of the game's own p
 | 4 | `eagle_eye/eagle_eye_lootable_plant` | circles on the ground | `circle` |
 | 5 | `scr_net_fire_smoke/scr_mp_item_pickup_highlight` | walls, borders | `wall` |
 
-A shape is a set of spots, one looped particle each. Every 200 ms the spots nearest the camera within `range` burn, at most
+A particle shape is a set of spots, one looped particle each. Every 200 ms the spots nearest the camera within `range` burn, at most
 `w_lib:glowBudget` (convar, default 300 since 4.1.1) per resource; the rest are put out, so a long border costs no more than a short one.
 Ground shapes (wall, line, circle) sit on the ground once it is loaded. A look the game refuses falls back to a small
-`DrawMarker` ring. Particles are local: only this player sees them. They stop when the resource stops.
+`DrawMarker` ring. With `particle = true` the polygon is drawn too only when `solid` is given. Particles stop when the resource stops.
 
-Options (all optional): `look` (1-5), `color` ({r,g,b} 0-255, a tint; not every effect takes it), `alpha` (0-1), `scale`,
-`lift` (metres above the point or the ground), `range` (metres, default `w_lib:glowRange` = 60), `ground` (true/false),
-`id` (redraw that shape in place: its particles move instead of starting again), `solid` (4.1.2: `true` or
-`{ color, alpha, height, size }`: beside the glitter, every frame while the shape is in range, a see-through wall along a
-wall / line or a flat ring under a point / circle / arrow, seen from any distance -- the glitter is not seen from high up,
-so the top-down editors pass it). Per shape: `wall` `closed`, `step` (0.5),
-`rows` ({0.0, 0.8, 1.6}: heights of the wall's rows; look 5 is drawn 1.5 times its size since 4.1.1); `line` `step` (2.0), `closed`; `circle` `step` (0.8); `arrow` `size` (1.2),
-`heading`, `step`.
+Options (all optional): `particle` (4.2.0), `solid`, `look` (1-5), `color` ({r,g,b} 0-255; for the glitter a tint, not every effect takes it),
+`alpha` (0-1, the glitter's), `scale`, `lift` (metres above the point or the ground), `range` (metres, default `w_lib:glowRange` = 60),
+`ground` (true/false), `id` (redraw that shape in place: its particles move instead of starting again). Per shape: `wall` `closed`,
+`step` (0.5, the glitter's), `rows` ({0.0, 0.8, 1.6}: heights of the wall's rows; the polygon is the top row + 0.8 high); `line` `step` (2.0),
+`closed`; `circle` `step` (0.8); `arrow` `size` (1.2), `heading`, `step`.
 
 ```lua
--- a farm's border as a wall while the player is near it
+-- a farm's border as a wall while the player is near it (a polygon)
 local border = lib.glow.wall(farm.poly, { range = 80.0 })
--- a spot to use, drawn every frame like a marker
+-- a spot to use, drawn every frame like a marker (a ring on the ground)
 CreateThread(function()
     while near do lib.glow.frame('shop', 'circle', shop.coords, 0.8) Wait(0) end
 end)
+-- the game's glitter, on request only (w_map's trail: arrows along the route)
+lib.glow.arrow(at, { particle = true, look = 3, heading = h, size = 1.0 })
 ```
 
-`/glow` (w_lib itself) shows every shape in front of the player for a minute; `/glow wall 5` one shape in one look; `/glow off`.
-`lib.marker`, the placer (`w.placer`) and the essentials teleports draw with `lib.glow` since 4.1.0.
+`/glow` (w_lib itself) shows every shape in front of the player for a minute as polygons, `/glow fx` in the glitter; `/glow wall 5`
+one shape in one glitter look; `/glow off`. `lib.marker`, the placer (`w.placer`) and the essentials teleports draw with `lib.glow`
+since 4.1.0; since 4.2.0 `lib.marker` with a game marker hash (e.g. 0x07DCE236) draws that marker with `DrawMarker` again.
 
 ### lib.marker.new
 

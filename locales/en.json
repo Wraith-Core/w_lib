@@ -68,9 +68,10 @@
     }
   },
   "glow": {
-    "all": "Every shape in front of you: the wall (5) round the square, the path (1) to it, the point (2), the arrow (3) and the circle (4). They go after a minute; /glow off hides them.",
-    "one": "The shape \"%s\" in glitter %s in front of you for a minute. /glow off hides it.",
+    "all": "Every shape in front of you as drawn now (polygons): the wall round the square, the path to it, the point, the arrow and the circle. They go after a minute; /glow fx shows them in the game's glitter; /glow off hides them.",
+    "all_fx": "Every shape in the game's glitter: the wall (5) round the square, the path (1) to it, the point (2), the arrow (3) and the circle (4). They go after a minute; /glow off hides them.",
+    "one": "The shape \"%s\" in front of you for a minute (glitter %s; - = the polygon). /glow off hides it.",
     "off": "The shapes are hidden.",
-    "usage": "Type /glow for all, or /glow then the shape (wall, line, point, arrow or circle) then the glitter number 1 to 5."
+    "usage": "Type /glow for all (/glow fx in the glitter), or /glow then the shape (wall, line, point, arrow or circle), and a glitter number 1 to 5 to see it in the glitter."
   }
 }

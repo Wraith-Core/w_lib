@@ -1,8 +1,29 @@
 --[[
-    w_lib · imports/glow/client.lua -- the game's own glitter drawn as shapes (w_lib 4.1.0, the owner 2026-10-23)
+    w_lib · imports/glow/client.lua -- shapes on the world: polygons by default, the game's glitter on request
+    (w_lib 4.1.0, the owner 2026-10-23; 4.2.0 the owner 2026-11-02)
 
-    The owner tried five of the game's glitter effects on a farm's border (w_farming 2.3.0 /farmfx 1-5) and chose to
-    use them INSTEAD of DrawMarker everywhere, each look with its own job, through the library:
+    ★ 4.2.0 (the owner 2026-11-02: "I get particles instead of polygons. I want polygons, not particles. Particles only
+      for the waypoint, as an arrow -- not for marking places or for placing positions / NPCs"): every shape is drawn as
+      a POLYGON by default (the `solid` look of 4.1.2: DrawPoly walls, DrawMarker rings / spheres / arrows), with NO
+      particle. The game's glitter burns only when the caller asks for it with `opts.particle = true` (w_map's waypoint
+      trail does). Same API, same arguments: no resource that calls lib.glow needed a change.
+
+    The polygon of each shape (`opts.solid`: true | { shape, color = {r,g,b}, alpha = 0-255, height, size, step }):
+        wall    a see-through wall along the border (DrawPoly both faces, a line at its foot and top), `height` default
+                the top row + 0.8 (2.4 m); on the ground it is cut every `step` (2 m) so it follows the land
+        line    the same, low (0.8 m over its row)
+        circle  a flat ring on the ground (DrawMarker 0x6903B113), its radius; wider than 3 m (a zone) a see-through
+                wall round it instead, `height` 1 m (shape = 'ring' keeps the flat ring: the placer's reach)
+        point   a small sphere (DrawMarker 0x50638AB9), radius `size` (default 0.125 x scale); a flat ring instead
+                when `shape = 'ring'`, when opts.ground = true, or when the caller passed `solid` itself (4.1.2's ring)
+        arrow   the game's arrow marker pointing down at `at` (DrawMarker 0x07DCE236, w_inventory's drop arrow before
+                4.1.0), `size` its length (1.2); with opts.heading a flat arrow on the ground (DrawPoly) whose tip is `at`
+    Colour: solid.color, else opts.color, else the theme's paper (242); a 4th colour value is the alpha.
+    Cost: every 200 ms the pieces nearest the camera within `range` are chosen, at most convar `w_lib:solidBudget`
+    (default 150) a resource (a wall piece = 4 polygons + 2 lines; a point / ring / arrow = 1 marker); they are drawn
+    every frame. A frame shape that was not drawn again in the last 150 ms is not drawn (like DrawMarker).
+
+    The glitter (opts.particle = true), the looks the owner chose 2026-10-23 (w_farming 2.3.0 /farmfx 1-5):
 
         look 1  eagle_eye/eagle_eye_trail                        paths, routes                 lib.glow.line
         look 2  eagle_eye/eagle_eye_clue                         a point to use (board, door)  lib.glow.point
@@ -11,11 +32,11 @@
         look 5  scr_net_fire_smoke/scr_mp_item_pickup_highlight  walls, borders (his pick)     lib.glow.wall
 
     (the names: femga/rdr3_discoveries graphics/ptfx/ptfx_assets_looped.lua). Any shape takes any look: opts.look.
-
-    A shape is a set of SPOTS, one looped particle each. Every 200 ms the spots nearest the camera (within `range`, at
-    most `budget` of them in this resource) burn, the rest are put out, so a long border costs the same as a short one.
-    Spots on the ground (`ground`, the default for walls, lines and circles) read the ground height once it is loaded.
-    A look the game refuses is drawn with DrawMarker instead (a small flat ring), so nothing disappears.
+    A particle shape is a set of SPOTS, one looped particle each. Every 200 ms the spots nearest the camera (within
+    `range`, at most `budget` of them in this resource) burn, the rest are put out. Spots on the ground (`ground`, the
+    default for walls, lines and circles) read the ground height once it is loaded. A look the game refuses is drawn
+    with DrawMarker instead (a small flat ring). With particle = true the polygon is drawn too only if `solid` is given
+    (4.1.2), so the glitter alone stays possible.
 
     Two ways to use it:
       kept:  local id = lib.glow.wall(points, opts) ... lib.glow.remove(id)   (opts.id = redraw that shape in place)
@@ -28,18 +49,12 @@
       lib.glow.point(at, { look = 2, ground = false })                 one spot
       lib.glow.arrow(at, { heading = nil, size = 1.2, look = 3 })      down at `at`; with a heading: flat, pointing it
       lib.glow.remove(id) · lib.glow.clear() · lib.glow.looks (the table above) · lib.glow.count()
-      common opts: look (1-5), color {r,g,b} 0-255 (a tint; not every effect takes it), alpha 0-1, scale, lift
-                   (metres above the point / ground), range (metres, default 60), ground (true/false), id,
-                   solid (true | { color = {r,g,b}, alpha = 0-255, height = m, size = m }): see below
-    4.1.2 (the owner 2026-10-24: "when I draw from above I cannot see the borders, I want to see them from far, only I
-    see them"): the glitter is tiny sparkles the game does not show from high up, so `solid` adds, every frame while the
-    shape is within its range, a see-through wall along a wall / line (DrawPoly both sides, a line at its foot and top,
-    `height` default the top row + 0.8) or a flat ring under a point / circle / arrow (DrawMarker, `size` the ring's
-    radius for a point). Local like the glitter. The editors from above pass it; a player on foot does not need it.
+      common opts: particle (true = the game's glitter, 4.2.0), solid (see above), look (1-5), color {r,g,b} 0-255,
+                   alpha 0-1 (the glitter's), scale, lift (metres above the point / ground), range (metres, default 60),
+                   ground (true/false), id
     Budget: convar `w_lib:glowBudget` (default 300 spots per resource), range `w_lib:glowRange` (60).
-    4.1.1 (the owner 2026-10-23: "all of them: taller, denser, bigger"): a wall has three rows (0, 0.8, 1.6 m), a spot
-    every 0.5 m, look 5 drawn 1.5 times its size; the budget went 150 -> 300 so about 50 m of such a wall stands round
-    the camera (6 spots a metre).
+    4.1.2 (2026-10-24): `solid` beside the glitter for the editors from above (the glitter is not seen from high up).
+    4.1.1 (2026-10-23): a wall has three rows (0, 0.8, 1.6 m), a spot every 0.5 m, look 5 drawn 1.5 times its size.
 
     ★ natives (hashes for when the name is missing): REQUEST_NAMED_PTFX_ASSET 0xF2B2353BBC0D4E8F,
       HAS_NAMED_PTFX_ASSET_LOADED 0x65BB72F29138F5D6, USE_PARTICLE_FX_ASSET 0xA10DB07FC234DD12,
@@ -48,6 +63,10 @@
       SET_PARTICLE_FX_LOOPED_OFFSETS 0xD3A4A95FC94FE83B (a moved spot), SET_PARTICLE_FX_LOOPED_FAR_CLIP_DIST
       0x9B04D471DA0AD7AA (a shape with a range past the default is seen that far: an editor from above);
       alloc8or/rdr3-nativedb-data natives.json. Proven in game: w_farming 2.3.0 client/landfx.lua.
+      The polygons: DrawPoly (4.1.2 walls, w_farming livestock/client/guide.lua), DRAW_LINE 0x6B7256074AE34680, and
+      DrawMarker with the marker hashes used in game before 4.1.0: 0x6903B113 flat ground ring (essentials teleports,
+      the placer), 0x50638AB9 sphere (the placer's camera spots, w_doorlock's aim, modules/debugger), 0x07DCE236 the
+      arrow (w_inventory's drops, w_farming's care arrows; arguments as w_inventory: rotate = true).
 ]]
 
 lib.glow = {}
@@ -64,13 +83,18 @@ local LOOK_OF = { line = 1, point = 2, arrow = 3, circle = 4, wall = 5 }
 
 local TICK = 200
 local FRAME_LIFE = 350
+local FRAME_DRAW = 150       -- 4.2.0: a frame shape's polygon is drawn only while it was drawn again this recently
 local BUDGET = math.max(1, GetConvarInt('w_lib:glowBudget', 300))
+local SOLID_BUDGET = math.max(1, GetConvarInt('w_lib:solidBudget', 150))
 local RANGE = math.max(5, GetConvarInt('w_lib:glowRange', 60))
-local RING = 0x6903B113   -- the fallback: a flat ground cylinder (modules/placer MARKER_GROUND)
+local PROBES = 64            -- ground reads a tick for the polygons' corners
+local RING = 0x6903B113      -- a flat ground cylinder (modules/placer MARKER_GROUND)
+local SPHERE = 0x50638AB9    -- a sphere (modules/placer MARKER_SPHERE)
+local ARROW = 0x07DCE236     -- the arrow down (w_inventory's drop arrow before 4.1.0)
 local DRAW_LINE = 0x6B7256074AE34680
-local GOLD = { 224, 184, 74 }
+local PAPER = { 242, 242, 242 }
 
-local shapes = {}    -- id -> { id, spots = { { x, y, z, lift, ground, look, scale, color, ckey, alpha, gz }, ... }, range, frame, at, sig }
+local shapes = {}    -- id -> { id, spots (particle shapes only), solid, range, frame, at, sig, vis }
 local active = {}    -- spot key -> { h, x, y, z, look, scale, ckey }
 local assets = {}    -- look number -> 'loading' | 'ready' | 'failed'
 local fallback = {}  -- spot key -> { x, y, z }: drawn with DrawMarker (a look the game refused)
@@ -126,7 +150,7 @@ local function asset(n)
     return 'loading'
 end
 
--- ── the spots of each shape ───────────────────────────────────────────────────
+-- ── the spots of each particle shape ──────────────────────────────────────────
 local function spot(list, x, y, z, lift, ground, look, opts)
     local c = type(opts.color) == 'table' and opts.color or nil
     local r, g, b = c and num(c.r or c[1], nil), c and num(c.g or c[2], nil), c and num(c.b or c[3], nil)
@@ -226,13 +250,41 @@ function BUILD.arrow(at, _, opts)
     return list
 end
 
--- ── 4.1.2: the solid part (seen from any distance) ────────────────────────────
+-- ── the polygons (4.1.2 `solid`; since 4.2.0 the default look) ───────────────
+--- The ground under a corner: probed just above it first (an interior's roof is not taken), then from 25 m up
+local function probe(x, y, z)
+    local ok, found, gz = pcall(GetGroundZFor_3dCoord, x + 0.0, y + 0.0, z + 1.5, false)
+    if ok and yes(found) and type(gz) == 'number' and gz <= z + 1.5 and z - gz < 6.0 then return gz end
+    ok, found, gz = pcall(GetGroundZFor_3dCoord, x + 0.0, y + 0.0, z + 25.0, false)
+    if ok and yes(found) and type(gz) == 'number' and math.abs(gz - z) < 25.0 then return gz end
+    return nil
+end
+
+--- A corner of a polygon: { x, y, z, ground, gz }; its height is the ground once read, else its own
+local function corner(x, y, z, ground) return { x = x, y = y, z = z, ground = ground } end
+local function baseZ(v) return v.ground and (v.gz or v.z) or v.z end
+
+local function settle(v, budget)
+    if v.ground and not v.gz and budget.n > 0 then
+        budget.n = budget.n - 1
+        v.gz = probe(v.x, v.y, v.z)
+    end
+end
+
+local function colourOf(s, opts)
+    local c = (type(s.color) == 'table' and s.color) or (type(opts.color) == 'table' and opts.color) or PAPER
+    local r, g, b = num(c.r or c[1], nil), num(c.g or c[2], nil), num(c.b or c[3], nil)
+    if not (r and g and b) then r, g, b = PAPER[1], PAPER[2], PAPER[3] end
+    return { r, g, b }, num(c.a or c[4], nil)
+end
+
+--- What the polygon of a shape is (nil = none / bad input). `asked` = the caller passed `solid` himself.
 local function solidOf(kind, a, b, opts)
-    local s = opts.solid
-    if not s then return nil end
-    s = type(s) == 'table' and s or {}
-    local c = type(s.color) == 'table' and s.color or (type(opts.color) == 'table' and opts.color) or GOLD
-    local out = { c = { num(c.r or c[1], 224), num(c.g or c[2], 184), num(c.b or c[3], 74) } }
+    local asked = opts.solid ~= nil and opts.solid ~= false
+    local s = type(opts.solid) == 'table' and opts.solid or {}
+    local c, ca = colourOf(s, opts)
+    local out = { c = c }
+    local lift = num(opts.lift, 0.0)
     if kind == 'wall' or kind == 'line' then
         local pts = points(a)
         if #pts < 2 then return nil end
@@ -241,59 +293,185 @@ local function solidOf(kind, a, b, opts)
         for _, h in ipairs(rows) do top = math.max(top, num(h, 0.0)) end
         local closed = opts.closed
         if closed == nil then closed = kind == 'wall' and #pts >= 3 end
-        out.pts, out.h, out.closed, out.a = pts, num(s.height, top + 0.8), closed == true, math.floor(num(s.alpha, 60))
-    else
-        local p = vec(a)
-        if not p then return nil end
-        out.at = { x = p.x, y = p.y, z = p.z + num(opts.lift, 0.0) }
-        out.r = kind == 'circle' and num(b, 1.0) or num(s.size, kind == 'arrow' and 0.4 or 0.5)
-        out.a = math.floor(num(s.alpha, 170))
+        local ground = opts.ground ~= false
+        -- on the ground each side is cut every `step` metres so the wall follows the land between two corners
+        local step = math.max(0.5, num(s.step, 2.0))
+        local v = {}
+        local n = #pts
+        for i = 1, closed and n or n - 1 do
+            local p, q = pts[i], pts[i % n + 1]
+            local count = ground and math.max(1, math.floor(math.sqrt((q.x - p.x) ^ 2 + (q.y - p.y) ^ 2) / step + 0.5)) or 1
+            for k = 0, count - 1 do
+                local t = k / count
+                v[#v + 1] = corner(p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t, p.z + (q.z - p.z) * t, ground)
+            end
+        end
+        if not closed then v[#v + 1] = corner(pts[n].x, pts[n].y, pts[n].z, ground) end
+        out.kind, out.v, out.closed = 'wall', v, closed == true
+        out.segs = closed and #v or #v - 1
+        out.h = num(s.height, top + 0.8)
+        out.a = math.floor(num(s.alpha, ca or 60))
+        return out
     end
+    local p = vec(a)
+    if not p then return nil end
+    if kind == 'circle' then
+        local r = num(b, 1.0)
+        if r <= 0 then return nil end
+        if r > 3.0 and s.shape ~= 'ring' then
+            -- a wide circle (a zone) is a low see-through wall round it, not a disc over the whole land
+            local ground, v = opts.ground ~= false, {}
+            local n = math.max(16, math.min(96, math.ceil(2 * math.pi * r / math.max(0.5, num(s.step, 2.0)))))
+            for i = 0, n - 1 do
+                local t = 2 * math.pi * i / n
+                v[#v + 1] = corner(p.x + math.cos(t) * r, p.y + math.sin(t) * r, p.z, ground)
+            end
+            out.kind, out.v, out.closed, out.segs = 'wall', v, true, n
+            out.h = num(s.height, 1.0)
+            out.a = math.floor(num(s.alpha, ca or 60))
+            return out
+        end
+        out.kind, out.r = 'ring', r
+        out.at = corner(p.x, p.y, p.z, opts.ground ~= false)
+        out.a = math.floor(num(s.alpha, ca or 170))
+    elseif kind == 'point' then
+        local shape = s.shape
+        if shape ~= 'ring' and shape ~= 'sphere' then
+            shape = (asked or opts.ground == true) and 'ring' or 'sphere'
+        end
+        out.kind = shape
+        out.at = corner(p.x, p.y, p.z, opts.ground == true)
+        out.r = num(s.size, shape == 'ring' and 0.5 or 0.125 * math.max(0.1, num(opts.scale, 1.0)))
+        out.a = math.floor(num(s.alpha, ca or (shape == 'ring' and 170 or 160)))
+    else -- arrow
+        local h = tonumber(opts.heading)
+        out.size = math.max(0.1, num(s.size, num(opts.size, 1.2)))
+        if h then
+            out.kind, out.heading = 'flatArrow', math.rad(h)
+            out.at = corner(p.x, p.y, p.z, opts.ground ~= false)
+            out.a = math.floor(num(s.alpha, ca or 170))
+        else
+            out.kind = 'arrow'
+            out.at = corner(p.x, p.y, p.z, false)
+            out.a = math.floor(num(s.alpha, ca or 222))
+        end
+    end
+    out.lift = lift
     return out
 end
 
-local function drawSolid(s)
+local function poly2(x1, y1, z1, x2, y2, z2, x3, y3, z3, c, al)
+    -- both faces (a face is drawn from one side only)
+    DrawPoly(x1, y1, z1, x2, y2, z2, x3, y3, z3, c[1], c[2], c[3], al)
+    DrawPoly(x3, y3, z3, x2, y2, z2, x1, y1, z1, c[1], c[2], c[3], al)
+end
+
+local function drawPiece(s, i)
     local c, al = s.c, s.a
-    if s.pts then
-        local pts = s.pts
-        local n = #pts
-        for i = 1, s.closed and n or n - 1 do
-            local p, q = pts[i], pts[i % n + 1]
-            local az, bz, at, bt = p.z - 0.2, q.z - 0.2, p.z + s.h, q.z + s.h
-            -- both sides of each quad (a face is drawn from one side only)
-            DrawPoly(p.x, p.y, az, q.x, q.y, bz, q.x, q.y, bt, c[1], c[2], c[3], al)
-            DrawPoly(q.x, q.y, bt, q.x, q.y, bz, p.x, p.y, az, c[1], c[2], c[3], al)
-            DrawPoly(p.x, p.y, az, q.x, q.y, bt, p.x, p.y, at, c[1], c[2], c[3], al)
-            DrawPoly(p.x, p.y, at, q.x, q.y, bt, p.x, p.y, az, c[1], c[2], c[3], al)
-            Citizen.InvokeNative(DRAW_LINE, p.x + 0.0, p.y + 0.0, p.z + 0.1, q.x + 0.0, q.y + 0.0, q.z + 0.1, c[1], c[2], c[3], 235)
-            Citizen.InvokeNative(DRAW_LINE, p.x + 0.0, p.y + 0.0, at + 0.0, q.x + 0.0, q.y + 0.0, bt + 0.0, c[1], c[2], c[3], 235)
-        end
-    else
+    if s.kind == 'wall' then
+        local v = s.v
+        local p, q = v[i], v[i % #v + 1]
+        local pz, qz = baseZ(p), baseZ(q)
+        local az, bz, at, bt = pz - 0.2, qz - 0.2, pz + s.h, qz + s.h
+        poly2(p.x, p.y, az, q.x, q.y, bz, q.x, q.y, bt, c, al)
+        poly2(p.x, p.y, az, q.x, q.y, bt, p.x, p.y, at, c, al)
+        Citizen.InvokeNative(DRAW_LINE, p.x + 0.0, p.y + 0.0, pz + 0.1, q.x + 0.0, q.y + 0.0, qz + 0.1, c[1], c[2], c[3], 235)
+        Citizen.InvokeNative(DRAW_LINE, p.x + 0.0, p.y + 0.0, at + 0.0, q.x + 0.0, q.y + 0.0, bt + 0.0, c[1], c[2], c[3], 235)
+        return
+    end
+    local x, y, z = s.at.x, s.at.y, baseZ(s.at) + s.lift
+    if s.kind == 'ring' then
         local d = s.r * 2.0
-        DrawMarker(RING, s.at.x, s.at.y, s.at.z + 0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d, d, 0.2, c[1], c[2], c[3], s.a,
+        DrawMarker(RING, x, y, z + 0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d, d, 0.2, c[1], c[2], c[3], al,
             false, false, 2, false, nil, nil, false)
+    elseif s.kind == 'sphere' then
+        local d = s.r * 2.0
+        DrawMarker(SPHERE, x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, d, d, d, c[1], c[2], c[3], al,
+            false, false, 2, false, nil, nil, false)
+    elseif s.kind == 'arrow' then
+        local L = s.size
+        DrawMarker(ARROW, x, y, z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, L * 0.75, L * 0.5, L * 0.375, c[1], c[2], c[3], al,
+            false, false, 0, true, nil, nil, false)
+    else -- a flat arrow on the ground, its tip at `at`, pointing along the heading
+        local L, r = s.size, s.heading
+        local fx, fy = -math.sin(r), math.cos(r)
+        local rx, ry = fy, -fx
+        local hl, hw, sw = L * 0.45, L * 0.3, L * 0.08
+        local zz = z + 0.05
+        local bx, by = x - fx * hl, y - fy * hl
+        local ex, ey = x - fx * L, y - fy * L
+        poly2(x, y, zz, bx + rx * hw, by + ry * hw, zz, bx - rx * hw, by - ry * hw, zz, c, al)
+        poly2(bx + rx * sw, by + ry * sw, zz, ex + rx * sw, ey + ry * sw, zz, ex - rx * sw, ey - ry * sw, zz, c, al)
+        poly2(bx + rx * sw, by + ry * sw, zz, ex - rx * sw, ey - ry * sw, zz, bx - rx * sw, by - ry * sw, zz, c, al)
     end
 end
 
---- Every frame while a shape with a solid part exists; draws those within their range
+--- How far (squared, flat) the eye is from piece i of a polygon
+local function pieceD2(s, i, at)
+    if s.kind == 'wall' then
+        local v = s.v
+        local p, q = v[i], v[i % #v + 1]
+        local dx, dy = q.x - p.x, q.y - p.y
+        local len2 = dx * dx + dy * dy
+        local t = len2 > 0 and math.max(0.0, math.min(1.0, ((at.x - p.x) * dx + (at.y - p.y) * dy) / len2)) or 0.0
+        local ex, ey = p.x + dx * t - at.x, p.y + dy * t - at.y
+        return ex * ex + ey * ey
+    end
+    local dx, dy = s.at.x - at.x, s.at.y - at.y
+    local d = math.max(0.0, math.sqrt(dx * dx + dy * dy) - (s.r or s.size or 0.0))
+    return d * d
+end
+
+--- The pieces of every polygon in range, nearest first, at most SOLID_BUDGET in all -> sh.vis = { piece index, ... }
+local function cull(list, at)
+    local cand = {}
+    for _, sh in ipairs(list) do
+        local s = sh.solid
+        local r2 = sh.range * sh.range
+        for i = 1, s.kind == 'wall' and s.segs or 1 do
+            local d2 = pieceD2(s, i, at)
+            if d2 <= r2 then cand[#cand + 1] = { sh = sh, i = i, d2 = d2 } end
+        end
+        sh.vis = {}
+    end
+    table.sort(cand, function(x, y) return x.d2 < y.d2 end)
+    local probes = { n = PROBES }
+    for k = 1, math.min(#cand, SOLID_BUDGET) do
+        local e = cand[k]
+        local s = e.sh.solid
+        e.sh.vis[#e.sh.vis + 1] = e.i
+        if s.kind == 'wall' then
+            settle(s.v[e.i], probes)
+            settle(s.v[e.i % #s.v + 1], probes)
+        else
+            settle(s.at, probes)
+        end
+    end
+end
+
+--- Every frame while a shape with a polygon exists: draws its pieces chosen by the last cull
 local function runSolid()
     if solidRunning then return end
     solidRunning = true
     CreateThread(function()
         while true do
             local any, drew = false, false
+            local now = GetGameTimer()
             for _, sh in pairs(shapes) do
                 if sh.solid then
                     any = true
-                    if sh.seen then
+                    if sh.vis and #sh.vis > 0 and (not sh.frame or now - sh.at <= FRAME_DRAW) then
                         drew = true
-                        local ok, err = pcall(drawSolid, sh.solid)
-                        if not ok then sh.solid = nil print(('^1w_lib glow: solid draw error %s^7'):format(tostring(err))) end
+                        local s = sh.solid
+                        for _, i in ipairs(sh.vis) do
+                            local ok, err = pcall(drawPiece, s, i)
+                            if not ok then sh.solid = nil print(('^1w_lib glow: polygon draw error %s^7'):format(tostring(err))) break end
+                        end
                     end
                 end
             end
             if not any then break end
-            Wait(drew and 0 or 250)
+            Wait(drew and 0 or 100)
         end
         solidRunning = false
     end)
@@ -356,20 +534,17 @@ local function tick()
         if sh.frame and now - sh.at > FRAME_LIFE then shapes[id] = nil end
     end
     local at = eye()
-    local cand = {}
+    local cand, solids = {}, {}
     for id, sh in pairs(shapes) do
+        if sh.solid then solids[#solids + 1] = sh end
         local r2 = sh.range * sh.range
-        local seen = false
-        for i, s in ipairs(sh.spots) do
+        for i, s in ipairs(sh.spots or {}) do
             local dx, dy = s.x - at.x, s.y - at.y
             local d2 = dx * dx + dy * dy
-            if d2 <= r2 then
-                seen = true
-                cand[#cand + 1] = { key = id .. ':' .. i, d2 = d2, s = s }
-            end
+            if d2 <= r2 then cand[#cand + 1] = { key = id .. ':' .. i, d2 = d2, s = s } end
         end
-        sh.seen = seen
     end
+    cull(solids, at)
     table.sort(cand, function(a, b) return a.d2 < b.d2 end)
     local keep, fb = {}, {}
     for i = 1, math.min(#cand, BUDGET) do
@@ -418,11 +593,15 @@ local function run()
     end)
 end
 
---- Makes (or remakes in place: opts.id) one shape
+--- Makes (or remakes in place: opts.id) one shape. 4.2.0: a polygon unless opts.particle = true (then the glitter,
+--- with its polygon too only when `solid` is given).
 local function put(kind, a, b, opts)
     opts = type(opts) == 'table' and opts or {}
-    local spots = BUILD[kind](a, b, opts)
-    if not spots then return nil end
+    local particle = opts.particle == true
+    local spots = particle and BUILD[kind](a, b, opts) or nil
+    if particle and not spots then return nil end
+    local solid = (not particle or (opts.solid ~= nil and opts.solid ~= false)) and solidOf(kind, a, b, opts) or nil
+    if not spots and not solid then return nil end
     local id = opts.id
     if id == nil then
         nextId = nextId + 1
@@ -430,13 +609,18 @@ local function put(kind, a, b, opts)
     end
     id = tostring(id)
     local range = math.max(1.0, num(opts.range, RANGE))
-    if range > RANGE then
+    if spots and range > RANGE then
         for _, s in ipairs(spots) do s.far = range end
     end
-    local solid = solidOf(kind, a, b, opts)
-    shapes[id] = { id = id, spots = spots, range = range, frame = opts.frame == true, at = GetGameTimer(), solid = solid, seen = true }
+    local sh = { id = id, spots = spots, range = range, frame = opts.frame == true, at = GetGameTimer(), solid = solid }
+    shapes[id] = sh
+    if solid then
+        -- seen at once (a moving cursor is drawn where it is now, not after the next tick)
+        local ok, err = pcall(cull, { sh }, eye())
+        if not ok then sh.vis = {} print(('^1w_lib glow: polygon error %s^7'):format(tostring(err))) end
+        runSolid()
+    end
     run()
-    if solid then runSolid() end
     return id
 end
 
@@ -475,19 +659,22 @@ local function signature(kind, a, b, opts)
         end
     end
     parts[#parts + 1] = tostring(b)
-    for _, k in ipairs({ 'look', 'scale', 'size', 'heading', 'step', 'lift', 'range', 'closed', 'ground', 'alpha' }) do
+    for _, k in ipairs({ 'look', 'scale', 'size', 'heading', 'step', 'lift', 'range', 'closed', 'ground', 'alpha', 'particle' }) do
         parts[#parts + 1] = tostring(opts[k])
     end
     local sd = opts.solid
     if type(sd) == 'table' then
         local sc = type(sd.color) == 'table' and sd.color or {}
-        parts[#parts + 1] = ('solid:%s,%s,%s,%s,%s,%s'):format(tostring(sc.r or sc[1]), tostring(sc.g or sc[2]), tostring(sc.b or sc[3]),
-            tostring(sd.alpha), tostring(sd.height), tostring(sd.size))
-    elseif sd then
-        parts[#parts + 1] = 'solid'
+        parts[#parts + 1] = ('solid:%s,%s,%s,%s,%s,%s,%s,%s,%s'):format(tostring(sc.r or sc[1]), tostring(sc.g or sc[2]),
+            tostring(sc.b or sc[3]), tostring(sc.a or sc[4]), tostring(sd.alpha), tostring(sd.height), tostring(sd.size),
+            tostring(sd.shape), tostring(sd.step))
+    elseif sd ~= nil then
+        parts[#parts + 1] = 'solid:' .. tostring(sd)
     end
     local c = opts.color
-    if type(c) == 'table' then parts[#parts + 1] = tostring(c.r or c[1]) .. ',' .. tostring(c.g or c[2]) .. ',' .. tostring(c.b or c[3]) end
+    if type(c) == 'table' then
+        parts[#parts + 1] = tostring(c.r or c[1]) .. ',' .. tostring(c.g or c[2]) .. ',' .. tostring(c.b or c[3]) .. ',' .. tostring(c.a or c[4])
+    end
     if type(opts.rows) == 'table' then parts[#parts + 1] = table.concat(opts.rows, ',') end
     return table.concat(parts, '|')
 end
@@ -510,7 +697,7 @@ function Glow.frame(key, kind, a, b, c)
     if not put(kind, a, b, o) then return nil end
     shapes[id].sig = sig
     -- a moved frame shape (a cursor): its burning spots off the ground follow at once, not at the next tick
-    if sh then
+    if sh and shapes[id].spots then
         for i, s in ipairs(shapes[id].spots) do
             local act = active[id .. ':' .. i]
             if act and not s.ground and act.look == s.look and act.scale == s.scale and act.ckey == s.ckey then
