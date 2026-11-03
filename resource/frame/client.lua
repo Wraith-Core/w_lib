@@ -38,9 +38,39 @@ local radarMode    = 'map'                   -- 'map' | 'compass' | 'off'
 
 local function radarReplaced() return radarOwnerCount > 0 end
 
+-- * How a replaced radar is hidden (owner, 2026-11-03). The game's health and stamina rings are part of its radar:
+--   DisplayRadar(false) took them down with it, so with w_map's minimap up the player had no rings at all.
+--     'type'    (default)  the radar stays on and its TYPE is set to 0 (off), as the game's own "radar off" setting -
+--                          the map goes, the rings stay where the game draws them. The type the radar had (VORP sets
+--                          one on foot and another on a horse) is kept and put back when the radar is given back.
+--     'display'            the old way: DisplayRadar(false) - the rings go too.
+--   Set with   setr w_lib:radarHide display   in server.cfg to go back to the old way.
+local hideByType = GetConvar('w_lib:radarHide', 'type') ~= 'display'
+local SetMinimapType, GetMinimapType = SetMinimapType, GetMinimapType
+local typeBefore = nil   -- the radar type to put back (nil: we did not change it)
+
+--- The radar's type off while it is replaced, its own type back once it is not.
+local function holdType(replaced)
+    if not hideByType then return end
+    if replaced then
+        local t = GetMinimapType()
+        -- another script set a type while we hold it (VORP on mounting): that is the type to put back later
+        if t ~= 0 then typeBefore = t; SetMinimapType(0) end
+    elseif typeBefore ~= nil then
+        SetMinimapType(typeBefore)
+        typeBefore = nil
+    end
+end
+
 --- What the native radar should show right now, and show it.
 local function applyRadar()
-    DisplayRadar(radarVisible and radarMode ~= 'off' and not radarReplaced())
+    local replaced = radarReplaced()
+    if hideByType then
+        DisplayRadar(radarVisible and radarMode ~= 'off')
+        holdType(replaced)
+    else
+        DisplayRadar(radarVisible and radarMode ~= 'off' and not replaced)
+    end
 end
 
 local function pump()
@@ -57,8 +87,10 @@ local function pump()
                 end
             end
             -- a custom minimap owns the screen: the native one stays down whatever
-            -- another script switched on this frame
-            if radarReplaced() then DisplayRadar(false) end
+            -- another script switched on this frame (by its type: the rings stay; or the old way, all of it)
+            if radarReplaced() then
+                if hideByType then holdType(true) else DisplayRadar(false) end
+            end
         end
         running = false
     end)
@@ -212,6 +244,7 @@ AddEventHandler('onClientResourceStop', function(resource)
     -- a stopping owner gives the radar back; the library stopping hands it to the game
     if resource == GetCurrentResourceName() then
         radarOwners, radarOwnerCount = {}, 0
+        holdType(false)   -- its own type back
         DisplayRadar(true)
     elseif radarOwners[resource] then
         radarOwners[resource] = nil
