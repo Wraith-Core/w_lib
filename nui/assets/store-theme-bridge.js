@@ -83,7 +83,10 @@
       if (getComputedStyle(plate).position === 'static') plate.classList.add('wst-positioned');
     }
     for (const panel of document.querySelectorAll('.wst-panel')) {
-      if (getComputedStyle(panel).position === 'static') panel.classList.add('wst-positioned');
+      const style = getComputedStyle(panel);
+      if (style.position === 'static') panel.classList.add('wst-positioned');
+      // a panel that scrolls: up and down only (store-frame.js says why)
+      panel.classList.toggle('wst-scrolls', style.overflowY === 'auto' || style.overflowY === 'scroll');
       let frame = Array.from(panel.children).find(node => node.matches('.wst-frame,.wc-frame,.ws-frame'));
       if (!frame) {
         frame = document.createElement('span'); frame.className = 'wst-frame';
