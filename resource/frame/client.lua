@@ -38,16 +38,19 @@ local radarMode    = 'map'                   -- 'map' | 'compass' | 'off'
 
 local function radarReplaced() return radarOwnerCount > 0 end
 
--- * How a replaced radar is hidden (owner, 2026-11-03). The game's health and stamina rings are part of its radar:
---   DisplayRadar(false) took them down with it, so with w_map's minimap up the player had no rings at all.
---     'type'    (default)  the radar stays on and its TYPE is set to 0 (off), as the game's own "radar off" setting -
---                          the map goes, the rings stay where the game draws them. The type the radar had (VORP sets
---                          one on foot and another on a horse) is kept and put back when the radar is given back.
---     'display'            the old way: DisplayRadar(false) - the rings go too.
---   Set with   setr w_lib:radarHide display   in server.cfg to go back to the old way.
-local hideByType = GetConvar('w_lib:radarHide', 'type') ~= 'display'
+-- * How a replaced radar is hidden.
+--     'display' (default)  DisplayRadar(false): the radar is down while a resource draws its own.
+--     'type'               the radar stays on with its TYPE set to 0 (off), its own type put back afterwards.
+--   ! 2026-11-03: 'type' was tried as the default to keep the game's health and stamina rings - and it does not:
+--     in RedM radar type 0 takes the rings down too (the owner's test: with the type left at 0 no rings, and no
+--     radar). And a type that was already 0 when the radar was taken was never put back, so stopping w_map left the
+--     game with no radar at all. Back to 'display'; 'type' stays for a test, now always putting a type back.
+--   Set with   setr w_lib:radarHide type   in server.cfg to try it.
+local hideByType = GetConvar('w_lib:radarHide', 'display') == 'type'
 local SetMinimapType, GetMinimapType = SetMinimapType, GetMinimapType
 local typeBefore = nil   -- the radar type to put back (nil: we did not change it)
+local lastType = 1       -- the last type other than 0 the radar had (1 = regular: never left at 0 by us)
+do local ok, t = pcall(GetMinimapType); if ok and type(t) == 'number' and t ~= 0 then lastType = t end end
 
 --- The radar's type off while it is replaced, its own type back once it is not.
 local function holdType(replaced)
@@ -55,7 +58,8 @@ local function holdType(replaced)
     if replaced then
         local t = GetMinimapType()
         -- another script set a type while we hold it (VORP on mounting): that is the type to put back later
-        if t ~= 0 then typeBefore = t; SetMinimapType(0) end
+        if t ~= 0 then typeBefore, lastType = t, t; SetMinimapType(0)
+        elseif typeBefore == nil then typeBefore = lastType end   -- it was 0 already: a type goes back anyway
     elseif typeBefore ~= nil then
         SetMinimapType(typeBefore)
         typeBefore = nil
