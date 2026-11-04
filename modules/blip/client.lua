@@ -65,7 +65,9 @@ function w.blip.create(locationOrEntity, name, sprite, blipHash, color, scale)
   end
   Blips[#Blips + 1] = blip
 
-  Known[blip] = { name = name, sprite = sprite, color = color, scale = scale }
+  -- exact: a hex colour is the script's own choice, so w_map draws it as it is (not toned to its black and white)
+  local exact = type(color) == "string" and color:match("^#%x%x%x%x%x%x$") ~= nil or nil
+  Known[blip] = { name = name, sprite = sprite, color = color, scale = scale, exact = exact }
   announce(blip, Known[blip])
 
   return blip

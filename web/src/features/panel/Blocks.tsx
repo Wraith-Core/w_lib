@@ -151,6 +151,11 @@ export interface Block {
   icon?: string;
   /** hero: a colour behind the emblem, for a crest or a house colour (drawn as its nearest palette tone). */
   color?: string;
+  /**
+   * hero: the emblem's picture (an image url) painted in this '#rrggbb' as w_map paints a blip: its white becomes the
+   * colour, its black stays black -- a tribe's blip in its own colour.
+   */
+  tint?: string;
   subtitle?: string;
 
   // form
@@ -614,7 +619,49 @@ const Chips: React.FC<{ block: Block; ctx: Ctx }> = ({ block, ctx }) => (
  * ⚠️ Not the same as the header. The header names the PANEL ('Kingdoms'); this names the
  *    subject inside it ('House Beaumont'), which changes as the player moves around.
  */
-const Hero: React.FC<{ block: Block }> = ({ block }) => (
+/* ★ A tinted picture, made once per (picture, colour): multiply (the white takes the colour, the black stays), then
+     cut back to the picture's own shape -- the same two steps as w_map's engine/sprites.ts, so the blip here and the
+     blip on the map are one colour. */
+const tintCache = new Map<string, string>();
+function useTinted(src?: string, tint?: string): string | undefined {
+  const ok = !!src && !!tint && /^#[0-9a-f]{6}$/i.test(tint) && !/^#(fff|ffffff|f0f0f0)$/i.test(tint);
+  const key = ok ? `${src}|${tint!.toLowerCase()}` : '';
+  const [url, setUrl] = React.useState<string | undefined>(ok ? tintCache.get(key) : src);
+  React.useEffect(() => {
+    if (!ok) { setUrl(src); return; }
+    const done = tintCache.get(key);
+    if (done) { setUrl(done); return; }
+    let live = true;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const size = Math.max(img.naturalWidth, img.naturalHeight, 64);
+      const c = document.createElement('canvas');
+      c.width = c.height = size;
+      const ctx = c.getContext('2d');
+      if (!ctx) { if (live) setUrl(src); return; }
+      ctx.drawImage(img, 0, 0, size, size);
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = tint!;
+      ctx.fillRect(0, 0, size, size);
+      ctx.globalCompositeOperation = 'destination-in';
+      ctx.drawImage(img, 0, 0, size, size);
+      try {
+        const data = c.toDataURL('image/png');
+        tintCache.set(key, data);
+        if (live) setUrl(data);
+      } catch { if (live) setUrl(src); }   // a picture from an origin that forbids reading: shown untinted
+    };
+    img.onerror = () => { if (live) setUrl(src); };
+    img.src = src!;
+    return () => { live = false; };
+  }, [key, src, ok, tint]);
+  return url;
+}
+
+const Hero: React.FC<{ block: Block }> = ({ block }) => {
+  const tinted = useTinted(block.tint ? block.image : undefined, block.tint);
+  return (
   <div className="wl-panel-hero">
     {/* ★ The house colour on the palette: whatever hue a script stored is drawn as its nearest
         paper tone (utils/palette), so the crest's frame stays visible on the ink. */}
@@ -622,7 +669,7 @@ const Hero: React.FC<{ block: Block }> = ({ block }) => (
       className="wc-slot wl-panel-crest"
       style={toPalette(block.color, READING_TONES) ? { ['--wl-crest' as string]: toPalette(block.color, READING_TONES) } : undefined}
     >
-      <Icon icon={block.image ?? block.icon} fallback="menu_icon_rank" />
+      <Icon icon={(block.tint && tinted) || block.image || block.icon} fallback="menu_icon_rank" />
     </span>
 
     <div style={{ minWidth: 0 }}>
@@ -634,7 +681,8 @@ const Hero: React.FC<{ block: Block }> = ({ block }) => (
       )}
     </div>
   </div>
-);
+  );
+};
 
 /* ── the renderer ─────────────────────────────────────────────────────────── */
 
