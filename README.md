@@ -704,6 +704,7 @@ Each section below covers one part of the library. Within a section, every call 
   - [w.animation.setDesiredHeading and w.animation.faceEntity](#wanimationsetdesiredheading-and-wanimationfaceentity)
   - [w.animation.waitTaskEnd](#wanimationwaittaskend)
   - [w.blip.create](#wblipcreate)
+  - [w.blip.radius](#wblipradius)
   - [w.screen.fadeOut and w.screen.fadeIn](#wscreenfadeout-and-wscreenfadein)
   - [w.utils.loadGameData and w.utils.releaseGameData](#wutilsloadgamedata-and-wutilsreleasegamedata)
   - [w.utils.waiter](#wutilswaiter)
@@ -13352,6 +13353,21 @@ Creates a native blip, remembers it so it is removed when the consumer resource 
 ```lua
 local handle = w.blip.create(vector3(-300.0, 800.0, 118.0), "Stable", "blip_shop_horse", 1664425300, "BLIP_MODIFIER_MP_COLOR_2")
 -- later: if handle then RemoveBlip(handle) end
+```
+
+### w.blip.radius
+
+```lua
+w.blip.radius(coords: vector3, radius: number, name?: string, color?: string, style?: integer): integer|false
+```
+
+A radius blip (a filled circle on the map: a war front, a search area). `color` is a modifier name such as
+`'BLIP_MODIFIER_AREA_PULSE'`, `style` the radius style hash (default `1664425300`). Not listed on w_map's index;
+remove it with `w.blip.remove`.
+
+```lua
+local circle = w.blip.radius(vector3(-300.0, 800.0, 0.0), 150.0, "Front", "BLIP_MODIFIER_AREA_PULSE")
+-- later: w.blip.remove(circle)
 ```
 
 ### w.screen.fadeOut and w.screen.fadeIn

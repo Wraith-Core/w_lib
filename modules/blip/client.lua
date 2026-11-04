@@ -67,6 +67,24 @@ function w.blip.create(locationOrEntity, name, sprite, blipHash, color, scale)
   return blip
 end
 
+--- Create a radius blip: a filled circle on the map (a war front, a search area).
+--- It is not announced to w_map (a circle has no sprite or name to list); remove it with w.blip.remove.
+---@param coords vector3 The circle's centre
+---@param radius number The radius in metres
+---@param name? string The label (shown when the game lists it)
+---@param color? string A colour modifier name (resolved via `GetHashFromString`), e.g. 'BLIP_MODIFIER_AREA_PULSE'
+---@param style? integer The radius blip's style hash - default: `1664425300`
+---@return integer|false blip The blip ID, or `false` when the game made none
+function w.blip.radius(coords, radius, name, color, style)
+  if not coords then return false end
+  local blip = BlipAddForRadius(tonumber(style) or 1664425300, coords.x + 0.0, coords.y + 0.0, (coords.z or 0.0) + 0.0, (tonumber(radius) or 100.0) + 0.0)
+  if not blip or blip == 0 then return false end
+  if color then BlipAddModifier(blip, GetHashFromString(color)) end
+  if name then SetBlipName(blip, name) end
+  Blips[#Blips + 1] = blip
+  return blip
+end
+
 --- Rename a blip made with w.blip.create (w_map learns the new name too).
 ---@param blip integer
 ---@param name string
