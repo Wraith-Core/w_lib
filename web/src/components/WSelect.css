@@ -93,6 +93,19 @@ body[data-store-theme=library] .lb-input > .w-select { font-size: calc(16 * var(
   max-height: min(78vh, 720px);
   padding: 12px 10px 10px;
 }
+/* gridSize 'lg': nearly the size of a panel, for a long catalogue (w_tribes' blip of a tribe) */
+.w-select-pop.is-grid.is-lg {
+  width: min(92vw, 1480px);
+  height: min(86vh, 980px);
+  max-height: none;
+  padding: 18px 16px 14px;
+}
+.w-select-pop.is-lg .w-select-title { font-size: 18px; padding-bottom: 10px; }
+.w-select-pop.is-lg .w-select-grid { gap: 10px; }
+.w-select-pop.is-lg .w-select-tile { padding: 16px 6px 12px; gap: 10px; }
+.w-select-pop.is-lg .w-select-tile-img { width: 72px; height: 72px; }
+.w-select-pop.is-lg .w-select-tile-img img { max-width: 72px; max-height: 72px; }
+.w-select-pop.is-lg .w-select-tile-name { font-size: 13px; }
 .w-select-title {
   flex: none;
   padding: 0 6px 6px;

@@ -55,6 +55,8 @@ export interface Field {
   searchable?: boolean;
   /** a select: open as a menu of tiles in this many columns (picture, name below) with a search bar */
   grid?: number;
+  /** a grid select: 'lg' opens the tile menu nearly as big as the panel */
+  gridSize?: 'lg';
   disabled?: boolean;
 }
 
@@ -430,6 +432,7 @@ const FormField: React.FC<{ field: FormFieldSpec; ctx: Ctx }> = ({ field, ctx })
           searchable={field.searchable}
           searchPlaceholder={field.placeholder}
           grid={field.grid}
+          gridSize={field.gridSize}
           onChange={(v) => {
             setText(v);
             ctx.onField(field.id, v);

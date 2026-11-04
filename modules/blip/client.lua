@@ -53,7 +53,11 @@ function w.blip.create(locationOrEntity, name, sprite, blipHash, color, scale)
 
   SetBlipSprite(blip, sprite)
   SetBlipName(blip, name)
-  if color then
+  -- ★ A '#rrggbb' colour is w_map's only (any colour, drawn on its map screen): the game's own map knows its fixed
+  --   BLIP_MODIFIER colours alone, so the engine's blip keeps its plain look and w_map gets the hex below.
+  if type(color) == "string" and color:match("^#%x%x%x%x%x%x$") then
+    -- nothing for the engine
+  elseif color then
     BlipAddModifier(blip, GetHashFromString(color))
   end
   if tonumber(scale) and tonumber(scale) > 0 then

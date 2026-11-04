@@ -40,7 +40,9 @@ const WSelect: React.FC<{
   searchPlaceholder?: string;
   /** open as a menu of tiles in this many columns (the picture, its name below), with a search bar */
   grid?: number;
-}> = ({ value, options, onChange, disabled, placeholder, allowEmpty, ariaLabel, buttonRef, searchable, searchPlaceholder, grid }) => {
+  /** grid: 'lg' draws the tile menu nearly as big as a panel (bigger tiles, bigger pictures) -- a long catalogue */
+  gridSize?: 'lg';
+}> = ({ value, options, onChange, disabled, placeholder, allowEmpty, ariaLabel, buttonRef, searchable, searchPlaceholder, grid, gridSize }) => {
   const [open, setOpen] = React.useState(false);
   const [hot, setHot] = React.useState(-1);
   const [query, setQuery] = React.useState('');
@@ -177,7 +179,7 @@ const WSelect: React.FC<{
         <div className="w-select-veil" onMouseDown={(e) => { if (e.target === e.currentTarget) close(); }}>
           <div
             ref={pop}
-            className="w-select-pop is-grid"
+            className={`w-select-pop is-grid${gridSize === 'lg' ? ' is-lg' : ''}`}
             style={{ ['--w-select-cols' as string]: cols }}
             dir={document.documentElement.dir || undefined}
             role="dialog"
