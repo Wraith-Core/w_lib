@@ -10,15 +10,20 @@
 
 local keepInput = IsNuiFocusKeepingInput()
 
+-- ★ The frame is told whether it has focus, and its clicks (hover, select, deny) only sound while it does
+--   (web/src/wc/sound.ts). With no window of the library open, a cursor crossing the game window - alt-tabbed,
+--   or over another resource's page - used to tick over every button in the frame.
 function lib.setNuiFocus(allowInput, disableCursor)
     keepInput = IsNuiFocusKeepingInput()
     SetNuiFocus(true, not disableCursor)
     SetNuiFocusKeepInput(allowInput)
+    SendNUIMessage({ action = 'wl:focus', data = true })
 end
 
 function lib.resetNuiFocus()
     SetNuiFocus(false, false)
     SetNuiFocusKeepInput(keepInput)
+    SendNUIMessage({ action = 'wl:focus', data = false })
 end
 
 --- ═══════════════════════════════════════════════════════════════════════════════════════════

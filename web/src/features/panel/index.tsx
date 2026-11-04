@@ -130,6 +130,8 @@ interface PanelState {
   progress?: Progress;
   /** Seconds left on the whole panel -- a market window closing. Shown in the header. */
   countdown?: number;
+  /** The side column only as wide as its widest row (w_playernames' list of name plates). */
+  navFit?: boolean;
 
   /**
    * A grouped sidebar in place of the item list -- Overview / Players / World, the shape an
@@ -175,6 +177,8 @@ interface NavGroup {
   scope?: string;
   /** Open on arrival. With none set anywhere, the first group opens. */
   expanded?: boolean;
+  /** The row count as a quiet "(31)" beside the name instead of the box at the end. */
+  countInline?: boolean;
   items: Array<{
     id: string;
     label: string;
@@ -183,6 +187,10 @@ interface NavGroup {
     count?: number | string;
     /** A second line under the label -- what the row makes, what it costs. */
     description?: string;
+    /** A wide picture under the text, the row's full width (w_playernames: each player's name plate). */
+    picture?: string;
+    /** A row with a picture: a small line under it (w_playernames' /nameplate: the plate's name). */
+    caption?: string;
     /**
      * ★ Extra text the search matches but never draws.
      *
@@ -513,8 +521,13 @@ const Panel: React.FC = () => {
   useNuiEvent<PanelState | false | null>('showPanel', (data) => {
     if (!data) return close();
 
+    /* ⚠️ The open sound for an OPENING only. A script redraws its open panel with lib.showPanel on every
+          change (a saved field, a nav) -- and a colour wheel or a slider being dragged changes it several
+          times a second, so the sound played in a loop for as long as the mouse was held. A redraw of the
+          panel already on screen (same id) is silent; a new panel, or another one replacing it, still plays it. */
+    const redraw = !!stateRef.current && stateRef.current.id === data.id;
     setState(data);
-    play('open');
+    if (!redraw) play('open');
     setElapsed(0);
     setAmounts(
       Object.fromEntries(
@@ -656,6 +669,7 @@ const Panel: React.FC = () => {
       />
 
       <DashboardBody
+        fit={!!state.navFit}
         browser={
           state.nav?.length ? (
             /* ★ w_crafting's browser, not a likeness of it. The tabs, the tally, the headings
@@ -727,9 +741,11 @@ const Panel: React.FC = () => {
                                   It was the lock emoji, which no theme face has: the system drew it. */}
                               {group.private && <Glyph tex="lock" className="wc-category-lock" />}
                               {group.label}
+                              {/* countInline: the count beside the name, quiet, "(31)", not in a box */}
+                              {group.countInline && <span className="wl-count-inline" dir="ltr">({rows.length})</span>}
                             </span>
                             <span className="wc-category-meta" dir="ltr">
-                              <span className="wc-category-count">{rows.length}</span>
+                              {!group.countInline && <span className="wc-category-count">{rows.length}</span>}
                               {group.levelLabel && <span className="wc-category-lvl">{group.levelLabel}</span>}
                             </span>
                           </button>
@@ -744,22 +760,35 @@ const Panel: React.FC = () => {
                                 type="button"
                                 key={item.id}
                                 disabled={item.disabled}
-                                className={`wc-card${item.id === state.activeNav ? ' is-active' : ''}${
+                                className={`wc-card${item.picture ? ' is-picture' : ''}${item.id === state.activeNav ? ' is-active' : ''}${
                                   item.disabled ? ' is-disabled' : ''
                                 }`}
+                                title={item.picture ? item.label : undefined}
+                                aria-label={item.picture ? item.label : undefined}
                                 onClick={() => {
                                   play('select');
                                   fetchNui('panelNav', item.id);
                                 }}
                               >
-                                <span className="wc-slot">
-                                  <Icon icon={item.image ?? item.icon} fallback="menu_bar" />
-                                </span>
-                                <span style={{ minWidth: 0 }}>
-                                  <span className="wc-card-name">{item.label}</span>
-                                  {item.description && <span className="lb-item-desc">{item.description}</span>}
-                                </span>
-                                {item.count != null && <span className="wc-category-count">{item.count}</span>}
+                                {/* A row with a picture IS the picture (w_playernames: a list of name plates); the
+                                    label still names it for search and the tooltip. */}
+                                {item.picture ? (
+                                  <>
+                                    <img className="wl-nav-picture" src={item.picture} alt="" draggable={false} />
+                                    {item.caption && <span className="wl-nav-caption">{item.caption}</span>}
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="wc-slot">
+                                      <Icon icon={item.image ?? item.icon} fallback="menu_bar" />
+                                    </span>
+                                    <span style={{ minWidth: 0 }}>
+                                      <span className="wc-card-name">{item.label}</span>
+                                      {item.description && <span className="lb-item-desc">{item.description}</span>}
+                                    </span>
+                                    {item.count != null && <span className="wc-category-count">{item.count}</span>}
+                                  </>
+                                )}
                               </button>
                             ))}
                           </div>

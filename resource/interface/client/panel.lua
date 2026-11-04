@@ -160,6 +160,7 @@ function lib.showPanel(data)
             --    the description already said what the sections are. `onTab` still fires for a
             --    script that wants to load a tab's rows on demand; ignoring it is normal.
             nav = data.nav,
+            navFit = data.navFit,   -- the side column only as wide as its widest row
             activeNav = data.activeNav,
             navCountLabel = data.navCountLabel,
             blocks = data.blocks,

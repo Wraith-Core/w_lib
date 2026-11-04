@@ -38,9 +38,43 @@ local radarMode    = 'map'                   -- 'map' | 'compass' | 'off'
 
 local function radarReplaced() return radarOwnerCount > 0 end
 
+-- * How a replaced radar is hidden.
+--     'display' (default)  DisplayRadar(false): the radar is down while a resource draws its own.
+--     'type'               the radar stays on with its TYPE set to 0 (off), its own type put back afterwards.
+--   ! 2026-11-03: 'type' was tried as the default to keep the game's health and stamina rings - and it does not:
+--     in RedM radar type 0 takes the rings down too (the owner's test: with the type left at 0 no rings, and no
+--     radar). And a type that was already 0 when the radar was taken was never put back, so stopping w_map left the
+--     game with no radar at all. Back to 'display'; 'type' stays for a test, now always putting a type back.
+--   Set with   setr w_lib:radarHide type   in server.cfg to try it.
+local hideByType = GetConvar('w_lib:radarHide', 'display') == 'type'
+local SetMinimapType, GetMinimapType = SetMinimapType, GetMinimapType
+local typeBefore = nil   -- the radar type to put back (nil: we did not change it)
+local lastType = 1       -- the last type other than 0 the radar had (1 = regular: never left at 0 by us)
+do local ok, t = pcall(GetMinimapType); if ok and type(t) == 'number' and t ~= 0 then lastType = t end end
+
+--- The radar's type off while it is replaced, its own type back once it is not.
+local function holdType(replaced)
+    if not hideByType then return end
+    if replaced then
+        local t = GetMinimapType()
+        -- another script set a type while we hold it (VORP on mounting): that is the type to put back later
+        if t ~= 0 then typeBefore, lastType = t, t; SetMinimapType(0)
+        elseif typeBefore == nil then typeBefore = lastType end   -- it was 0 already: a type goes back anyway
+    elseif typeBefore ~= nil then
+        SetMinimapType(typeBefore)
+        typeBefore = nil
+    end
+end
+
 --- What the native radar should show right now, and show it.
 local function applyRadar()
-    DisplayRadar(radarVisible and radarMode ~= 'off' and not radarReplaced())
+    local replaced = radarReplaced()
+    if hideByType then
+        DisplayRadar(radarVisible and radarMode ~= 'off')
+        holdType(replaced)
+    else
+        DisplayRadar(radarVisible and radarMode ~= 'off' and not replaced)
+    end
 end
 
 local function pump()
@@ -57,8 +91,10 @@ local function pump()
                 end
             end
             -- a custom minimap owns the screen: the native one stays down whatever
-            -- another script switched on this frame
-            if radarReplaced() then DisplayRadar(false) end
+            -- another script switched on this frame (by its type: the rings stay; or the old way, all of it)
+            if radarReplaced() then
+                if hideByType then holdType(true) else DisplayRadar(false) end
+            end
         end
         running = false
     end)
@@ -212,6 +248,7 @@ AddEventHandler('onClientResourceStop', function(resource)
     -- a stopping owner gives the radar back; the library stopping hands it to the game
     if resource == GetCurrentResourceName() then
         radarOwners, radarOwnerCount = {}, 0
+        holdType(false)   -- its own type back
         DisplayRadar(true)
     elseif radarOwners[resource] then
         radarOwners[resource] = nil

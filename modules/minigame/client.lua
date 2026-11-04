@@ -78,6 +78,8 @@ end
 local function resetFocus()
     SetNuiFocus(previousFocus, previousFocus)
     SetNuiFocusKeepInput(previousKeepInput)
+    -- the frame's clicks follow its focus (web/src/wc/sound.ts, 'wl:focus' - as lib.setNuiFocus tells it)
+    NativeSendNUIMessage({ action = 'wl:focus', data = previousFocus == true, messageTargetUiName = 'wui' })
     if w.nui.isLoaded("wui") then
         w.nui.resetFocus()
     end
@@ -115,6 +117,7 @@ local function startMinigame(game, config)
 
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(false)
+    NativeSendNUIMessage({ action = 'wl:focus', data = true, messageTargetUiName = 'wui' })   -- its clicks sound (sound.ts)
     if type(mergedConfig.animPostFx) == "string" and mergedConfig.animPostFx ~= "" then
         currentAnimPostFx = mergedConfig.animPostFx
         AnimpostfxPlay(currentAnimPostFx)

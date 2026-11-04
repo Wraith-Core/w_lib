@@ -7,6 +7,11 @@ const PX = /(^|[^\w.#-])(-?\d*\.?\d+)px\b/g;
 
 const fmt = (n: number) => String(+n.toFixed(4));
 
+/** 1 design px in real px, the same rule as --ws-px: min(height / 1080, width / 1920), never below 720p's .6667.
+ *  For sizes measured in JS (a pop-up's width, a gap to the screen edge) of pieces whose CSS is scaled. */
+export const wsScale = (): number =>
+  Math.max(0.6667, Math.min((window.innerHeight || 1080) / 1080, (window.innerWidth || 1920) / 1920));
+
 export function scaleValue(value: string, font: boolean): string {
   if (!value || value.indexOf('px') < 0 || /var\(--ws-f?px\)/.test(value)) return value;
   const keep: string[] = [];

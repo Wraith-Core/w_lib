@@ -111,9 +111,11 @@ export const DashboardHeader: React.FC<{
 export const DashboardBody: React.FC<{
   browser: React.ReactNode;
   children: React.ReactNode;
-}> = ({ browser, children }) => (
+  /** The side column as wide as its widest row instead of the fixed share (a panel's navFit). */
+  fit?: boolean;
+}> = ({ browser, children, fit }) => (
   <div className="wc-body">
-    <div className="wc-browser">{browser}</div>
+    <div className={`wc-browser${fit ? ' is-fit' : ''}`}>{browser}</div>
     <div className="wc-vr" />
     <div className="wc-detail">{children}</div>
   </div>

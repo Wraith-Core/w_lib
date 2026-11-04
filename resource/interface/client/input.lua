@@ -32,6 +32,7 @@ local input
 ---@field maxSelectedValues? number
 ---@field minLength? number
 ---@field maxLength? number
+---@field allow? string the only characters a text field takes, as a character class body ('A-Za-z0-9 \'-'): anything else is dropped as it is typed or pasted
 
 ---@class InputDialogOptionsProps
 ---@field allowCancel? boolean

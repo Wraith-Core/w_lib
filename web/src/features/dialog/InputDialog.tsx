@@ -6,9 +6,23 @@ import { Glyph, Head, Layer, Panel, play } from '../../wc/Panel';
 import Icon from '../../wc/Icon';
 import DateFields from '../../components/DateFields';
 import PaletteField from '../../components/PaletteField';
+import WSelect from '../../components/WSelect';
 import { useLocales } from '../../providers/LocaleProvider';
 
 type Row = InputProps['rows'][number] & Record<string, any>;
+
+/** `allow` (a character class body, 'A-Za-z0-9 '): a text field drops every other character as it is typed or
+ *  pasted - a script that needs a name in Latin letters only says so, and the field cannot take anything else. */
+const allowCache = new Map<string, RegExp | null>();
+const onlyAllowed = (allow: unknown, value: string): string => {
+  if (typeof allow !== 'string' || allow === '') return value;
+  let re = allowCache.get(allow);
+  if (re === undefined) {
+    try { re = new RegExp(`[^${allow}]`, 'gu'); } catch { re = null; }
+    allowCache.set(allow, re);
+  }
+  return re ? value.replace(re, '') : value;
+};
 
 const sizeClass = (size?: string) =>
   size === 'lg' || size === 'xl' ? ' is-lg' : size === 'xs' || size === 'sm' ? ' is-sm' : '';
@@ -137,27 +151,42 @@ const InputDialog: React.FC = () => {
                 <div className="lb-field" key={i}>
                   <FieldLabel row={row} />
                   <div className="lb-input">
-                    <select
-                      ref={first}
-                      multiple={multi}
-                      size={multi ? 4 : undefined}
-                      disabled={row.disabled}
-                      required={row.required}
-                      value={values[i] ?? (multi ? [] : '')}
-                      onChange={(e) =>
-                        set(i, multi ? Array.from(e.target.selectedOptions, (o) => o.value) : e.target.value)
-                      }
-                    >
-                      {!multi && <option value="" />}
-                      {(row.options || []).map((o: any, k: number) => {
-                        const value = o?.value != null ? o.value : o;
-                        return (
-                          <option key={k} value={value}>
-                            {o?.label != null ? o.label : value}
-                          </option>
-                        );
-                      })}
-                    </select>
+                    {multi ? (
+                      // a multi-select is drawn open in the page (size=4): no popup, so the native one stays
+                      <select
+                        ref={first}
+                        multiple
+                        size={4}
+                        disabled={row.disabled}
+                        required={row.required}
+                        value={values[i] ?? []}
+                        onChange={(e) => set(i, Array.from(e.target.selectedOptions, (o) => o.value))}
+                      >
+                        {(row.options || []).map((o: any, k: number) => {
+                          const value = o?.value != null ? o.value : o;
+                          return (
+                            <option key={k} value={value}>
+                              {o?.label != null ? o.label : value}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    ) : (
+                      // the page's own dropdown: a native <select> opens a popup the game paints as noise
+                      <WSelect
+                        buttonRef={first}
+                        value={String(values[i] ?? '')}
+                        allowEmpty
+                        placeholder=""
+                        disabled={row.disabled}
+                        ariaLabel={row.label}
+                        options={(row.options || []).map((o: any) => {
+                          const value = o?.value != null ? o.value : o;
+                          return { value: String(value), label: String(o?.label != null ? o.label : value) };
+                        })}
+                        onChange={(v) => set(i, v)}
+                      />
+                    )}
                   </div>
                 </div>
               );
@@ -266,7 +295,8 @@ const InputDialog: React.FC = () => {
                     minLength={type !== 'number' ? row.minLength : undefined}
                     maxLength={type !== 'number' ? row.maxLength : undefined}
                     value={values[i] ?? ''}
-                    onChange={(e) => set(i, type === 'number' ? e.target.value : e.target.value)}
+                    dir={type !== 'number' && row.allow ? 'ltr' : undefined}
+                    onChange={(e) => set(i, type === 'number' ? e.target.value : onlyAllowed(row.allow, e.target.value))}
                   />
 
                   {type === 'number' && (

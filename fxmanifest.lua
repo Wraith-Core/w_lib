@@ -5,13 +5,13 @@ games { 'rdr3', 'gta5' }
 rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aware my resources *will* become incompatible once RedM ships.'
 
 name 'w_lib'
-author 'Wraith Studio'
+author 'WraithStudio'
 version '4.2.0'
 -- Includes adaptations from ox_lib and jo_libs; preserve their original notices.
 -- See CREDITS.md and LICENSES/ for upstream attribution and license copies.
 license 'LGPL-3.0-or-later'
 repository ''
-description 'w_lib — one NUI frame for every interface: context, dialogs, notifications, text UI, menus, progress, skill check, prompt, gizmo and minigames, on the w_crafting design. Built on ox_lib and RedM-jo_libs — see CREDITS.md.'
+description 'discord.gg/stellar | w_lib — one NUI frame for every interface: context, dialogs, notifications, text UI, menus, progress, skill check, prompt, gizmo and minigames, on the w_crafting design. Built on ox_lib and RedM-jo_libs — see CREDITS.md.'
 
 dependencies {
     '/server:14901',

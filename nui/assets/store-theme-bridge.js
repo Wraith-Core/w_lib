@@ -83,7 +83,10 @@
       if (getComputedStyle(plate).position === 'static') plate.classList.add('wst-positioned');
     }
     for (const panel of document.querySelectorAll('.wst-panel')) {
-      if (getComputedStyle(panel).position === 'static') panel.classList.add('wst-positioned');
+      const style = getComputedStyle(panel);
+      if (style.position === 'static') panel.classList.add('wst-positioned');
+      // a panel that scrolls: up and down only (store-frame.js says why)
+      panel.classList.toggle('wst-scrolls', style.overflowY === 'auto' || style.overflowY === 'scroll');
       let frame = Array.from(panel.children).find(node => node.matches('.wst-frame,.wc-frame,.ws-frame'));
       if (!frame) {
         frame = document.createElement('span'); frame.className = 'wst-frame';
@@ -110,4 +113,15 @@
     }).observe(document.body, { childList:true, subtree:true, attributes:true, attributeFilter:['class'], attributeOldValue:true });
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once:true }); else start();
+  /* A frame on a panel that scrolls stays over the visible part (store-frame.js, the same lines). */
+  if (!window.__wstFrameFollow) {
+    window.__wstFrameFollow = true;
+    document.addEventListener('scroll', (event) => {
+      const panel = event.target;
+      if (!(panel instanceof Element)) return;
+      for (const node of panel.children) {
+        if (node.matches('.wst-frame,.wc-frame,.ws-frame')) node.style.transform = panel.scrollTop ? `translateY(${panel.scrollTop}px)` : '';
+      }
+    }, { capture: true, passive: true });
+  }
 })();
