@@ -176,7 +176,9 @@ const InputDialog: React.FC = () => {
                       <WSelect
                         buttonRef={first}
                         value={String(values[i] ?? '')}
-                        allowEmpty
+                        /* * the blank first choice only where "nothing" is an answer: a required list (or one with
+                           `clearable = false`) had an empty row above its real choices that could be picked */
+                        allowEmpty={!row.required && row.clearable !== false}
                         placeholder=""
                         disabled={row.disabled}
                         ariaLabel={row.label}
