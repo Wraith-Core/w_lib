@@ -1,3 +1,5 @@
+/* ui-scale */
+:root{--ws-px:max(.6667px,min(.0925926vh,.0520833vw));--ws-fpx:max(.8px,min(.0925926vh,.0520833vw));--ws-gutter:max(0px,calc((100vw - 177.7778vh) / 2))}
 /* ════════════════════════════════════════════════════════════════════════════
    Wraith Core theme · tokens.css
    Custom properties only: no selectors that style anything, so linking this file can
@@ -41,7 +43,7 @@
   --w-strip: #CFCFCF;          /* the pinned paper strip beside a board (pause menu) */
   --w-scrim: rgba(5, 5, 5, .72);
   --w-shadow: 0 .55em .9em rgba(0, 0, 0, .55);
-  --w-text-shadow: 0 1px .4em rgba(0, 0, 0, .6);
+  --w-text-shadow: 0 max(1px, calc(1 * var(--ws-px))) .4em rgba(0, 0, 0, .6);
 
   /* ── faces (LTR): the Latin face first, Arabic glyphs fall through by unicode-range ── */
   --w-f-display: 'RDR Lino', 'Lalezar', 'Tajawal', 'W Noto Arabic', Georgia, serif;      /* wordmark, masthead only */
@@ -81,7 +83,7 @@
   --w-label-track: .14em;      /* Arabic is never letter-spaced */
 
   /* ── scale: 1 --w-rem = 20px at 1920x1080, 13.3px at 1280x720 (the loading / pause scale) ── */
-  --w-rem: clamp(12px, min(1.04vw, 1.85vh), 24px);
+  --w-rem: clamp(calc(12 * var(--ws-px)), min(1.04vw, 1.85vh), calc(24 * var(--ws-px)));
   --w-u: calc(var(--w-rem) / 20);                    /* 1px at 1080p */
   --w-fs-display: calc(var(--w-rem) * 3.2);
   --w-fs-title: calc(var(--w-rem) * 1.6);

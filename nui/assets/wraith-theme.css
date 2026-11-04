@@ -6,3 +6,5 @@
 @import url('../theme/tokens.css');
 @import url('../theme/fonts.css');
 @import url('../theme/base.css');
+/* ui-scale */
+:root{--ws-px:max(.6667px,min(.0925926vh,.0520833vw));--ws-fpx:max(.8px,min(.0925926vh,.0520833vw));--ws-gutter:max(0px,calc((100vw - 177.7778vh) / 2))}

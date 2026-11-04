@@ -1,3 +1,5 @@
+/* ui-scale */
+:root{--ws-px:max(.6667px,min(.0925926vh,.0520833vw));--ws-fpx:max(.8px,min(.0925926vh,.0520833vw));--ws-gutter:max(0px,calc((100vw - 177.7778vh) / 2))}
 /* Preserve original geometry while removing the old decorative layer. */
 /* Temporary bridge until w_lib's own frame (web/src) is rebuilt on the theme: its --wc-* greys
    and whites become the theme's ink and paper at runtime. html:root (0,1,1) beats the build's :root.
@@ -16,9 +18,9 @@ body[data-store-theme=library] .lb-menu-item.is-active::before,body[data-store-t
 body[data-store-theme=library] :is(.lb-item.is-hover,.lb-menu-item.is-hover,.lb-menu-item.is-active) :is(span,p,b,small){color:inherit!important}
 /* .wn-note.has-plate draws its own two-part plate again (wnotify.css); nothing here overrides it. */
 body[data-store-theme=library] .lb-btn:not(.is-danger)>span{color:inherit!important}
-body[data-store-theme=library] .lb-close-tab{position:absolute!important;left:auto!important;right:clamp(14px,1.6vw,24px)!important;top:clamp(14px,1.8vh,24px)!important;transform:none!important;animation:none!important;z-index:4!important}
+body[data-store-theme=library] .lb-close-tab{position:absolute!important;left:auto!important;right:clamp(calc(14 * var(--ws-px)),1.6vw,calc(24 * var(--ws-px)))!important;top:clamp(calc(14 * var(--ws-px)),1.8vh,calc(24 * var(--ws-px)))!important;transform:none!important;animation:none!important;z-index:4!important}
 body[data-store-theme=library] .lb-close-tab:active{transform:scale(.95)!important}
-body[data-store-theme=library] .lb-head{padding-inline:54px}
+body[data-store-theme=library] .lb-head{padding-inline:calc(54 * var(--ws-px))}
 body[data-store-theme=library] :is(.wl-prompt-bg,.wl-prompt-group .line){background-color:var(--wst-ink)}
 body[data-store-theme=library] .wc-atmo{display:none!important}
 body[data-store-theme=menu] .menu .container{overflow:visible}

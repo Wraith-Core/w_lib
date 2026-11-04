@@ -1,5 +1,7 @@
+/* ui-scale */
+:root{--ws-px:max(.6667px,min(.0925926vh,.0520833vw));--ws-fpx:max(.8px,min(.0925926vh,.0520833vw));--ws-gutter:max(0px,calc((100vw - 177.7778vh) / 2))}
 /* Auxiliary library surfaces scale with screen height; world/pointer coordinates stay unchanged. */
-body[data-store-theme=library],body[data-store-theme=notify]{--w-aux-px:clamp(1px,.0925925926vh,2px)}
+body[data-store-theme=library],body[data-store-theme=notify]{--w-aux-px:var(--ws-fpx)}
 body[data-store-theme=library] .lb-textui-icon{width:clamp(calc(18 * var(--w-aux-px)),2.4vh,calc(22 * var(--w-aux-px)))}
 body[data-store-theme=library] .lb-textui{gap:calc(10 * var(--w-aux-px));padding:clamp(calc(8 * var(--w-aux-px)),1.2vh,calc(12 * var(--w-aux-px))) clamp(calc(12 * var(--w-aux-px)),1.2vw,calc(18 * var(--w-aux-px)));font-size:clamp(calc(12 * var(--w-aux-px)),1.8vh,calc(15 * var(--w-aux-px)))}
 body[data-store-theme=library] .lb-textui .wc-glyph{width:calc(15 * var(--w-aux-px));height:calc(15 * var(--w-aux-px))}

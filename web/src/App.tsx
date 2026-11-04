@@ -19,7 +19,11 @@ import WNotify from './features/wnotify';
 import Voice from './features/voice';
 import RadialMenu from './features/menu/radial';
 import { theme } from './theme';
-import { MantineProvider } from '@mantine/core';
+import { MantineProvider, createEmotionCache } from '@mantine/core';
+import { uiScaleStylis } from './utils/uiScale';
+
+// ★ Mantine's runtime styles follow the screen scale too (720p .. 8K, ultrawide by height).
+const emotionCache = createEmotionCache({ key: 'mantine', stylisPlugins: [uiScaleStylis] });
 import { useConfig } from './providers/ConfigProvider';
 import { useLocales } from './providers/LocaleProvider';
 import { useEffect, useMemo } from 'react';
@@ -107,7 +111,7 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <MantineProvider withNormalizeCSS theme={themeWithConfig}>
+    <MantineProvider withNormalizeCSS theme={themeWithConfig} emotionCache={emotionCache}>
       {/* The preview scene, browser only -- see .wl-preview-bg in index.css for why it is an
           element rather than a background. */}
       {isEnvBrowser() && <div className="wl-preview-bg" />}

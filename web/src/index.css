@@ -46,7 +46,7 @@
   /* ★ The library's own px: 1px at 1080p, never below 1px (a 720p window keeps the 1080p sizes,
      as the store-responsive sheets do), 2px at 2160p. Text in the frame is sized in it, so a
      line never shrinks under the theme's minimums (Arabic text 16px, labels 13px). */
-  --lb-px: clamp(1px, 0.0925925926vh, 2px);
+  --lb-px: var(--ws-fpx); /* 1px at 1080p, 0.8 at 720p (text floor), 2 at 4K, 4 at 8K -- ui-scale.cjs */
 }
 
 /* The faces by role (theme/THEME.md): display, title, text, action, label, input, numbers. */
