@@ -73,6 +73,39 @@ function w.blip.create(locationOrEntity, name, sprite, blipHash, color, scale)
   return blip
 end
 
+-- The area styles a radius blip is tried with, in order (the game refuses some styles on some builds)
+local RADIUS_STYLES = { joaat("BLIP_STYLE_AREA"), -1282792512, joaat("BLIP_STYLE_DANGEROUS_AREA") }
+
+--- An area on the game's own map and radar: a circle of `radius` metres (2026-11-05: w_kingdoms' war fronts called
+--- this before it existed; w_tribes' camps when w_map is off). It is the engine's only area: a circle, never a polygon.
+--- Not announced to w_map, which draws its own zones (exports.w_map:UpsertTerritories).
+---@param coords vector3 its middle
+---@param radius number metres
+---@param name? string
+---@param color? string a BLIP_MODIFIER name (a '#rrggbb' colour has no engine equivalent: the area keeps its own)
+---@param style? string|integer the radius blip's style (default: the area styles above)
+---@return integer|false blip
+function w.blip.radius(coords, radius, name, color, style)
+  radius = tonumber(radius)
+  if not coords or not radius or radius <= 0 then return false end
+  local tries = {}
+  if style then tries[1] = type(style) == "string" and joaat(style) or style end
+  for _, s in ipairs(RADIUS_STYLES) do tries[#tries + 1] = s end
+  local blip
+  for _, s in ipairs(tries) do
+    blip = BlipAddForRadius(s, coords.x + 0.0, coords.y + 0.0, (coords.z or 0.0) + 0.0, radius + 0.0)
+    if blip and blip ~= 0 then break end
+    blip = nil
+  end
+  if not blip then return false end
+  if name then SetBlipName(blip, name) end
+  if type(color) == "string" and color ~= "" and not color:match("^#") then
+    BlipAddModifier(blip, GetHashFromString(color))
+  end
+  Blips[#Blips + 1] = blip
+  return blip
+end
+
 --- Rename a blip made with w.blip.create (w_map learns the new name too).
 ---@param blip integer
 ---@param name string

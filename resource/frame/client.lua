@@ -25,7 +25,11 @@ local IsDisabledControlJustPressed = IsDisabledControlJustPressed
 local TriggerEvent = TriggerEvent
 local pairs = pairs
 
----@type table<number, { n: integer, press: table<string, string> }>
+-- ★ 2026-11-05: who holds each block, by resource (owners = { [resource] = holds }), and no longer one count for all:
+--   the count went out of step with the press events (the same event claimed twice counted twice, released once), and
+--   a stopped w_map could leave M blocked for good - the game's map never opened again until the game restarted.
+--   A resource that stops now takes every hold it had with it, whatever its count.
+---@type table<number, { owners: table<string, integer>, press: table<string, string> }>
 local blocked = {}
 local live = 0
 local running = false
@@ -103,18 +107,32 @@ end
 --- احجب تحكُّمًا عن اللعبة، واسمع ضغطته.
 ---@param control number هاش التحكُّم، مثل `INPUT_MAP`
 ---@param pressEvent? string حدثٌ يُبعث لحظةَ الضغط (اختياريّ: بلا حدثٍ يكون حجبًا صرفًا)
+local function holder() return GetInvokingResource() or 'w_lib' end
+
+--- The control is free again once nobody holds it.
+local function settle(control, e)
+    if next(e.owners) == nil then
+        blocked[control] = nil
+        live = live - 1
+    end
+end
+
 function lib.blockControl(control, pressEvent)
     control = tonumber(control)
     if not control then return false end
 
+    local owner = holder()
     local e = blocked[control]
     if not e then
-        e = { n = 0, press = {} }
+        e = { owners = {}, press = {} }
         blocked[control] = e
         live = live + 1
     end
-    e.n = e.n + 1
-    if pressEvent then e.press[pressEvent] = GetInvokingResource() or 'w_lib' end
+    -- the same press event claimed again is the same hold (one release frees it)
+    if not (pressEvent and e.press[pressEvent] == owner) then
+        e.owners[owner] = (e.owners[owner] or 0) + 1
+    end
+    if pressEvent then e.press[pressEvent] = owner end
 
     pump()
     return true
@@ -128,12 +146,14 @@ function lib.unblockControl(control, pressEvent)
     local e = control and blocked[control]
     if not e then return false end
 
-    if pressEvent then e.press[pressEvent] = nil end
-    e.n = e.n - 1
-    if e.n <= 0 then
-        blocked[control] = nil
-        live = live - 1
+    local owner = holder()
+    if pressEvent and e.press[pressEvent] then
+        owner = e.press[pressEvent]
+        e.press[pressEvent] = nil
     end
+    local n = (e.owners[owner] or 0) - 1
+    e.owners[owner] = n > 0 and n or nil
+    settle(control, e)
     return true
 end
 
@@ -234,15 +254,10 @@ end
 AddEventHandler('onClientResourceStop', function(resource)
     for control, e in pairs(blocked) do
         for event, owner in pairs(e.press) do
-            if owner == resource then
-                e.press[event] = nil
-                e.n = e.n - 1
-            end
+            if owner == resource then e.press[event] = nil end
         end
-        if e.n <= 0 then
-            blocked[control] = nil
-            live = live - 1
-        end
+        e.owners[resource] = nil
+        settle(control, e)
     end
 
     -- a stopping owner gives the radar back; the library stopping hands it to the game
