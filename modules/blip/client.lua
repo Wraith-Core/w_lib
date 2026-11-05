@@ -106,6 +106,32 @@ function w.blip.radius(coords, radius, name, color, style)
   return blip
 end
 
+-- ── the game's blip pictures, for every Wraith script (2026-11-05) ─────────────────────────────────────────────
+-- w_lib ships all 631 (web/build/tex/blips/<name>.png, with index.json: { { name, hash }, ... }), so a script's menu
+-- or page shows a blip's picture without w_map or a copy of its own.
+local PICTURES = "nui://w_lib/web/build/tex/blips/"
+
+--- The picture of a blip sprite, as a URL any NUI page can show (nil for a name w_lib has no picture of).
+---@param name string a sprite name, e.g. 'blip_camp'
+---@return string|nil
+function w.blip.picture(name)
+  if type(name) ~= "string" or not name:match("^[%w_]+$") then return nil end
+  return PICTURES .. name .. ".png"
+end
+
+local spriteList
+--- Every blip sprite w_lib has a picture of: { { name, hash }, ... } sorted by name (read once).
+---@return table
+function w.blip.sprites()
+  if not spriteList then
+    local ok, list = pcall(json.decode, LoadResourceFile("w_lib", "web/build/tex/blips/index.json") or "")
+    if not ok or type(list) ~= "table" then return {} end   -- not kept: read again next time
+    table.sort(list, function(a, b) return tostring(a.name) < tostring(b.name) end)
+    spriteList = list
+  end
+  return spriteList
+end
+
 --- Rename a blip made with w.blip.create (w_map learns the new name too).
 ---@param blip integer
 ---@param name string
