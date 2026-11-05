@@ -118,6 +118,12 @@
 .wst-row.clickable:hover,.wst-row:is(.selected,.is-selected,[aria-selected=true]){color:var(--w-ink)!important}
 .wst-row.clickable:hover::before,.wst-row:is(.selected,.is-selected,[aria-selected=true])::before{background:var(--w-paper)!important;-webkit-mask-image:var(--wst-tex-selection_box_bg_1a)!important;mask-image:var(--wst-tex-selection_box_bg_1a)!important}
 .wst-row.clickable:hover :is(h1,h2,h3,h4,p,small,span,b,strong,label,em,i,svg),.wst-row:is(.selected,.is-selected,[aria-selected=true]) :is(h1,h2,h3,h4,p,small,span,b,strong,label,em,i,svg){color:inherit!important}
+/* 2026-11-05 (owner): the site's look. A selected card / tab / row and the main button are the red band with
+   light text: inside them paper means the mark and ink means the text on it, so every rule above (and every
+   resource rule that draws with these tokens) paints them red without its own copy. The cursor on an unselected
+   element stays the paper band. */
+.wst-button.primary,.wst-tab:is(.active,.selected,.chosen,.is-active,.is-selected,[aria-selected=true]),.wst-card:is(.active,.chosen,.selected,.is-active,.is-selected,[aria-selected=true]),.wst-row:is(.selected,.is-selected,[aria-selected=true]),.wst-mark{--w-paper:var(--w-mark,#D0161B);--w-paper-lit:var(--w-mark-lit,#E01A1F);--w-paper-dim:var(--w-mark-deep,#8F0B0E);--w-ink:var(--w-mark-ink,#F2F2F2);--w-ink-2:var(--w-mark-ink,#F2F2F2);--w-ink-3:var(--w-mark-ink,#F2F2F2)}
+.wst-card:is(.active,.chosen,.selected,.is-active,.is-selected,[aria-selected=true]):hover:not(:disabled):not(.disabled)::before,.wst-row:is(.selected,.is-selected,[aria-selected=true]):hover::before{background:var(--w-paper-lit)!important}
 .wst-field:focus-within{box-shadow:inset 0 min(-2px, calc(-2 * var(--ws-px))) 0 var(--w-paper)!important}
 .wst-field:focus-within::before{background:var(--w-ink-4)!important}
 .wst-input{background:var(--w-ink-2)!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:var(--w-paper)!important;font-family:var(--wst-f-body)!important;outline:none!important;caret-color:var(--w-paper)}

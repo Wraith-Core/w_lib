@@ -80,8 +80,8 @@
 .wc-bar{position:relative;display:block;width:100%;height:clamp(3px,.4vh,5px);border-radius:0;overflow:hidden;background:rgba(242,242,242,.14);box-shadow:none}
 .wc-bar-track{display:none}
 .wc-bar-mask{position:absolute;top:0;right:0;bottom:0;left:0;overflow:hidden;-webkit-mask:none;mask:none}
-.wc-bar-fill{position:absolute;inset-block:0;inset-inline-start:0;width:0%;border-radius:0;background:var(--w-paper-dim);transition:width .25s linear}
-.wc-bar-fill.is-bright{background:var(--w-paper)}
+.wc-bar-fill{position:absolute;inset-block:0;inset-inline-start:0;width:0%;border-radius:0;background:var(--w-red-deep,#8F0B0E);transition:width .25s linear}
+.wc-bar-fill.is-bright{background:var(--w-red,#D0161B)}
 
 /* ── the close cross: ink plate, the band under the cursor ─────────────── */
 .wc-close{position:relative;isolation:isolate;display:grid;place-items:center;width:clamp(38px,5vh,46px);aspect-ratio:1;cursor:pointer;border:0;color:var(--wc-text-dim);background:transparent;transition:color .12s ease}
