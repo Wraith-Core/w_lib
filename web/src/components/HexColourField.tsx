@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import './HexColourField.css';
+import { wsScale } from '../utils/uiScale';
 
 /**
  * A colour typed as hex, with a ▲ inside the box that opens a colour wheel above it.
@@ -95,21 +96,23 @@ const HexColourField: React.FC<{
     if (next) { setC(next); send(t.toLowerCase()); }
   };
 
-  const W = 236;
+  // the pop-up's CSS is in design px (ui-scale): its width and the gaps here follow the screen too
+  const s = wsScale();
+  const W = 236 * s;
   const keepIn = (left: number, top: number) => ({
     left: Math.max(0, Math.min(window.innerWidth - W, left)),
-    top: Math.max(0, Math.min(window.innerHeight - 40, top)),
+    top: Math.max(0, Math.min(window.innerHeight - 40 * s, top)),
   });
 
   const place = () => {
     if (dragged) { setBox(keepIn(dragged.left, dragged.top)); return; }
     const r = btn.current?.getBoundingClientRect();
     if (!r) return;
-    const H = 330;
-    const left = Math.max(8, Math.min(window.innerWidth - W - 8, r.right - W));
-    setBox(r.top > H + 12 || r.top > window.innerHeight - r.bottom
-      ? { left, bottom: window.innerHeight - r.top + 6 }     // up, as the arrow says (when there is room)
-      : { left, top: r.bottom + 6 });
+    const H = 330 * s;
+    const left = Math.max(8 * s, Math.min(window.innerWidth - W - 8 * s, r.right - W));
+    setBox(r.top > H + 12 * s || r.top > window.innerHeight - r.bottom
+      ? { left, bottom: window.innerHeight - r.top + 6 * s }     // up, as the arrow says (when there is room)
+      : { left, top: r.bottom + 6 * s });
   };
 
   React.useEffect(() => {

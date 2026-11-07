@@ -1,5 +1,7 @@
+/* ui-scale */
+:root{--ws-px:max(.6667px,min(.0925926vh,.0520833vw));--ws-fpx:max(.8px,min(.0925926vh,.0520833vw));--ws-gutter:max(0px,calc((100vw - 177.7778vh) / 2))}
 /* Library forms and menus keep the 1080p proportions at higher pixel densities. */
-body[data-store-theme=library]{--w-lib-px:clamp(1px,.0925925926vh,2px)}
+body[data-store-theme=library]{--w-lib-px:var(--ws-fpx)}
 body[data-store-theme=library] .lb-close-tab{width:clamp(calc(28 * var(--w-lib-px)),3.6vh,calc(34 * var(--w-lib-px)));padding:0}
 body[data-store-theme=library] .lb-close-tab .wc-glyph,body[data-store-theme=library] .lb-close-tab .lb-back-arrow{width:42%;height:42%}
 body[data-store-theme=library] .lb-values-prev,body[data-store-theme=library] .lb-values-next{width:calc(12 * var(--w-lib-px));height:calc(12 * var(--w-lib-px))}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import './WSelect.css';
+import { wsScale } from '../utils/uiScale';
 
 /**
  * A single-choice dropdown drawn by the page, in place of <select>.
@@ -66,11 +67,13 @@ const WSelect: React.FC<{
   const place = React.useCallback(() => {
     const r = btn.current?.getBoundingClientRect();
     if (!r) return;
-    const below = window.innerHeight - r.bottom - 8, above = r.top - 8;
-    const want = Math.min(search ? 340 : 280, all.length * 34 + 8 + (search ? 44 : 0));
+    // the list's rows are in design px (ui-scale): its heights and gaps here follow the screen too
+    const s = wsScale();
+    const below = window.innerHeight - r.bottom - 8 * s, above = r.top - 8 * s;
+    const want = Math.min((search ? 340 : 280) * s, (all.length * 34 + 8 + (search ? 44 : 0)) * s);
     const up = below < want && above > below;
-    setBox({ left: r.left, width: r.width, maxHeight: Math.max(120, Math.min(search ? 340 : 280, up ? above : below)),
-      ...(up ? { bottom: window.innerHeight - r.top + 2 } : { top: r.bottom + 2 }) });
+    setBox({ left: r.left, width: r.width, maxHeight: Math.max(120 * s, Math.min((search ? 340 : 280) * s, up ? above : below)),
+      ...(up ? { bottom: window.innerHeight - r.top + 2 * s } : { top: r.bottom + 2 * s }) });
   }, [all.length, search]);
 
   const openList = () => {

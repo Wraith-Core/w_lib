@@ -16,11 +16,11 @@
    ============================================================================ */
 
 :root {
-  --wc-bg: var(--w-ink, #0a0a0a);
-  --wc-panel: var(--w-ink, #0a0a0a);
-  --wc-panel-2: var(--w-ink-2, #111111);
-  --wc-panel-3: var(--w-ink-3, #191919);
-  --wc-plate: var(--w-ink-3, #191919);
+  --wc-bg: var(--w-ink, #0b0a0a);
+  --wc-panel: var(--w-ink, #0b0a0a);
+  --wc-panel-2: var(--w-ink-2, #151313);
+  --wc-panel-3: var(--w-ink-3, #1c1919);
+  --wc-plate: var(--w-ink-3, #1c1919);
 
   --wc-text: var(--w-paper, #f2f2f2);
   --wc-text-dim: var(--w-paper-dim, #b4b4b4);
@@ -30,10 +30,10 @@
   --wc-line-strong: var(--w-rule-2, rgba(242, 242, 242, 0.32));
   --wc-hover: rgba(242, 242, 242, 0.12);
 
-  --wc-red: var(--w-red, #cb0101);
-  --wc-red-deep: var(--w-red-deep, #cb0101); /* one red: the deep alias is the mark itself */
-  --wc-red-soft: var(--w-red-soft, rgba(242, 242, 242, 0.06)); /* a paper lift: red is never a wash */
-  --wc-ok: var(--w-paper, #f2f2f2);
+  --wc-red: var(--w-red, #d0161b);
+  --wc-red-deep: var(--w-red-deep, #8f0b0e);
+  --wc-red-soft: var(--w-red-soft, rgba(208, 22, 27, 0.14));
+  --wc-ok: var(--w-green, #9fc79a); /* 2026-11-05: ok states in the site's soft green */
 
   /* ⚠️ The accent MUST have a root value. It is otherwise declared only on .lb-panel and on
      .wc-shell / .wc-theme-*, and the two progress readouts live inside neither -- so
@@ -46,7 +46,7 @@
   /* ★ The library's own px: 1px at 1080p, never below 1px (a 720p window keeps the 1080p sizes,
      as the store-responsive sheets do), 2px at 2160p. Text in the frame is sized in it, so a
      line never shrinks under the theme's minimums (Arabic text 16px, labels 13px). */
-  --lb-px: clamp(1px, 0.0925925926vh, 2px);
+  --lb-px: var(--ws-fpx); /* 1px at 1080p, 0.8 at 720p (text floor), 2 at 4K, 4 at 8K -- ui-scale.cjs */
 }
 
 /* The faces by role (theme/THEME.md): display, title, text, action, label, input, numbers. */

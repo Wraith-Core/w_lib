@@ -1,3 +1,5 @@
+/* ui-scale */
+:root{--ws-px:max(.6667px,min(.0925926vh,.0520833vw));--ws-fpx:max(.8px,min(.0925926vh,.0520833vw));--ws-gutter:max(0px,calc((100vw - 177.7778vh) / 2))}
 /* ════════════════════════════════════════════════════════════════════════════
    Wraith Core theme · tokens.css
    Custom properties only: no selectors that style anything, so linking this file can
@@ -18,11 +20,13 @@
 
 :root, [dir=ltr] {
   /* ── palette ─────────────────────────────────────────────────────────────── */
-  --w-ink: #0A0A0A;            /* page, sheets, text on the paper band */
-  --w-ink-2: #111111;          /* cards, fields at rest */
-  --w-ink-3: #191919;          /* plates, a focused card */
-  --w-ink-4: #222222;          /* a pressed plate, a field with focus */
-  --w-ink-5: #333333;          /* a plate under the cursor where a band would be too loud */
+  /* 2026-11-05 (owner): the website/store look (store.wraith7.com, wraith7.com): the inks are the site's,
+     the selection band and the main button are the red mark, ok states its soft green. Paper stays neutral. */
+  --w-ink: #0B0A0A;            /* page, sheets, text on the paper band */
+  --w-ink-2: #151313;          /* cards, fields at rest */
+  --w-ink-3: #1C1919;          /* plates, a focused card */
+  --w-ink-4: #242020;          /* a pressed plate, a field with focus */
+  --w-ink-5: #3A3534;          /* a plate under the cursor where a band would be too loud */
   --w-paper: #F2F2F2;          /* primary text, the selection band, fills */
   --w-paper-lit: #FFFFFF;      /* the band under the cursor when it is already a band (primary) */
   --w-paper-dim: #B4B4B4;      /* secondary text, labels, controls at rest */
@@ -30,9 +34,14 @@
   --w-rule: rgba(242, 242, 242, .16);    /* hairlines between rows */
   --w-rule-2: rgba(242, 242, 242, .32);  /* stronger dividers, brushed rules */
   --w-rule-3: rgba(242, 242, 242, .5);   /* the store's divider brush */
-  --w-red: #CB0101;            /* a MARK only: where the player is, destructive confirm, critical, progress tick */
-  --w-red-deep: #CB0101;       /* ONE red: the old deeper step is the mark itself now (kept as a name, many sheets read it) */
-  --w-red-soft: rgba(242, 242, 242, .06); /* was a red wash; red is never a fill, so the plate behind an error is a paper lift and the red stays on its rule */
+  --w-red: #D0161B;            /* the site's red: marks, destructive confirm, critical, progress tick */
+  --w-red-deep: #8F0B0E;       /* the site's deep red: the rest of a bar, a pressed mark */
+  --w-red-soft: rgba(208, 22, 27, .14); /* a red wash behind an error or a chosen chip */
+  --w-mark: #D0161B;           /* the selection band and the main button (the site's red band) */
+  --w-mark-lit: #E01A1F;       /* the mark under the cursor */
+  --w-mark-deep: #8F0B0E;      /* the mark pressed */
+  --w-mark-ink: #F2F2F2;       /* text and icons on the mark */
+  --w-green: #9FC79A;          /* ok / done / running (the site's soft green) */
   --w-note: #E9E9E9;           /* the paper note (confirm dialogs, help notes): the only light surface */
   --w-note-ink: #111111;
   --w-note-dim: #555555;
@@ -41,7 +50,7 @@
   --w-strip: #CFCFCF;          /* the pinned paper strip beside a board (pause menu) */
   --w-scrim: rgba(5, 5, 5, .72);
   --w-shadow: 0 .55em .9em rgba(0, 0, 0, .55);
-  --w-text-shadow: 0 1px .4em rgba(0, 0, 0, .6);
+  --w-text-shadow: 0 max(1px, calc(1 * var(--ws-px))) .4em rgba(0, 0, 0, .6);
 
   /* ── faces (LTR): the Latin face first, Arabic glyphs fall through by unicode-range ── */
   --w-f-display: 'RDR Lino', 'Lalezar', 'Tajawal', 'W Noto Arabic', Georgia, serif;      /* wordmark, masthead only */
@@ -81,7 +90,7 @@
   --w-label-track: .14em;      /* Arabic is never letter-spaced */
 
   /* ── scale: 1 --w-rem = 20px at 1920x1080, 13.3px at 1280x720 (the loading / pause scale) ── */
-  --w-rem: clamp(12px, min(1.04vw, 1.85vh), 24px);
+  --w-rem: clamp(calc(12 * var(--ws-px)), min(1.04vw, 1.85vh), calc(24 * var(--ws-px)));
   --w-u: calc(var(--w-rem) / 20);                    /* 1px at 1080p */
   --w-fs-display: calc(var(--w-rem) * 3.2);
   --w-fs-title: calc(var(--w-rem) * 1.6);

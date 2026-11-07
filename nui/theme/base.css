@@ -1,3 +1,5 @@
+/* ui-scale */
+:root{--ws-px:max(.6667px,min(.0925926vh,.0520833vw));--ws-fpx:max(.8px,min(.0925926vh,.0520833vw));--ws-gutter:max(0px,calc((100vw - 177.7778vh) / 2))}
 /* ════════════════════════════════════════════════════════════════════════════
    Wraith Core theme · base.css - the w-* primitives (opt-in)
 
@@ -113,12 +115,12 @@
   isolation: isolate;
   color: var(--w-paper);
   background: radial-gradient(130% 90% at 50% 0%, rgba(25, 25, 25, .96) 0%, rgba(17, 17, 17, .97) 42%, rgba(10, 10, 10, .98) 100%);
-  box-shadow: 0 18px 55px -18px rgba(0, 0, 0, .85), 0 0 0 1px rgba(242, 242, 242, .08);
+  box-shadow: 0 calc(18 * var(--ws-px)) calc(55 * var(--ws-px)) calc(-18 * var(--ws-px)) rgba(0, 0, 0, .85), 0 0 0 max(1px, calc(1 * var(--ws-px))) rgba(242, 242, 242, .08);
 }
 .w-sheet::before {
   content: '';
   position: absolute;
-  inset: -4px -6px;
+  inset: calc(-4 * var(--ws-px)) calc(-6 * var(--ws-px));
   z-index: -1;
   pointer-events: none;
   background: rgba(10, 10, 10, .91);
@@ -132,7 +134,7 @@
   inset: 0;
   z-index: 3;
   pointer-events: none;
-  --w-frame-px: clamp(10px, 1.3vh, 16px);
+  --w-frame-px: clamp(calc(10 * var(--ws-px)), 1.3vh, calc(16 * var(--ws-px)));
   background: var(--w-paper);
   opacity: .5;
   -webkit-mask-image: var(--w-tex-frame-tl), var(--w-tex-frame-tr), var(--w-tex-frame-bl), var(--w-tex-frame-br),
@@ -191,7 +193,7 @@
   z-index: -1;
   pointer-events: none;
   background-image: var(--w-tex-grain);
-  background-size: 256px 256px;
+  background-size: calc(256 * var(--ws-px)) calc(256 * var(--ws-px));
   opacity: .1;
   mix-blend-mode: screen;
   filter: invert(1);
@@ -239,7 +241,7 @@
   z-index: -1;
   pointer-events: none;
   background-image: var(--w-tex-grain);
-  background-size: 256px 256px;
+  background-size: calc(256 * var(--ws-px)) calc(256 * var(--ws-px));
   opacity: .45;
 }
 .w-note-wrap { filter: drop-shadow(0 calc(var(--w-rem) * .8) calc(var(--w-rem) * 1.4) rgba(0, 0, 0, .6)); }
@@ -307,18 +309,18 @@
 }
 
 /* ══════════════════ Hairlines and rules ══════════════════ */
-.w-rule { display: block; height: 1px; border: 0; background: var(--w-rule); }
+.w-rule { display: block; height: max(1px, calc(1 * var(--ws-px))); border: 0; background: var(--w-rule); }
 .w-rule.is-strong { background: var(--w-rule-2); }
-.w-vrule { display: block; width: 1px; align-self: stretch; background: var(--w-rule); }
+.w-vrule { display: block; width: max(1px, calc(1 * var(--ws-px))); align-self: stretch; background: var(--w-rule); }
 .w-rule-brush {
   display: block;
-  height: 4px;
+  height: calc(4 * var(--ws-px));
   border: 0;
   background: var(--w-rule-3);
   -webkit-mask: var(--w-tex-divider) center / 100% 100% no-repeat;
   mask: var(--w-tex-divider) center / 100% 100% no-repeat;
 }
-.w-lined { border-bottom: 1px solid var(--w-rule); }
+.w-lined { border-bottom: max(1px, calc(1 * var(--ws-px))) solid var(--w-rule); }
 
 /* ══════════════════ The paper band (the cursor) ══════════════════ */
 /* Always-on band: the primary action, the chosen option, a highlighted line */
@@ -348,7 +350,7 @@
   min-height: calc(var(--w-rem) * 2.3);
   padding: calc(var(--w-rem) * .35) calc(var(--w-rem) * .9);
   border: 0;
-  border-bottom: 1px solid var(--w-rule);
+  border-bottom: max(1px, calc(1 * var(--ws-px))) solid var(--w-rule);
   background: none;
   color: var(--w-paper);
   text-align: start;
@@ -362,7 +364,7 @@
 .w-item::before {
   content: '';
   position: absolute;
-  inset: -1px calc(var(--w-rem) * -.25) 0;
+  inset: min(-1px, calc(-1 * var(--ws-px))) calc(var(--w-rem) * -.25) 0;
   z-index: -1;
   pointer-events: none;
   background: var(--w-paper);
@@ -402,7 +404,7 @@
   flex-wrap: wrap;
   gap: calc(var(--w-rem) * .2) calc(var(--w-rem) * .3);
   padding-bottom: calc(var(--w-rem) * .3);
-  border-bottom: 1px solid var(--w-rule);
+  border-bottom: max(1px, calc(1 * var(--ws-px))) solid var(--w-rule);
 }
 .w-tab {
   position: relative;
@@ -448,15 +450,15 @@
 .w-attn::after {
   content: '';
   display: inline-block;
-  width: 6px;
-  height: 6px;
+  width: calc(6 * var(--ws-px));
+  height: calc(6 * var(--ws-px));
   margin-inline-start: .4em;
   vertical-align: middle;
   background: var(--w-red);
 }
 
 /* Segmented control (two to four options, e.g. sex): the chosen one on the band */
-.w-seg { display: inline-flex; border-bottom: 1px solid var(--w-rule); }
+.w-seg { display: inline-flex; border-bottom: max(1px, calc(1 * var(--ws-px))) solid var(--w-rule); }
 .w-seg-opt {
   position: relative;
   isolation: isolate;
@@ -487,7 +489,7 @@
 .w-seg-opt:hover:not(:disabled) { color: var(--w-paper); }
 .w-seg-opt.is-on, .w-seg-opt[aria-checked=true], .w-seg-opt[aria-pressed=true] { color: var(--w-ink); }
 .w-seg-opt.is-on::before, .w-seg-opt[aria-checked=true]::before, .w-seg-opt[aria-pressed=true]::before { opacity: 1; }
-.w-seg-opt:focus-visible { outline: none; box-shadow: inset 0 -2px 0 var(--w-red); }
+.w-seg-opt:focus-visible { outline: none; box-shadow: inset 0 min(-2px, calc(-2 * var(--ws-px))) 0 var(--w-red); }
 .w-seg-opt:disabled { opacity: .45; cursor: default; }
 
 /* ══════════════════ Buttons ══════════════════ */
@@ -539,7 +541,7 @@
   position: absolute;
   inset-inline: 22%;
   bottom: calc(var(--w-rem) * .28);
-  height: 2px;
+  height: max(2px, calc(2 * var(--ws-px)));
   background: var(--w-red);
   pointer-events: none;
 }
@@ -573,7 +575,7 @@
   outline: none;
   background: var(--w-ink-2);
   color: var(--w-paper);
-  box-shadow: inset 0 -1px 0 var(--w-rule-2);
+  box-shadow: inset 0 min(-1px, calc(-1 * var(--ws-px))) 0 var(--w-rule-2);
   font-family: var(--w-f-input);
   font-weight: var(--w-wt-input);
   font-size: calc(var(--w-fs-input) * var(--w-k-input));
@@ -583,9 +585,9 @@
 }
 .w-input::placeholder { color: var(--w-paper-faint); opacity: 1; }
 .w-input::selection { background: rgba(242, 242, 242, .85); color: var(--w-ink); }
-.w-input:focus, .w-field:focus-within { background: var(--w-ink-3); box-shadow: inset 0 -2px 0 var(--w-paper); }
+.w-input:focus, .w-field:focus-within { background: var(--w-ink-3); box-shadow: inset 0 min(-2px, calc(-2 * var(--ws-px))) 0 var(--w-paper); }
 .w-field .w-input { flex: 1 1 auto; min-width: 0; min-height: 0; height: 100%; padding: 0; background: transparent; box-shadow: none; }
-.w-input.is-invalid, .w-field.is-invalid, .w-input[aria-invalid=true] { box-shadow: inset 0 -2px 0 var(--w-red); }
+.w-input.is-invalid, .w-field.is-invalid, .w-input[aria-invalid=true] { box-shadow: inset 0 min(-2px, calc(-2 * var(--ws-px))) 0 var(--w-red); }
 .w-input:disabled, .w-field.is-disabled { opacity: .4; }
 /* the message under an invalid field: reading text in paper, marked by a red square, never red text */
 .w-error {
@@ -597,7 +599,7 @@
   line-height: var(--w-lh-text);
   color: var(--w-paper);
 }
-.w-error::before { content: ''; flex: none; width: 6px; height: 6px; background: var(--w-red); transform: translateY(-.15em); }
+.w-error::before { content: ''; flex: none; width: calc(6 * var(--ws-px)); height: calc(6 * var(--ws-px)); background: var(--w-red); transform: translateY(-.15em); }
 .w-label {
   font-family: var(--w-f-label);
   font-weight: var(--w-wt-label);
@@ -615,19 +617,19 @@
   display: inline-grid;
   place-items: center;
   flex: none;
-  width: 18px;
-  height: 18px;
+  width: calc(18 * var(--ws-px));
+  height: calc(18 * var(--ws-px));
   margin: 0;
   padding: 0;
-  border: 2px solid var(--w-paper-faint);
+  border: max(2px, calc(2 * var(--ws-px))) solid var(--w-paper-faint);
   border-radius: 0;
   background: var(--w-ink);
   cursor: pointer;
   outline: none;
 }
 .w-checkbox:checked { background: var(--w-paper); border-color: var(--w-paper); }
-.w-checkbox:checked::after { content: ''; width: 8px; height: 8px; background: var(--w-ink); }
-.w-checkbox:focus-visible { box-shadow: 0 0 0 2px var(--w-ink), 0 0 0 3px var(--w-paper); }
+.w-checkbox:checked::after { content: ''; width: calc(8 * var(--ws-px)); height: calc(8 * var(--ws-px)); background: var(--w-ink); }
+.w-checkbox:focus-visible { box-shadow: 0 0 0 max(2px, calc(2 * var(--ws-px))) var(--w-ink), 0 0 0 calc(3 * var(--ws-px)) var(--w-paper); }
 .w-checkbox:disabled { opacity: .4; cursor: default; }
 
 /* The pause menu's on / off chip: outline at rest, paper when on, a red underline when it is the cursor */
@@ -635,7 +637,7 @@
   flex: none;
   min-width: calc(var(--w-rem) * 3.2);
   padding: calc(var(--w-rem) * .18) calc(var(--w-rem) * .55) calc(var(--w-rem) * .24);
-  border: 1px solid rgba(242, 242, 242, .35);
+  border: max(1px, calc(1 * var(--ws-px))) solid rgba(242, 242, 242, .35);
   background: none;
   color: var(--w-paper-dim);
   text-align: center;
@@ -655,32 +657,32 @@
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 18px;
+  height: calc(18 * var(--ws-px));
   margin: 0;
   background: transparent;
   cursor: pointer;
   --w-fill: 50%;
 }
 .w-range::-webkit-slider-runnable-track {
-  height: 2px;
+  height: max(2px, calc(2 * var(--ws-px)));
   background: linear-gradient(to var(--w-to-end), var(--w-paper) var(--w-fill), rgba(242, 242, 242, .18) var(--w-fill));
 }
 .w-range::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 11px;
-  height: 16px;
-  margin-top: -7px;
+  width: calc(11 * var(--ws-px));
+  height: calc(16 * var(--ws-px));
+  margin-top: calc(-7 * var(--ws-px));
   border: 0;
   background: var(--w-paper);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .6);
+  box-shadow: 0 max(1px, calc(1 * var(--ws-px))) calc(3 * var(--ws-px)) rgba(0, 0, 0, .6);
 }
 .w-range:focus { outline: none; }
-.w-range:focus-visible::-webkit-slider-thumb, .w-range:active::-webkit-slider-thumb { box-shadow: 0 0 0 2px var(--w-ink), inset 0 -3px 0 var(--w-red); }
+.w-range:focus-visible::-webkit-slider-thumb, .w-range:active::-webkit-slider-thumb { box-shadow: 0 0 0 max(2px, calc(2 * var(--ws-px))) var(--w-ink), inset 0 calc(-3 * var(--ws-px)) 0 var(--w-red); }
 
 /* Progress: a hairline track, a paper fill, the red leading tick (the loading screen's) */
-.w-progress { position: relative; height: 1px; background: var(--w-rule); }
-.w-progress-fill { position: absolute; inset-block: -.5px; inset-inline-start: 0; height: 2px; background: var(--w-paper); transition: width 220ms var(--w-ease); }
-.w-progress-fill::after { content: ''; position: absolute; inset-inline-end: -1px; top: -3.5px; width: 2px; height: 9px; background: var(--w-red); }
+.w-progress { position: relative; height: max(1px, calc(1 * var(--ws-px))); background: var(--w-rule); }
+.w-progress-fill { position: absolute; inset-block: min(-0.5px, calc(-0.5 * var(--ws-px))); inset-inline-start: 0; height: max(2px, calc(2 * var(--ws-px))); background: var(--w-paper); transition: width 220ms var(--w-ease); }
+.w-progress-fill::after { content: ''; position: absolute; inset-inline-end: min(-1px, calc(-1 * var(--ws-px))); top: calc(-3.5 * var(--ws-px)); width: max(2px, calc(2 * var(--ws-px))); height: calc(9 * var(--ws-px)); background: var(--w-red); }
 
 /* ══════════════════ Marks, keys, pins ══════════════════ */
 /* A key cap in a hint or prompt */
@@ -691,8 +693,8 @@
   min-width: 1.7em;
   height: 1.7em;
   padding: 0 .45em;
-  border: 1px solid rgba(242, 242, 242, .4);
-  box-shadow: inset 0 -2px 0 rgba(242, 242, 242, .14);
+  border: max(1px, calc(1 * var(--ws-px))) solid rgba(242, 242, 242, .4);
+  box-shadow: inset 0 min(-2px, calc(-2 * var(--ws-px))) 0 rgba(242, 242, 242, .14);
   color: var(--w-paper);
   font-family: var(--w-f-label);
   font-weight: 400;
@@ -737,7 +739,7 @@
 
 /* ══════════════════ Scroll, motion ══════════════════ */
 .w-scroll { overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: rgba(242, 242, 242, .3) transparent; }
-.w-scroll::-webkit-scrollbar { width: 4px; height: 0; }
+.w-scroll::-webkit-scrollbar { width: calc(4 * var(--ws-px)); height: 0; }
 .w-scroll::-webkit-scrollbar-track { background: transparent; }
 .w-scroll::-webkit-scrollbar-thumb { background: rgba(242, 242, 242, .3); border-radius: 0; }
 .w-scroll::-webkit-scrollbar-thumb:hover { background: rgba(242, 242, 242, .5); }

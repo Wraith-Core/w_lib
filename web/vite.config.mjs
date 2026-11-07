@@ -1,11 +1,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import * as path from 'path';
+// ★ Every px in the CSS follows the screen (720p .. 8K, ultrawide by height): ui-scale.cjs.
+import uiScale from './ui-scale.cjs';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   base: './',
+  css: { postcss: { plugins: [uiScale()] } },
   server: {
     port: 3000,
   },

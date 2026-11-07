@@ -194,7 +194,8 @@ body {
 .lb-context {
   position: absolute;
   top: 12vh;
-  right: 3vw;
+  /* ★ 3vw at 16:9; on a wider screen it stays inside the centred 16:9 frame (ui-scale --ws-gutter) */
+  right: calc(var(--ws-gutter) + min(3vw, 57.6px));
   width: min(30vw, 420px);
   max-height: 76vh;
 }
@@ -1192,10 +1193,10 @@ body {
 
    It also keeps the close button clear of the viewport: it floats 20px above the panel now,
    and at 4vh that put it almost off the top of the screen. */
-.lb-menu.pos-top-left { top: 12vh; left: 2.5vw; }
-.lb-menu.pos-top-right { top: 12vh; right: 2.5vw; }
-.lb-menu.pos-bottom-left { bottom: 6vh; left: 2.5vw; }
-.lb-menu.pos-bottom-right { bottom: 6vh; right: 2.5vw; }
+.lb-menu.pos-top-left { top: 12vh; left: calc(var(--ws-gutter) + min(2.5vw, 48px)); }
+.lb-menu.pos-top-right { top: 12vh; right: calc(var(--ws-gutter) + min(2.5vw, 48px)); }
+.lb-menu.pos-bottom-left { bottom: 6vh; left: calc(var(--ws-gutter) + min(2.5vw, 48px)); }
+.lb-menu.pos-bottom-right { bottom: 6vh; right: calc(var(--ws-gutter) + min(2.5vw, 48px)); }
 
 .lb-menu-list {
   flex: 1;

@@ -7,6 +7,8 @@
    band with ink text. Red is a mark only: the danger underline, the destructive fill, invalid. */
 @import url('../theme/tokens.css');
 @import url('../theme/fonts.css');
+/* ui-scale */
+:root{--ws-px:max(.6667px,min(.0925926vh,.0520833vw));--ws-fpx:max(.8px,min(.0925926vh,.0520833vw));--ws-gutter:max(0px,calc((100vw - 177.7778vh) / 2))}
 :root{
  --wst-ink:var(--w-ink);--wst-text:var(--w-paper);--wst-text-dim:var(--w-paper-dim);--wst-text-faint:var(--w-paper-faint);
  --wst-line:var(--w-rule);--wst-line-strong:var(--w-rule-2);--wst-plate:var(--w-ink-3);
@@ -41,7 +43,7 @@
 :root,[dir]{--wst-f-display:var(--w-f-display);--wst-f-title:var(--w-f-title);--wst-f-body:var(--w-f-label);--wst-f-num:var(--w-f-num)}
 .wst-root{color:var(--wst-text);font-family:var(--wst-f-body);-webkit-font-smoothing:antialiased}
 .wst-root *{scrollbar-width:thin;scrollbar-color:rgba(242,242,242,.3) rgba(242,242,242,.04)}
-.wst-root *::-webkit-scrollbar{width:6px;height:0}
+.wst-root *::-webkit-scrollbar{width:calc(6 * var(--ws-px));height:0}
 .wst-root *::-webkit-scrollbar:horizontal{height:0!important;display:none!important}
 .wst-root *::-webkit-scrollbar-track{background:rgba(242,242,242,.04)}
 .wst-root *::-webkit-scrollbar-thumb{background:rgba(242,242,242,.3);border-radius:0}
@@ -49,11 +51,11 @@
 .wst-root *::-webkit-scrollbar-button{display:none;width:0;height:0}
 .wst-root *::-webkit-scrollbar-corner{background:transparent!important;display:none!important}
 .wst-panel::before,.wst-header::before,.wst-button::before,.wst-tab::before,.wst-close::before,.wst-card::before,.wst-plate::before,.wst-row::before,.wst-field::before{display:block!important;width:auto!important;height:auto!important;transform:none!important;filter:none!important;border-radius:0!important;box-shadow:none!important}
-.wst-panel{isolation:isolate!important;background:radial-gradient(130% 90% at 50% 0%,rgba(25,25,25,.96) 0%,rgba(17,17,17,.97) 42%,rgba(10,10,10,.98) 100%)!important;box-shadow:0 18px 55px -18px rgba(0,0,0,.85),0 0 0 1px rgba(242,242,242,.08)!important;border:0!important;border-radius:0!important;color:var(--w-paper)!important;backdrop-filter:none!important}
-.wst-panel::before{content:''!important;position:absolute!important;inset:-4px -6px!important;z-index:-1!important;pointer-events:none!important;background:rgba(10,10,10,.91)!important;opacity:1!important;-webkit-mask:var(--wst-tex-help_text_bg) center/100% 100% no-repeat!important;mask:var(--wst-tex-help_text_bg) center/100% 100% no-repeat!important}
+.wst-panel{isolation:isolate!important;background:radial-gradient(130% 90% at 50% 0%,rgba(25,25,25,.96) 0%,rgba(17,17,17,.97) 42%,rgba(10,10,10,.98) 100%)!important;box-shadow:0 calc(18 * var(--ws-px)) calc(55 * var(--ws-px)) calc(-18 * var(--ws-px)) rgba(0,0,0,.85),0 0 0 max(1px, calc(1 * var(--ws-px))) rgba(242,242,242,.08)!important;border:0!important;border-radius:0!important;color:var(--w-paper)!important;backdrop-filter:none!important}
+.wst-panel::before{content:''!important;position:absolute!important;inset:calc(-4 * var(--ws-px)) calc(-6 * var(--ws-px))!important;z-index:-1!important;pointer-events:none!important;background:rgba(10,10,10,.91)!important;opacity:1!important;-webkit-mask:var(--wst-tex-help_text_bg) center/100% 100% no-repeat!important;mask:var(--wst-tex-help_text_bg) center/100% 100% no-repeat!important}
 /* a panel that scrolls (store-frame.js / store-theme-bridge.js mark it): its texture's 6px past each side is no sideways scroll */
 .wst-panel.wst-scrolls{overflow-x:hidden!important}
-.wst-frame{position:absolute!important;inset:0!important;pointer-events:none!important;z-index:3!important;--wst-frame-px:clamp(10px,1.3vh,16px);opacity:.65!important;display:block!important}
+.wst-frame{position:absolute!important;inset:0!important;pointer-events:none!important;z-index:3!important;--wst-frame-px:clamp(calc(10 * var(--ws-px)),1.3vh,calc(16 * var(--ws-px)));opacity:.65!important;display:block!important}
 .wst-frame>span{position:absolute!important;background:var(--wst-accent)!important;border:0!important}
 .wst-fr-t,.wst-fr-b{left:var(--wst-frame-px)!important;right:var(--wst-frame-px)!important;height:var(--wst-frame-px)!important;-webkit-mask-repeat:repeat-x!important;mask-repeat:repeat-x!important;-webkit-mask-size:auto 100%!important;mask-size:auto 100%!important}
 .wst-fr-l,.wst-fr-r{top:var(--wst-frame-px)!important;bottom:var(--wst-frame-px)!important;width:var(--wst-frame-px)!important;-webkit-mask-repeat:repeat-y!important;mask-repeat:repeat-y!important;-webkit-mask-size:100% auto!important;mask-size:100% auto!important}
@@ -71,10 +73,10 @@
 /* Titles: the title role. EB Garamond 600 in Latin; Lalezar 400 in Arabic (it has one weight:
    --w-wt-title is 400 under any RTL ancestor, and the font is declared over a weight range so
    nothing is ever synthesised bold). Never Tajawal, never tracked in Arabic. */
-.wst-title{font-family:var(--wst-f-title)!important;color:var(--w-paper)!important;font-weight:var(--w-wt-title)!important;letter-spacing:.01em;text-shadow:0 2px 8px #000!important}
+.wst-title{font-family:var(--wst-f-title)!important;color:var(--w-paper)!important;font-weight:var(--w-wt-title)!important;letter-spacing:.01em;text-shadow:0 max(2px, calc(2 * var(--ws-px))) calc(8 * var(--ws-px)) #000!important}
 .wst-sub{color:var(--wst-text-dim)!important;font-family:var(--wst-f-body)!important}
 .wst-num{font-family:var(--wst-f-num)!important;direction:ltr;unicode-bidi:isolate;letter-spacing:.02em}
-.wst-rule{display:block;height:4px;background:var(--w-rule-3)!important;border:0!important;-webkit-mask:var(--wst-tex-divider_line) center/100% 100% no-repeat!important;mask:var(--wst-tex-divider_line) center/100% 100% no-repeat!important}
+.wst-rule{display:block;height:calc(4 * var(--ws-px));background:var(--w-rule-3)!important;border:0!important;-webkit-mask:var(--wst-tex-divider_line) center/100% 100% no-repeat!important;mask:var(--wst-tex-divider_line) center/100% 100% no-repeat!important}
 .wst-button,.wst-tab,.wst-card,.wst-row,.wst-field{position:relative}
 .wst-button,.wst-tab,.wst-close,.wst-card,.wst-plate,.wst-row,.wst-field{isolation:isolate!important;background:transparent!important;background-image:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:var(--w-paper)!important}
 /* Controls are the label role (Hapna Slab / Tajawal), at the weight the file has: no reflow on select */
@@ -94,7 +96,7 @@
 /* Destructive: paper text on the plate with a red underline. Under the cursor it is the same paper
    band as every other button (the pause menu's cursor) and the red underline stays under the ink
    word, as on the pause menu's confirm note. Red is never a plate outside the confirm note. */
-.wst-button.danger{color:var(--w-paper)!important;text-decoration-line:underline;text-decoration-color:var(--w-red);text-decoration-thickness:2px;text-underline-offset:.3em}
+.wst-button.danger{color:var(--w-paper)!important;text-decoration-line:underline;text-decoration-color:var(--w-red);text-decoration-thickness:max(2px, calc(2 * var(--ws-px)));text-underline-offset:.3em}
 .wst-button.danger:hover:not(:disabled),.wst-button.danger:focus-visible{color:var(--w-ink)!important;text-decoration-line:underline;text-decoration-color:var(--w-red)}
 .wst-button.danger:hover:not(:disabled)::before,.wst-button.danger:focus-visible::before{background:var(--w-paper)!important}
 .wst-button.danger:active:not(:disabled)::before{background:var(--w-paper-dim)!important}
@@ -116,21 +118,27 @@
 .wst-row.clickable:hover,.wst-row:is(.selected,.is-selected,[aria-selected=true]){color:var(--w-ink)!important}
 .wst-row.clickable:hover::before,.wst-row:is(.selected,.is-selected,[aria-selected=true])::before{background:var(--w-paper)!important;-webkit-mask-image:var(--wst-tex-selection_box_bg_1a)!important;mask-image:var(--wst-tex-selection_box_bg_1a)!important}
 .wst-row.clickable:hover :is(h1,h2,h3,h4,p,small,span,b,strong,label,em,i,svg),.wst-row:is(.selected,.is-selected,[aria-selected=true]) :is(h1,h2,h3,h4,p,small,span,b,strong,label,em,i,svg){color:inherit!important}
-.wst-field:focus-within{box-shadow:inset 0 -2px 0 var(--w-paper)!important}
+/* 2026-11-05 (owner): the site's look. A selected card / tab / row and the main button are the red band with
+   light text: inside them paper means the mark and ink means the text on it, so every rule above (and every
+   resource rule that draws with these tokens) paints them red without its own copy. The cursor on an unselected
+   element stays the paper band. */
+.wst-button.primary,.wst-tab:is(.active,.selected,.chosen,.is-active,.is-selected,[aria-selected=true]),.wst-card:is(.active,.chosen,.selected,.is-active,.is-selected,[aria-selected=true]),.wst-row:is(.selected,.is-selected,[aria-selected=true]),.wst-mark{--w-paper:var(--w-mark,#D0161B);--w-paper-lit:var(--w-mark-lit,#E01A1F);--w-paper-dim:var(--w-mark-deep,#8F0B0E);--w-ink:var(--w-mark-ink,#F2F2F2);--w-ink-2:var(--w-mark-ink,#F2F2F2);--w-ink-3:var(--w-mark-ink,#F2F2F2)}
+.wst-card:is(.active,.chosen,.selected,.is-active,.is-selected,[aria-selected=true]):hover:not(:disabled):not(.disabled)::before,.wst-row:is(.selected,.is-selected,[aria-selected=true]):hover::before{background:var(--w-paper-lit)!important}
+.wst-field:focus-within{box-shadow:inset 0 min(-2px, calc(-2 * var(--ws-px))) 0 var(--w-paper)!important}
 .wst-field:focus-within::before{background:var(--w-ink-4)!important}
 .wst-input{background:var(--w-ink-2)!important;border:0!important;border-radius:0!important;box-shadow:none!important;color:var(--w-paper)!important;font-family:var(--wst-f-body)!important;outline:none!important;caret-color:var(--w-paper)}
-.wst-input:focus{background:var(--w-ink-3)!important;box-shadow:inset 0 -2px 0 var(--w-paper)!important}
+.wst-input:focus{background:var(--w-ink-3)!important;box-shadow:inset 0 min(-2px, calc(-2 * var(--ws-px))) 0 var(--w-paper)!important}
 .wst-field .wst-input,.wst-field .wst-input:focus{background:transparent!important;box-shadow:none!important}
 .wst-input::placeholder{color:var(--w-paper-faint)!important}
 .wst-input::selection,.wst-root ::selection{background:rgba(242,242,242,.85);color:var(--w-ink)}
 .wst-input option{background:var(--w-ink-2);color:var(--w-paper)}
 /* The store's native checkbox: a dark square, then paper with an ink center. */
-.wst-check{display:inline-flex!important;align-items:center;gap:8px!important;cursor:pointer;font-family:var(--wst-f-body);font-size:clamp(13px,1.6vh,17px);color:var(--w-paper)}
-.wst-check input[type=checkbox]{appearance:none!important;width:18px!important;height:18px!important;min-width:18px;min-height:18px;box-sizing:border-box!important;border:2px solid var(--w-paper-faint)!important;background:var(--w-ink)!important;cursor:pointer;display:grid!important;place-items:center;flex:none!important;padding:0!important;margin:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important}
+.wst-check{display:inline-flex!important;align-items:center;gap:calc(8 * var(--ws-px))!important;cursor:pointer;font-family:var(--wst-f-body);font-size:clamp(calc(13 * var(--ws-fpx)),1.6vh,calc(17 * var(--ws-fpx)));color:var(--w-paper)}
+.wst-check input[type=checkbox]{appearance:none!important;width:calc(18 * var(--ws-px))!important;height:calc(18 * var(--ws-px))!important;min-width:calc(18 * var(--ws-px));min-height:calc(18 * var(--ws-px));box-sizing:border-box!important;border:max(2px, calc(2 * var(--ws-px))) solid var(--w-paper-faint)!important;background:var(--w-ink)!important;cursor:pointer;display:grid!important;place-items:center;flex:none!important;padding:0!important;margin:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important}
 .wst-check input[type=checkbox]::after{content:none}
 .wst-check input[type=checkbox]:checked{background:var(--w-paper)!important;border-color:var(--w-paper)!important}
-.wst-check input[type=checkbox]:checked::after{content:'';position:static;width:8px;height:8px;background:var(--w-ink);border:0;box-shadow:none;transform:none}
-.wst-check input[type=checkbox]:focus-visible{box-shadow:0 0 0 2px var(--w-ink),0 0 0 3px var(--w-paper)!important}
+.wst-check input[type=checkbox]:checked::after{content:'';position:static;width:calc(8 * var(--ws-px));height:calc(8 * var(--ws-px));background:var(--w-ink);border:0;box-shadow:none;transform:none}
+.wst-check input[type=checkbox]:focus-visible{box-shadow:0 0 0 max(2px, calc(2 * var(--ws-px))) var(--w-ink),0 0 0 calc(3 * var(--ws-px)) var(--w-paper)!important}
 .wst-check input[type=checkbox]:disabled{opacity:.4!important;cursor:default!important}
 /* Arabic. The label face everywhere except titles, which keep the title role (Lalezar). Arabic is
    never letter-spaced, uppercased or small-capped. */

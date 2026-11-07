@@ -543,7 +543,7 @@ const Form: React.FC<{ block: Block; ctx: Ctx }> = ({ block, ctx }) => (
   <>
     {block.image && (
       <div className="wl-panel-image">
-        <img src={block.image} alt="" style={{ height: `${Math.max(24, Math.min(400, block.height ?? 90))}px`, width: 'auto', maxWidth: '100%' }} />
+        <img src={block.image} alt="" style={{ height: `calc(${Math.max(24, Math.min(400, block.height ?? 90))} * var(--ws-px))`, width: 'auto', maxWidth: '100%' }} />
       </div>
     )}
     <div className="wl-panel-form">
@@ -711,8 +711,8 @@ const BODY: Record<Block['type'], React.FC<{ block: Block; ctx: Ctx }>> = {
       <div className="wl-panel-image">
         {/* fill: drawn AT that height (a small picture scaled up -- an SVG stays sharp), not merely kept under it */}
         <img src={block.image} alt={block.value ?? ''} style={block.fill
-          ? { height: `${Math.max(24, Math.min(400, block.height ?? 120))}px`, width: 'auto', maxWidth: '100%' }
-          : { maxHeight: `${Math.max(24, Math.min(400, block.height ?? 120))}px` }} />
+          ? { height: `calc(${Math.max(24, Math.min(400, block.height ?? 120))} * var(--ws-px))`, width: 'auto', maxWidth: '100%' }
+          : { maxHeight: `calc(${Math.max(24, Math.min(400, block.height ?? 120))} * var(--ws-px))` }} />
       </div>
     ) : null,
 };
