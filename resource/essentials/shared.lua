@@ -43,7 +43,7 @@ WEssentials = {
     blacklistedScenarios = { types = {}, groups = {} },
 
     -- a stopped wagon whose horses keep walking is stuck (OneSync): deleted every N seconds.
-    -- A player's own wagon (w_stables) and a w_housing delivery are never touched.
+    -- A player's own wagon (w_stables), a w_housing delivery and any wagon a script made (w_jobs, heists) are never touched.
     stuckWagons = { enabled = true, everySeconds = 3 },
 
     recoil = { enabled = true, amount = 0.7 },   -- camera kick per shot of a gun (0 = none)

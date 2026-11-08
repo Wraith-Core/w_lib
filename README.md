@@ -6,6 +6,10 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.4.3 (2026-11-08)
+
+- تنظيف العربات العالقة صار ينظف عربات اللعبة العشوائية فقط، ولا يحذف عربة صنعها سكربت (مثل عربة الوظائف وعربات السرقات). كانت عربة الوظيفة تختفي بعد ظهورها بثواني.
+
 ## 4.4.2 (2026-11-08)
 
 - وضع القتال بين اللاعبين يتوقف مؤقتًا على جهازك وقت ما تركب خلف لاعب على حصانه أو معه في عربته (w_stables)، ويرجع بعد ما تنزل.

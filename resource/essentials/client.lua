@@ -220,7 +220,12 @@ if E.stuckWagons.enabled then
                     if DoesEntityExist(veh) and NetworkGetEntityIsNetworked(veh) and IsVehicleStopped(veh) then
                         local state = Entity(veh).state
                         -- a player's wagon (w_stables) and a housing delivery stand on purpose
-                        if not state.wHousingDelivery and not state.w_stables and not state.wagonUUID then
+                        -- 4.4.3 (2026-11-08): only the game's own traffic is cleaned. A wagon a script made (population
+                        -- type 7 / 8 or a mission entity: w_jobs' wagon frozen at its bay while its team idles, a heist
+                        -- coach, a mission delivery) stands on purpose; the job wagon vanished within 3 s of spawning.
+                        local pop = GetEntityPopulationType(veh)
+                        local scripted = pop == 7 or pop == 8 or IsEntityAMissionEntity(veh) or state.w_jobs ~= nil
+                        if not scripted and not state.wHousingDelivery and not state.w_stables and not state.wagonUUID then
                             local horse = Citizen.InvokeNative(0xA8BA0BAE0173457B, veh, 0) -- the first draft animal
                             local driver = Citizen.InvokeNative(0x2963B5C1637E8A27, veh)
                             if horse and horse ~= 0 and (IsPedWalking(horse) or IsPedRunning(horse)) and driver ~= ped() then
