@@ -122,8 +122,9 @@ const ContextMenu: React.FC = () => {
 
   return (
     <div className={cls('wf', 'wk-ctx', rtl && 'is-rtl')}>
-      <div className="wk-side-scrim" />
-      <div className="wk-dock">
+      {/* always on the right, in every language (as before the board kit) */}
+      <div className="wk-side-scrim is-end" />
+      <div className="wk-dock is-end is-ctx">
         {/* ★ `menu` names the parent: then the control is the back arrow and there is no cross --
             one control answering one question. */}
         <header className="wf-mast wf-in">

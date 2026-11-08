@@ -6,13 +6,18 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.4.1 (2026-11-08)
+
+القائمة وقائمة الخيارات عادت إلى مكانها القديم في العربية والإنجليزية: القائمة على اليسار، وقائمة الخيارات على اليمين دائمًا.
+(List menu and context menu placement back to 4.3.0: physical, the same in both languages. Nothing else changed.)
+
 ## 4.4.0 (2026-11-08)
 
 The shared UI moved onto the board kit (a copy of w_train's `kit.css`, in `web/src/kit/`). The public API, every option, the
 NUI messages, return values and keys are unchanged: no script needs an edit. Needs a full restart (w_lib).
 
-- Context menu and list menu: a masthead with the title, one torn card docked at the inline-start edge inside the 16:9
-  frame (the right in Arabic), bare icons, thin paper gauges (red only for a red/orange/danger `colorScheme`), kit
+- Context menu and list menu: a masthead with the title, one torn card docked inside the 16:9
+  frame (4.4.1: the list menu on the left, the context menu on the right, in every language), bare icons, thin paper gauges (red only for a red/orange/danger `colorScheme`), kit
   switches and steppers. Metadata entries with `progress` get their own labelled gauge line.
 - Input dialog: one torn card with kit fields; confirm is the red band. Alert: the kit's paper note, one frame.
 - `showPanel`: rebuilt as the w_crafting / w_train board (list card + detail card + actions strip); the row under the

@@ -132,19 +132,23 @@
 .wk-fig { font-family: 'EB Garamond', Georgia, serif; font-variant-numeric: lining-nums tabular-nums; direction: ltr; unicode-bidi: isolate; }
 
 /* ══════════ The dock: the context menu and the list menu ══════════
-   A column at the board's edge (inline start: the right in Arabic), inside the 16:9 frame on an ultrawide. */
+   2026-11-08 (owner): PHYSICAL placement, the same in Arabic and English, as before the board kit (4.3.0's
+   .lb-menu / .lb-context): the list menu on the left by default ('right' in its position = the right), the context
+   menu always on the right; top 12vh (bottom 6vh), 420 px wide + the old frame. Only the content follows the language.
+   Inside the 16:9 frame on an ultrawide. */
 .wk-dock {
   position: absolute;
-  inset-inline-start: calc(5.4rem + var(--ws-gutter));
-  top: max(2rem, 11vh);
-  width: 27rem;
-  max-height: calc(100vh - max(2rem, 11vh) - 2.4rem);
+  left: calc(var(--ws-gutter) + min(2.5vw, 48px));
+  top: 12vh;
+  width: calc(min(30vw, 420px) + 48px);
+  max-height: calc(88vh - 2.4rem);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
-.wk-dock.is-end { inset-inline-start: auto; inset-inline-end: calc(5.4rem + var(--ws-gutter)); }
-.wk-dock.is-bottom { top: auto; bottom: max(2rem, 11vh); }
+.wk-dock.is-end { left: auto; right: calc(var(--ws-gutter) + min(2.5vw, 48px)); }
+.wk-dock.is-ctx { right: calc(var(--ws-gutter) + min(3vw, 57.6px)); }
+.wk-dock.is-bottom { top: auto; bottom: 6vh; max-height: calc(94vh - 2.4rem); }
 .wk-dock > .wf-mast { padding-inline: 0.2rem 0; }
 .wk-dock .wf-mark { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .wk-dock > .wf-wrap { flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column; }
@@ -159,9 +163,8 @@
   background: linear-gradient(90deg, rgba(11, 10, 10, 0.62) 0%, rgba(11, 10, 10, 0.4) 22%, rgba(11, 10, 10, 0.12) 38%, rgba(11, 10, 10, 0) 50%);
   animation: wf-fade 220ms var(--ease) both;
 }
-[dir='rtl'] .wk-side-scrim { transform: scaleX(-1); }
+/* the shade follows the dock's physical side (left, or right with .is-end), never the language */
 .wk-side-scrim.is-end { transform: scaleX(-1); }
-[dir='rtl'] .wk-side-scrim.is-end { transform: none; }
 
 /* a menu row: grows with its text; the paper band under the cursor; never red */
 .wk-row { width: 100%; height: auto; min-height: 2.95rem; padding: 0.5rem 0.8rem; text-align: start; }

@@ -24,9 +24,8 @@ interface MenuState {
 }
 
 /**
- * Where the menu docks. The kit docks at the board's edge on the inline START (the right in Arabic), so the four
- * corners ox_lib names are read in the reading direction: 'left' = the start side, 'right' = the end side, and an
- * Arabic screen mirrors them with everything else. top / bottom are kept. No position = top at the start.
+ * Where the menu docks: the four corners ox_lib names, PHYSICAL ('left' = the left, 'right' = the right) and the same
+ * in every language, as before the board kit. top / bottom are kept. No position = top left.
  */
 const dockClass = (position?: string) => {
   const p = String(position || 'top-left');
