@@ -228,3 +228,61 @@
   width: clamp(15px, 2vh, 24px);
   height: clamp(15px, 2vh, 24px);
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * 4.4.0 -- the board kit's ink, paper and faces (kit/kit.css), the wheel kept round.
+ *   discs      the kit card's ink (#151313) with its paper grain, the same inner light as a torn card
+ *   cursor     ringed in paper (unchanged: the paper is the cursor; red is never the cursor)
+ *   centre     the option's name in the display face; the idle line in EB Garamond small caps (Lalezar in
+ *              Arabic), no longer the label slab
+ * ══════════════════════════════════════════════════════════════════════════ */
+.lb-radial-face {
+  overflow: hidden;
+  background: radial-gradient(120% 120% at 50% 12%, rgba(242, 242, 242, 0.05), rgba(242, 242, 242, 0) 62%), var(--ink-2, #151313);
+  box-shadow:
+    inset 0 0 0 1px rgba(242, 242, 242, 0.18),
+    inset 0 0 0.9rem rgba(242, 242, 242, 0.08),
+    0 6px 16px rgba(0, 0, 0, 0.75);
+}
+.lb-radial-face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  background-image: var(--tex-grain);
+  background-size: 256px 256px;
+  opacity: 0.1;
+  mix-blend-mode: screen;
+  filter: invert(1);
+}
+.lb-radial-bubble.is-selected .lb-radial-face {
+  background: radial-gradient(120% 120% at 50% 12%, rgba(242, 242, 242, 0.09), rgba(242, 242, 242, 0) 62%), var(--ink-3, #1C1919);
+}
+.lb-radial-center {
+  background: radial-gradient(130% 90% at 50% 0%, rgba(242, 242, 242, 0.05), rgba(242, 242, 242, 0) 58%), var(--ink-2, #151313);
+  box-shadow:
+    inset 0 0 1.25rem rgba(242, 242, 242, 0.11),
+    inset 0 0 0.45rem rgba(242, 242, 242, 0.1),
+    0 0 0 1px rgba(242, 242, 242, 0.18),
+    0 14px 40px rgba(0, 0, 0, 0.8);
+}
+.lb-radial-center:before {
+  background: var(--tex-grain) center / 256px 256px repeat;
+  opacity: 0.1;
+  mix-blend-mode: screen;
+  filter: invert(1);
+}
+.lb-radial-title { font-family: 'EB Garamond', 'Lalezar', Georgia, serif; font-weight: 600; letter-spacing: 0.005em; }
+[dir='rtl'] .lb-radial-title { font-family: 'Lalezar', 'EB Garamond', Georgia, serif; font-weight: 400; }
+.lb-radial-hint {
+  font-family: 'EB Garamond', 'Lalezar', Georgia, serif;
+  font-weight: 500;
+  font-size: calc(clamp(13px, 1.6vh, 18px) * var(--w-k-label, 1));
+  text-transform: none;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+  color: var(--paper-dim, #B4B4B4);
+}
+[dir='rtl'] .lb-radial-hint { font-family: 'Lalezar', 'EB Garamond', Georgia, serif; font-variant-caps: normal; letter-spacing: 0; font-weight: 400; }
+.lb-radial-rule { background: var(--rule-2, rgba(242, 242, 242, 0.32)); width: 36%; }

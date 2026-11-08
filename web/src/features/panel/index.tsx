@@ -1,26 +1,29 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { fetchNui } from '../../utils/fetchNui';
-import { useLocales } from '../../providers/LocaleProvider';
-import { Dashboard, DashboardActions, DashboardBody, DashboardHeader, DashboardSearch } from '../../wc/Dashboard';
-import Icon from '../../wc/Icon';
-import { Bar, Glyph, play } from '../../wc/Panel';
-import Blocks, { Block } from './Blocks';
-import './panel.css';
+import { play } from '../../wc/sound';
+import { cls, Gauge, GlyphCross, GlyphDown, GlyphLock, GlyphSearch, KitIcon, Txt, useKit } from '../../kit/ui';
+import Blocks, { AmountField, Block, Slot } from './Blocks';
 
 /**
  * ============================================================================
- * The panel -- one dashboard, described from Lua.
+ * The panel -- one board, described from Lua (lib.showPanel).
  *
  * ★ WHY THIS EXISTS: every script here wants the same interface -- a titled panel, a list of
- *   things, the selected thing in detail, and a row of actions. Written per resource that is a
- *   React app, a build step and a frame each time, and eight of them drift apart within a month.
- *   Described instead, a script sends a table and gets w_crafting's interface.
+ *   things, the selected thing in detail, and a row of actions. Described instead of written, a
+ *   script sends a table and gets the board.
+ *
+ * ★ 4.4.0: drawn on the board kit, as w_crafting's board (the wide layout): the masthead (the title as the mark,
+ *   close at its end), the list card on the start side (tabs, search, the tally, sections that fold), the detail
+ *   card filling the rest (the blocks on a 12-column grid), and the actions strip under it (the main button on
+ *   the red band). The row under the mouse is lit (the paper band); the PICKED row is the red band.
  *
  * ⚠️ It is a DESCRIPTION, not a component tree. Lua cannot send functions across the NUI
- *    boundary (the same limit that made the context menu use `event` + `args`), so every action
- *    is an id that comes back on a callback. Anything that needs to compute while the panel is
- *    open updates it by sending a new description.
+ *    boundary, so every action is an id that comes back on a callback. The contract is unchanged:
+ *    showPanel (a description, or false) / hidePanel in; panelClose, panelSelect id, panelAction
+ *    {action, item, amount}, panelTab id, panelNav id, panelField {id, value}, panelCancel out.
+ *    Keys: arrows pick the next row (and tell Lua at once), Enter runs the primary action, Escape
+ *    closes; inside a field Escape and Enter only leave the field.
  * ============================================================================
  */
 
@@ -36,15 +39,11 @@ interface Detail {
   description?: string;
   /** A short state line beside the name -- 'In stock', 'Locked', 'Offline'. */
   tag?: string;
-  /** Draws the tag in red: missing, locked, banned. */
+  /** Draws the tag as a bad state: missing, locked, banned. */
   tagBad?: boolean;
   stats?: Meta[];
   rows?: Meta[];
-  /**
-   * What this costs, needs, or is made of -- and it is ONE field for all three on purpose.
-   * A crafting recipe's materials, a shop's price and a trade's offer are the same list of
-   * item / label / amount, and giving each its own field would be three names for one thing.
-   */
+  /** What this costs, needs, or is made of -- ONE field for all three on purpose. */
   requirements?: Requirement[];
   requirementsLabel?: string;
   /** Seconds left, counted down by the UI. */
@@ -57,7 +56,7 @@ interface Requirement {
   amount?: string | number;
   icon?: string;
   image?: string;
-  /** Red, and the action should usually be disabled with it: not enough, not carried. */
+  /** Marked, and the action should usually be disabled with it: not enough, not carried. */
   missing?: boolean;
 }
 
@@ -98,10 +97,9 @@ interface Action {
   icon?: string;
   primary?: boolean;
   disabled?: boolean;
-  /**
-   * Asks for a number before firing -- a bid, a quantity, a stake. Its value rides along on
-   * panelAction, so the script gets the amount and the action in one callback.
-   */
+  /** Not in the original contract, honoured when a script sends it: a button that takes something away. */
+  danger?: boolean;
+  /** Asks for a number before firing -- a bid, a quantity, a stake. Its value rides along on panelAction. */
   input?: { min?: number; max?: number; step?: number; value?: number; placeholder?: string };
 }
 
@@ -132,44 +130,21 @@ interface PanelState {
   countdown?: number;
   /** The side column only as wide as its widest row (w_playernames' list of name plates). */
   navFit?: boolean;
-
-  /**
-   * A grouped sidebar in place of the item list -- Overview / Players / World, the shape an
-   * admin panel wants. When this is set the browser column becomes navigation and the content
-   * comes from `blocks` instead of from a selected item's detail.
-   */
+  /** A grouped sidebar in place of the item list; the content then comes from `blocks`. */
   nav?: NavGroup[];
   activeNav?: string;
-  /**
-   * The unit counted under the tabs -- 'recipes', 'players', 'lots'. Without it the tally is
-   * left off entirely rather than guessed at, since 'items' is wrong in most panels.
-   */
+  /** The unit counted under the tabs -- 'recipes', 'players', 'lots'. Without it the tally is left off. */
   navCountLabel?: string;
-
-  /**
-   * The content, composed. When present it replaces the fixed detail pane entirely.
-   *
-   * ★ This is what makes the panel general. A shop needs the built-in detail; an admin section
-   *   needs stat tiles over a log table; a marketplace needs a card grid beside a sell form.
-   *   Rather than a layout per script, a script names the pieces and their order.
-   */
+  /** The content, composed. When present it replaces the fixed detail pane entirely. */
   blocks?: Block[];
 }
 
-/**
- * A section of the browser column: a heading that folds open, and rows under it.
- *
- * ★ This is w_crafting's category, described. The crafting menu groups its recipes under
- *   collapsible headings that carry a lock, a count and the level that unlocks them, with
- *   public/private tabs above and a running total beneath -- and a panel that only drew flat
- *   headings could not be that menu, only something resembling it. Every field below exists
- *   because the crafting browser draws it.
- */
+/** A section of the browser column: a heading that folds open, and rows under it (w_crafting's category). */
 interface NavGroup {
   /** Stable across redraws -- the open/closed state is keyed on it. Falls back to the label. */
   id?: string;
   label?: string;
-  /** 🔒 on the heading and a red edge down its side: a job-gated section. */
+  /** A lock on the heading and a red edge down its side: a job-gated section. */
   private?: boolean;
   /** Sits at the end of the heading beside the count -- 'Level 15'. */
   levelLabel?: string;
@@ -177,7 +152,7 @@ interface NavGroup {
   scope?: string;
   /** Open on arrival. With none set anywhere, the first group opens. */
   expanded?: boolean;
-  /** The row count as a quiet "(31)" beside the name instead of the box at the end. */
+  /** The row count as a quiet "(31)" beside the name instead of at the end. */
   countInline?: boolean;
   items: Array<{
     id: string;
@@ -185,19 +160,13 @@ interface NavGroup {
     icon?: string;
     image?: string;
     count?: number | string;
-    /** A second line under the label -- what the row makes, what it costs. */
+    /** A second line under the label. */
     description?: string;
-    /** A wide picture under the text, the row's full width (w_playernames: each player's name plate). */
+    /** A wide picture as the row (w_playernames: each player's name plate). */
     picture?: string;
-    /** A row with a picture: a small line under it (w_playernames' /nameplate: the plate's name). */
+    /** A row with a picture: a small line under it. */
     caption?: string;
-    /**
-     * ★ Extra text the search matches but never draws.
-     *
-     *   w_crafting's search finds a recipe by what it is MADE OF, not only by its name -- a
-     *   player looking for what to do with a pile of iron types 'iron'. The ingredients are not
-     *   in the row's label and should not be, so they travel here.
-     */
+    /** Extra text the search matches but never draws (what a recipe is made of). */
     search?: string;
     disabled?: boolean;
   }>;
@@ -205,9 +174,7 @@ interface NavGroup {
 
 /**
  * Seconds as a clock: 2:07, or 1:04:22 once it passes an hour.
- *
- * ⚠️ dir="ltr" wherever this is rendered. A time is digits and colons, all bidi-neutral, so an
- *    Arabic panel would otherwise reorder them.
+ * ⚠️ Drawn left to right wherever it is shown (.wk-fig): digits and colons are bidi-neutral.
  */
 const asClock = (total: number) => {
   const t = Math.max(0, Math.floor(total));
@@ -219,137 +186,15 @@ const asClock = (total: number) => {
   return `${h ? `${h}:` : ''}${mm}:${String(sec).padStart(2, '0')}`;
 };
 
-/** Rows in order, but gathered under their group headings. */
-const grouped = (items: Item[]) => {
-  const out: Array<{ group?: string; items: Item[] }> = [];
-
-  for (const item of items) {
-    const last = out[out.length - 1];
-    if (last && last.group === item.group) last.items.push(item);
-    else out.push({ group: item.group, items: [item] });
-  }
-
-  return out;
-};
-
-/**
- * Plain facts, as the tiles w_crafting uses for time / level / XP / yield.
- *
- * ⚠️ NOT a full-width label-and-value row. That is what this was, and across a detail pane six
- *    hundred pixels wide it put the label against one edge and its value against the other with
- *    a gulf between them -- four readings that had to be tracked one at a time instead of taken
- *    in at a glance. A tile keeps a value next to its own label.
- */
-const MetaTiles: React.FC<{ rows?: Meta[] }> = ({ rows }) =>
-  rows?.length ? (
-    <div className="wc-meta wl-panel-meta">
-      {rows.map((row, i) => (
-        <div className="wc-meta-tile" key={`${row.label}-${i}`}>
-          <span className="wc-meta-value" dir="ltr">
-            {row.value}
-          </span>
-          <span className="wc-meta-label">{row.label}</span>
-        </div>
-      ))}
-    </div>
-  ) : null;
-
-/**
- * The cost / materials / offer list, on w_crafting's ingredient row.
- *
- * ★ .wc-ing is a three-column grid -- picture, name, amount -- which is exactly the shape of a
- *   recipe's material, a shop item's price and a trade's side. One row type, three uses.
- */
-const Requirements: React.FC<{ rows?: Requirement[]; heading?: string }> = ({ rows, heading }) =>
-  rows?.length ? (
-    <>
-      <div className="wc-section-title">
-        <span>{heading}</span>
-        <span className="wc-hr-thin" />
-      </div>
-
-      <div className="wc-ingredients wc-scroll">
-        {rows.map((row, i) => (
-          <div className="wc-ing" key={`${row.label}-${i}`}>
-            <span className="wc-slot">
-              <Icon icon={row.image ?? row.icon} fallback="menu_bar" />
-            </span>
-
-            <span className="wc-ing-label">{row.label}</span>
-
-            {row.amount != null && (
-              <span className={`wc-ing-amount${row.missing ? ' is-danger' : ''}`} dir="ltr">
-                {row.amount}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-    </>
-  ) : null;
-
-/** Bars, under a ruled heading -- w_crafting's section pattern. */
-const StatRows: React.FC<{ rows?: Meta[]; heading?: string }> = ({ rows, heading }) =>
-  rows?.length ? (
-    <>
-      <div className="wc-section-title">
-        <span>{heading}</span>
-        <span className="wc-hr-thin" />
-      </div>
-
-      <div className="wl-panel-stats">
-        {rows.map((row, i) => (
-          <div className="wl-panel-row" key={`${row.label}-${i}`}>
-            <span className="wl-panel-row-label">{row.label}</span>
-            <Bar ratio={(row.progress ?? 0) / 100} bright />
-          </div>
-        ))}
-      </div>
-    </>
-  ) : null;
-
-/**
- * The amount an action asks for, drawn with the input dialog's own field and steppers.
- *
- * ★ .lb-input and .lb-spin are already in lib-ui.css -- reused rather than restyled, so a bid
- *   box and a dialog's number field are the same control wherever the player meets them.
- */
-const AmountField: React.FC<{
-  spec: NonNullable<Action['input']>;
-  value: number;
-  onChange: (value: number) => void;
-}> = ({ spec, value, onChange }) => {
-  const step = spec.step ?? 1;
-
-  const clamp = (n: number) =>
-    Math.min(spec.max ?? Number.MAX_SAFE_INTEGER, Math.max(spec.min ?? 0, Number.isFinite(n) ? n : spec.min ?? 0));
-
-  return (
-    <div className="lb-input wl-panel-amount">
-      <input
-        type="number"
-        dir="ltr"
-        value={value}
-        min={spec.min}
-        max={spec.max}
-        step={step}
-        placeholder={spec.placeholder}
-        onChange={(e) => onChange(clamp(Number(e.target.value)))}
-      />
-
-      <span className="lb-spin">
-        <button type="button" className="lb-spin-btn is-up" aria-label="+" onClick={() => onChange(clamp(value + step))} />
-        <button type="button" className="lb-spin-btn is-down" aria-label="-" onClick={() => onChange(clamp(value - step))} />
-      </span>
-    </div>
-  );
-};
+const low = (s: unknown) => (s == null ? '' : String(s).toLowerCase());
 
 const Panel: React.FC = () => {
-  const { locale } = useLocales();
+  const { rtl, t } = useKit();
   const [state, setState] = useState<PanelState | null>(null);
   const [selected, setSelected] = useState<string | number | null>(null);
   const [search, setSearch] = useState('');
+  /** The row under the mouse: lit only (the paper band), never picked. */
+  const [cursor, setCursor] = useState<string | null>(null);
   /** Seconds since this description arrived -- the one clock every countdown reads from. */
   const [elapsed, setElapsed] = useState(0);
   /** What each amount field is currently set to, keyed by action id. */
@@ -358,6 +203,7 @@ const Panel: React.FC = () => {
   /* The key handler is registered once and reads through refs, so it never goes stale. */
   const stateRef = useRef<PanelState | null>(null);
   const selectedRef = useRef<string | number | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   stateRef.current = state;
   selectedRef.current = selected;
@@ -365,12 +211,8 @@ const Panel: React.FC = () => {
   const items = state?.items ?? [];
 
   /**
-   * ★ ONE interval for the whole panel, and it runs only while something is counting.
-   *
-   * ⚠️ The alternative was Lua pushing a fresh description every second. With twenty auction
-   *    lots that is twenty full redraws a second across the NUI boundary to move some digits --
-   *    and the list would rebuild under the player's cursor while they were reading it. The
-   *    server still owns when a lot actually ends; this only draws the wait.
+   * ★ ONE interval for the whole panel, and it runs only while something is counting. The server still owns when
+   *   a lot actually ends; this only draws the wait.
    */
   const counting =
     typeof state?.countdown === 'number' ||
@@ -384,25 +226,17 @@ const Panel: React.FC = () => {
     return () => clearInterval(id);
   }, [state, counting]);
 
-  /* ★ Filtering is done here rather than in Lua. A search that has to cross the NUI boundary to
-     redraw feels laggy at exactly the moment the player is typing fastest. */
+  /* ★ Filtering is done here rather than in Lua: a search that crosses the NUI boundary feels laggy. */
   const visible = useMemo(() => {
     const needle = search.trim().toLowerCase();
     if (!needle) return items;
 
-    return items.filter(
-      (item) =>
-        item.title.toLowerCase().includes(needle) || (item.description ?? '').toLowerCase().includes(needle)
-    );
+    return items.filter((item) => low(item.title).includes(needle) || low(item.description).includes(needle));
   }, [items, search]);
 
-  /* ── the browser column, when it is navigation ──────────────────────────────────────────
-     ★ Tabs and folding are answered HERE, not by Lua. w_crafting switches scope and opens a
-       category without asking its client for anything, and a panel that took a round trip per
-       fold would put a frame of lag on a control the player is dragging their eye down. The
-       description says what the sections ARE; which one is open is the reader's business.
-     ⚠️ `panelTab` still fires so a script CAN react (loading a tab's rows on demand). Ignoring
-        it is the normal case and costs nothing -- the filtering has already happened. */
+  /* ── the browser column, when it is navigation ──
+     ★ Tabs and folding are answered HERE, not by Lua (no round trip per fold). `panelTab` still fires so a script
+       CAN react. */
   const navKey = (group: NavGroup, i: number) => group.id ?? group.label ?? String(i);
 
   const [navTab, setNavTab] = useState<string | null>(null);
@@ -425,25 +259,15 @@ const Panel: React.FC = () => {
         group,
         key: navKey(group, i),
         items: needle
-          ? group.items.filter(
-              (item) =>
-                item.label.toLowerCase().includes(needle) ||
-                (item.search ?? '').toLowerCase().includes(needle)
-            )
+          ? group.items.filter((item) => low(item.label).includes(needle) || low(item.search).includes(needle))
           : group.items,
       }))
-      /* A group scoped to another tab is not on this one. An unscoped group is on all of them,
-         which is what a panel with no tabs at all is made of. */
       .filter(({ group }) => !state?.tabs?.length || !group.scope || group.scope === tab)
-      /* ⚠️ Empty groups vanish only while searching. Standing empty they are still the shape of
-         the thing being edited -- a category with no recipes in it is a fact worth showing. */
+      /* ⚠️ Empty groups vanish only while searching. */
       .filter(({ items }) => !needle || items.length > 0);
   }, [state?.nav, state?.tabs, state?.activeTab, navTab, search]);
 
-  /**
-   * Which sections are open: every match while searching, otherwise what the reader has folded,
-   * and failing both the description's own choice -- or just the first one.
-   */
+  /** Which sections are open: every match while searching, else the reader's folds, else the description's, else the first. */
   const expandedKeys = useMemo(() => {
     if (navSearching) return navGroups.map((g) => g.key);
     if (opened) return opened;
@@ -454,11 +278,7 @@ const Panel: React.FC = () => {
     return navGroups.length ? [navGroups[0].key] : [];
   }, [navSearching, navGroups, opened]);
 
-  /* ⚠️ The first fold has to start from WHAT IS ON SCREEN, not from nothing. Until the reader
-        touches a heading `opened` is null and the open set is a default -- the description's
-        choice, or the first group. Seeding the toggle with [] instead would make that first
-        click silently close whatever was already open, so folding a second category would
-        collapse the first. */
+  /* ⚠️ The first fold starts from WHAT IS ON SCREEN, not from nothing (see the 4.x note). */
   const expandedRef = useRef<string[]>([]);
   expandedRef.current = expandedKeys;
 
@@ -470,12 +290,9 @@ const Panel: React.FC = () => {
     });
   }, []);
 
-  const navTotal = useMemo(
-    () => (state?.nav ?? []).reduce((n, group) => n + group.items.length, 0),
-    [state?.nav]
-  );
+  const navTotal = useMemo(() => (state?.nav ?? []).reduce((n, group) => n + group.items.length, 0), [state?.nav]);
 
-  /** Selectable nav rows, in drawn order — what the arrow keys walk. */
+  /** Selectable nav rows, in drawn order — what the arrow keys walk (open groups only). */
   const navRowsRef = useRef<string[]>([]);
   navRowsRef.current = useMemo(
     () =>
@@ -521,34 +338,25 @@ const Panel: React.FC = () => {
   useNuiEvent<PanelState | false | null>('showPanel', (data) => {
     if (!data) return close();
 
-    /* ⚠️ The open sound for an OPENING only. A script redraws its open panel with lib.showPanel on every
-          change (a saved field, a nav) -- and a colour wheel or a slider being dragged changes it several
-          times a second, so the sound played in a loop for as long as the mouse was held. A redraw of the
-          panel already on screen (same id) is silent; a new panel, or another one replacing it, still plays it. */
+    /* ⚠️ The open sound for an OPENING only: a redraw of the panel already on screen (same id) is silent. */
     const redraw = !!stateRef.current && stateRef.current.id === data.id;
     setState(data);
     if (!redraw) play('open');
     setElapsed(0);
     setAmounts(
-      Object.fromEntries(
-        (data.actions ?? []).filter((a) => a.input).map((a) => [a.id, a.input?.value ?? a.input?.min ?? 0])
-      )
+      Object.fromEntries((data.actions ?? []).filter((a) => a.input).map((a) => [a.id, a.input?.value ?? a.input?.min ?? 0]))
     );
 
     // Keep the selection when the same panel is refreshed; start at the top when it is new.
     const first = data.items?.find((item) => !item.disabled);
     setSelected((prev) => (prev !== null && data.items?.some((i) => i.id === prev) ? prev : first?.id ?? null));
 
-    /* ★ Folds survive a redraw, and MUST. Saving a recipe sends the whole description back, and
-       resetting the browser there would throw the reader to the top of a collapsed list every
-       time they committed an edit. A DIFFERENT panel is another matter -- its group keys mean
-       nothing here -- so the folds go with the panel they belonged to.
-       ⚠️ Compared against a ref, not against `state`: setState(data) above has already landed
-          by the time any updater would run, so a panel would always look like itself. */
+    /* ★ Folds survive a redraw of the same panel; a DIFFERENT panel starts clean. */
     if (panelIdRef.current !== data.id) {
       panelIdRef.current = data.id;
       setNavTab(null);
       setOpened(null);
+      setCursor(null);
     }
   });
 
@@ -564,28 +372,12 @@ const Panel: React.FC = () => {
     if (!state) return;
 
     const onKey = (e: KeyboardEvent) => {
-      /* ⚠️ A FIELD BEING TYPED INTO OWNS THE KEYBOARD.
-       *
-       *  This handler sits on window and used to swallow the arrows, Enter and Escape wherever
-       *  they were pressed -- including inside a text or number field. So an admin editing a
-       *  recipe could not touch the arrows to step a quantity (they moved the list instead),
-       *  Enter saved the form half-typed, and Escape shut the whole panel.
-       *
-       *  ★ And it is why NUMBERS could not be typed at all. With NumLock off the numeric keypad
-       *    reports 2 as ArrowDown and 8 as ArrowUp -- so on a keypad the digits themselves were
-       *    being read as navigation and eaten before the field ever saw them. Nothing was wrong
-       *    with the input; the panel was taking its keys.
-       *
-       *  Escape still has work to do here: it steps OUT of the field rather than out of the
-       *  panel, which is the smaller of the two things it could mean while typing.
-       */
+      /* ⚠️ A FIELD BEING TYPED INTO OWNS THE KEYBOARD (the keypad's 2 and 8 report as arrows with NumLock off).
+         Escape and Enter step OUT of the field rather than out of the panel. */
       const target = e.target as HTMLElement | null;
       const typing =
         !!target &&
-        (target.isContentEditable ||
-          target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT');
+        (target.isContentEditable || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT');
 
       if (typing) {
         if (e.key === 'Escape' || e.key === 'Enter') {
@@ -608,12 +400,7 @@ const Panel: React.FC = () => {
           e.preventDefault();
           const step = e.key === 'ArrowDown' ? 1 : -1;
 
-          /* ★ When the browser IS the nav, the arrows have to walk IT. w_crafting's menu is
-             driven up and down with the keyboard and confirmed with Enter -- a player never has
-             to touch the mouse -- and a panel standing in for that menu whose arrows moved
-             nothing would be a worse bench, however identical it looked.
-             ⚠️ Only rows in OPEN groups, and in the order they are drawn. Stepping into a folded
-                category would move the selection somewhere the player cannot see. */
+          /* ★ When the browser IS the nav, the arrows walk IT (open groups only, in drawn order). */
           if (navRowsRef.current.length) {
             const rows = navRowsRef.current;
             const here = rows.findIndex((id) => id === stateRef.current?.activeNav);
@@ -646,365 +433,384 @@ const Panel: React.FC = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [state, close, pick, run]);
 
+  /* the picked row stays in view when the arrows move it */
+  const pickedKey = state?.nav?.length ? state?.activeNav : selected;
+  useEffect(() => {
+    if (pickedKey == null || !listRef.current) return;
+    listRef.current.querySelector<HTMLElement>(`[data-row="${CSS.escape(String(pickedKey))}"]`)?.scrollIntoView({ block: 'nearest' });
+  }, [pickedKey]);
+
   if (!state) return null;
 
+  const isNav = !!state.nav?.length;
   const detail = current?.detail;
+  const activeTab = navTab ?? state.activeTab ?? state.tabs?.[0]?.id;
+  const many = (state.actions?.length ?? 0) > 4;
+  const main = state.actions?.find((a) => a.primary) ?? state.actions?.[0];
+  /* nothing to browse: one column, the masthead over the detail */
+  const single = !isNav && items.length === 0 && !state.tabs?.length;
+  const tally = navGroups.reduce((n, g) => n + (expandedKeys.includes(g.key) ? g.items.length : 0), 0);
+
+  const aside =
+    typeof state.countdown === 'number' ? (
+      <span className="wf-mast-item wk-aside"><b className="wk-fig">{asClock(state.countdown - elapsed)}</b></span>
+    ) : state.aside ? (
+      <span className="wf-mast-item wk-aside"><Txt s={state.aside} /></span>
+    ) : null;
+
+  const mast = (
+    <header className="wf-mast wf-in">
+      {state.logo && (
+        <img className="wk-logo" src={state.logo} alt="" draggable={false} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+      )}
+      <span className="wf-mark"><Txt s={state.title} /></span>
+      <span className="wf-mast-rule" />
+      {single && aside}
+      <button type="button" className="wk-x" onClick={close} aria-label={t('close')} title={t('close')}>
+        <GlyphCross />
+      </button>
+    </header>
+  );
+
+  const blockCtx = {
+    selected,
+    onPick: pick,
+    onAction: (id: string, itemId?: string | number) => {
+      play('select');
+      fetchNui('panelAction', { action: id, item: itemId ?? selectedRef.current });
+    },
+    onField: (id: string, value: string | number | boolean) => fetchNui('panelField', { id, value }),
+  };
+
+  /* the selected item's own detail, drawn with the same blocks */
+  const detailBlocks: Block[] | null =
+    current || detail
+      ? [
+          {
+            type: 'hero',
+            value: detail?.title ?? current?.title,
+            subtitle: detail?.description,
+            image: detail?.image ?? current?.image,
+            icon: current?.icon,
+            tag: detail?.tag,
+            tagBad: detail?.tagBad,
+          },
+          ...((typeof detail?.endsIn === 'number' || detail?.rows?.length)
+            ? [{
+                type: 'stats' as const,
+                items: [
+                  ...(typeof detail?.endsIn === 'number' ? [{ label: detail.endsInLabel ?? '', value: asClock(detail.endsIn - elapsed) }] : []),
+                  ...(detail?.rows ?? []),
+                ],
+              }]
+            : []),
+          ...(detail?.stats?.length ? [{ type: 'bars' as const, title: state.statsLabel, items: detail.stats }] : []),
+          ...(detail?.requirements?.length
+            ? [{
+                type: 'requirements' as const,
+                title: detail.requirementsLabel,
+                items: detail.requirements.map((r) => ({ label: r.label, value: r.amount, image: r.image, icon: r.icon, danger: r.missing })),
+              }]
+            : []),
+        ]
+      : null;
 
   return (
-    <Dashboard theme={state.theme}>
-      <DashboardHeader
-        title={state.title}
-        subtitle={state.subtitle}
-        icon={state.icon}
-        logo={state.logo}
-        aside={
-          state.aside || typeof state.countdown === 'number' ? (
-            <span className="wl-panel-aside" dir={typeof state.countdown === 'number' ? 'ltr' : undefined}>
-              {typeof state.countdown === 'number' ? asClock(state.countdown - elapsed) : state.aside}
-            </span>
-          ) : undefined
-        }
-        onClose={close}
-        closeLabel={locale.ui.close || 'Close'}
-      />
+    <div className={cls('wf', 'wk-board', rtl && 'is-rtl')} data-theme={state.theme}>
+      <div className="wk-scrim" />
+      <div className={cls('wk-layout', single && 'is-single')}>
+        {/* ── the list ── */}
+        {!single && (
+          <section className={cls('wk-side', state.navFit && 'is-fit')}>
+            {mast}
 
-      <DashboardBody
-        fit={!!state.navFit}
-        browser={
-          state.nav?.length ? (
-            /* ★ w_crafting's browser, not a likeness of it. The tabs, the tally, the headings
-               that fold with a lock and a level on them -- every one of these is a control the
-               crafting menu has, drawn from the same rules in wc-base.css. A panel that stopped
-               at flat headings could stand in for that menu but never BE it, and the moment an
-               admin console sits beside the bench it is meant to edit, the difference shows. */
-            <div className="wc-grouped-browser">
-              {state.tabs?.length ? (
-                <div className="wc-scope-tabs" role="tablist">
-                  {state.tabs.map((tab) => {
-                    const active = tab.id === (navTab ?? state.activeTab ?? state.tabs?.[0]?.id);
-                    return (
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={active}
-                        key={tab.id}
-                        className={`wc-scope-tab${active ? ' is-active' : ''}`}
-                        onClick={() => {
-                          play('select');
-                          setNavTab(tab.id);
-                          /* Filtering already happened above; this only lets a script that wants
-                             to know -- to fetch a tab's rows on demand -- find out. */
-                          fetchNui('panelTab', tab.id);
-                        }}
-                      >
-                        {tab.icon && <Icon icon={tab.icon} />}
-                        {tab.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
+            <div className="wf-wrap wk-list-wrap is-focus wf-in" style={{ ['--i' as string]: 1 }}>
+              <div className="wf-tick" />
+              <div className="wf-card">
+                <div className="wf-card-body wk-list">
+                  {(state.icon || state.subtitle || (isNav && state.navCountLabel)) && (
+                    <div className="wk-list-head">
+                      {state.icon && <span className="wk-head-ico"><KitIcon icon={state.icon} /></span>}
+                      <span className="wf-kicker"><Txt s={state.subtitle} /></span>
+                      {isNav && state.navCountLabel && (
+                        <span className="wk-tally">
+                          <b className="wk-fig">{tally}</b>
+                          {navSearching ? <> {t('of')} <b className="wk-fig">{navTotal}</b></> : null} <Txt s={state.navCountLabel} />
+                        </span>
+                      )}
+                    </div>
+                  )}
 
-              {state.search !== false && (
-                <DashboardSearch value={search} placeholder={state.searchPlaceholder} onChange={setSearch} />
-              )}
-
-              {state.navCountLabel ? (
-                <span className="wc-count" dir="ltr">
-                  {navGroups.reduce((n, g) => n + (expandedKeys.includes(g.key) ? g.items.length : 0), 0)}
-                  {navSearching ? ` / ${navTotal}` : ''} {state.navCountLabel}
-                </span>
-              ) : null}
-
-              {!navGroups.length ? (
-                <div className="wc-empty">{state.emptyText}</div>
-              ) : (
-                <div className="wc-grouped-list wc-scroll">
-                  {navGroups.map(({ group, key, items: rows }) => {
-                    const open = expandedKeys.includes(key);
-                    return (
-                      <section className="wc-category-group" key={key}>
-                        {group.label && (
+                  {state.tabs?.length ? (
+                    <div className="wf-tabs wk-tabs" role="tablist">
+                      {state.tabs.map((tab) => {
+                        const active = tab.id === activeTab;
+                        return (
                           <button
+                            key={tab.id}
                             type="button"
-                            className={`wc-category-toggle${open ? ' is-open' : ''}${
-                              group.private ? ' is-private' : ''
-                            }`}
-                            aria-expanded={open}
-                            onClick={() => toggleNavGroup(key)}
+                            role="tab"
+                            aria-selected={active}
+                            className={cls('wf-tab', active && 'is-active')}
+                            onClick={() => {
+                              play('select');
+                              /* a nav panel filters by itself; an item panel's tab is the script's to answer */
+                              if (isNav) setNavTab(tab.id);
+                              setCursor(null);
+                              fetchNui('panelTab', tab.id);
+                            }}
                           >
-                            {/* ★ The game's own arrow (masked, currentColor), turned down when open. It
-                                was the ▾ / ▸ characters, which no theme face has: the system drew them. */}
-                            <span className={`wc-category-chevron${open ? ' is-open' : ''}`} aria-hidden="true" />
-                            <span className="wc-category-name">
-                              {/* ★ The game's lock texture (masked, currentColor), as w_crafting draws it.
-                                  It was the lock emoji, which no theme face has: the system drew it. */}
-                              {group.private && <Glyph tex="lock" className="wc-category-lock" />}
-                              {group.label}
-                              {/* countInline: the count beside the name, quiet, "(31)", not in a box */}
-                              {group.countInline && <span className="wl-count-inline" dir="ltr">({rows.length})</span>}
-                            </span>
-                            <span className="wc-category-meta" dir="ltr">
-                              {!group.countInline && <span className="wc-category-count">{rows.length}</span>}
-                              {group.levelLabel && <span className="wc-category-lvl">{group.levelLabel}</span>}
-                            </span>
+                            {tab.icon && <span className="wk-btn-ico"><KitIcon icon={tab.icon} /></span>}
+                            <Txt s={tab.label} />
                           </button>
-                        )}
+                        );
+                      })}
+                    </div>
+                  ) : null}
 
-                        {/* A group with no heading cannot be folded shut -- there is nothing to
-                            click -- so it always shows. */}
-                        {(open || !group.label) && (
-                          <div className="wc-category-items" role="listbox" aria-label={group.label}>
-                            {rows.map((item) => (
-                              <button
-                                type="button"
-                                key={item.id}
-                                disabled={item.disabled}
-                                className={`wc-card${item.picture ? ' is-picture' : ''}${item.id === state.activeNav ? ' is-active' : ''}${
-                                  item.disabled ? ' is-disabled' : ''
-                                }`}
-                                title={item.picture ? item.label : undefined}
-                                aria-label={item.picture ? item.label : undefined}
-                                onClick={() => {
-                                  play('select');
-                                  fetchNui('panelNav', item.id);
-                                }}
-                              >
-                                {/* A row with a picture IS the picture (w_playernames: a list of name plates); the
-                                    label still names it for search and the tooltip. */}
-                                {item.picture ? (
-                                  <>
-                                    <img className="wl-nav-picture" src={item.picture} alt="" draggable={false} />
-                                    {item.caption && <span className="wl-nav-caption">{item.caption}</span>}
-                                  </>
-                                ) : (
-                                  <>
-                                    <span className="wc-slot">
-                                      <Icon icon={item.image ?? item.icon} fallback="menu_bar" />
-                                    </span>
-                                    <span style={{ minWidth: 0 }}>
-                                      <span className="wc-card-name">{item.label}</span>
-                                      {item.description && <span className="lb-item-desc">{item.description}</span>}
-                                    </span>
-                                    {item.count != null && <span className="wc-category-count">{item.count}</span>}
-                                  </>
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </section>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ) : (
-          <>
-            {state.tabs?.length ? (
-              <div className="wc-scope-tabs">
-                {state.tabs.map((tab) => (
-                  <button
-                    type="button"
-                    key={tab.id}
-                    className={`wc-scope-tab${tab.id === (state.activeTab ?? state.tabs?.[0]?.id) ? ' is-active' : ''}`}
-                    onClick={() => {
-                      play('select');
-                      fetchNui('panelTab', tab.id);
-                    }}
-                  >
-                    {tab.icon && <Icon icon={tab.icon} />}
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            ) : null}
+                  {state.search !== false && (
+                    <label className="wf-search">
+                      <GlyphSearch />
+                      <input
+                        value={search}
+                        placeholder={state.searchPlaceholder || t('search')}
+                        dir="auto"
+                        spellCheck={false}
+                        onChange={(e) => { setSearch(e.target.value); setCursor(null); }}
+                      />
+                      {search && (
+                        <button type="button" className="wk-search-x" onClick={() => setSearch('')} aria-label={t('close')}>
+                          <GlyphCross />
+                        </button>
+                      )}
+                    </label>
+                  )}
 
-            {state.search !== false && (
-              <DashboardSearch value={search} placeholder={state.searchPlaceholder} onChange={setSearch} />
-            )}
-
-            <div className="wc-list wc-scroll wl-panel-list">
-              {grouped(visible).map((block, gi) => (
-                <React.Fragment key={`${block.group ?? ''}-${gi}`}>
-                  {block.group && <div className="wl-panel-group">{block.group}</div>}
-
-                  {block.items.map((item) => (
-                    <button
-                      type="button"
-                      key={item.id}
-                      className={`lb-item${item.disabled ? ' is-disabled' : ''}${
-                        item.id === selected ? ' is-active' : ''
-                      }`}
-                      disabled={item.disabled}
-                      onClick={() => pick(item.id)}
-                    >
-                      <span className={`lb-item-icon${item.icon || item.image ? '' : ' is-empty'}`}>
-                        <Icon icon={item.image ?? item.icon} fallback="menu_bar" />
-                      </span>
-
-                      <span style={{ minWidth: 0 }}>
-                        <span className="lb-item-title">{item.title}</span>
-                        {item.description && <span className="lb-item-desc">{item.description}</span>}
-                        {item.meta?.length || typeof item.endsIn === 'number' ? (
-                          <span className="lb-meta">
-                            {typeof item.endsIn === 'number' && (
-                              <span dir="ltr" className={item.endsIn - elapsed <= 30 ? 'wl-panel-urgent' : undefined}>
-                                {asClock(item.endsIn - elapsed)}
-                              </span>
+                  <div className="wk-list-rows" ref={listRef} onMouseLeave={() => setCursor(null)}>
+                    {isNav ? (
+                      navGroups.length ? (
+                        navGroups.map(({ group, key, items: rows }) => {
+                          const open = expandedKeys.includes(key) || !group.label;
+                          return (
+                            <section className={cls('wk-group', group.private && 'is-private')} key={key}>
+                              {group.label && (
+                                <button
+                                  type="button"
+                                  className={cls('wk-group-head', open && 'is-open')}
+                                  aria-expanded={open}
+                                  onClick={() => toggleNavGroup(key)}
+                                >
+                                  <span className="wk-fold"><GlyphDown /></span>
+                                  {group.private && <span className="wk-lock"><GlyphLock /></span>}
+                                  <span className="wk-group-name">
+                                    <Txt s={group.label} />
+                                    {group.countInline && <span className="wk-group-inline wk-fig">({rows.length})</span>}
+                                  </span>
+                                  <span className="wk-group-rule" />
+                                  {group.levelLabel && <span className="wf-tag"><Txt s={group.levelLabel} /></span>}
+                                  {!group.countInline && <span className="wk-group-count wk-fig">{rows.length}</span>}
+                                </button>
+                              )}
+                              {open &&
+                                rows.map((row) => (
+                                  <button
+                                    key={row.id}
+                                    type="button"
+                                    data-row={row.id}
+                                    disabled={row.disabled}
+                                    title={row.picture ? row.label : undefined}
+                                    aria-label={row.picture ? row.label : undefined}
+                                    className={cls(
+                                      'wf-row',
+                                      'wk-prow',
+                                      row.picture && 'is-picture',
+                                      cursor === row.id && 'is-here',
+                                      row.id === state.activeNav && 'is-sel',
+                                      row.disabled && 'is-off'
+                                    )}
+                                    onMouseEnter={() => setCursor(row.id)}
+                                    onClick={() => {
+                                      play('select');
+                                      fetchNui('panelNav', row.id);
+                                    }}
+                                  >
+                                    {row.picture ? (
+                                      <>
+                                        <img src={row.picture} alt="" draggable={false} />
+                                        {row.caption && <span className="wk-caption"><Txt s={row.caption} /></span>}
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Slot image={row.image} icon={row.icon} />
+                                        <span className="wf-row-main">
+                                          <span className="wf-row-name"><Txt s={row.label} /></span>
+                                          {row.description && <span className="wf-row-meta"><Txt s={row.description} /></span>}
+                                        </span>
+                                        {row.count != null && row.count !== '' && (
+                                          <span className="wf-row-end"><Txt s={row.count} /></span>
+                                        )}
+                                      </>
+                                    )}
+                                  </button>
+                                ))}
+                            </section>
+                          );
+                        })
+                      ) : (
+                        <div className="wf-empty"><Txt s={state.emptyText || t('nothing')} /></div>
+                      )
+                    ) : visible.length ? (
+                      visible.map((item, i) => {
+                        const left = typeof item.endsIn === 'number' ? item.endsIn - elapsed : null;
+                        return (
+                          <React.Fragment key={String(item.id)}>
+                            {item.group && item.group !== visible[i - 1]?.group && (
+                              <div className={cls('wf-sec', 'wk-sec', 'wk-list-sec', i === 0 && 'is-first')}><span className="wk-sec-title"><Txt s={item.group} /></span></div>
                             )}
-                            {item.meta?.map((m, i) => (
-                              <span key={i}>
-                                {m.label}
-                                {m.value != null && (
-                                  <>
-                                    : <b dir="ltr">{m.value}</b>
-                                  </>
+                            <button
+                              type="button"
+                              data-row={String(item.id)}
+                              disabled={item.disabled}
+                              className={cls(
+                                'wf-row',
+                                'wk-prow',
+                                cursor === String(item.id) && 'is-here',
+                                item.id === selected && 'is-sel',
+                                item.disabled && 'is-off'
+                              )}
+                              onMouseEnter={() => setCursor(String(item.id))}
+                              onClick={() => pick(item.id)}
+                            >
+                              <Slot image={item.image} icon={item.icon} />
+                              <span className="wf-row-main">
+                                <span className="wf-row-name"><Txt s={item.title} /></span>
+                                {(item.description || item.meta?.length || left !== null) && (
+                                  <span className="wf-row-meta">
+                                    {left !== null && <b className={cls('wk-fig', left <= 30 && 'wk-urgent')}>{asClock(left)}</b>}
+                                    {item.description && <span><Txt s={item.description} /></span>}
+                                    {item.meta?.map((m, k) => (
+                                      <span key={k}>
+                                        <Txt s={m.label} />
+                                        {m.value != null && <>: <b className="wf-num">{m.value}</b></>}
+                                      </span>
+                                    ))}
+                                  </span>
                                 )}
                               </span>
-                            ))}
-                          </span>
-                        ) : null}
-                      </span>
-
-                      <span />
-                    </button>
-                  ))}
-                </React.Fragment>
-              ))}
-            </div>
-          </>
-          )
-        }
-      >
-        {state.blocks?.length ? (
-          <Blocks
-            blocks={state.blocks}
-            ctx={{
-              selected,
-              onPick: pick,
-              onAction: (id, itemId) => {
-                play('select');
-                fetchNui('panelAction', { action: id, item: itemId ?? selectedRef.current });
-              },
-              onField: (id, value) => fetchNui('panelField', { id, value }),
-            }}
-          />
-        ) : detail || current ? (
-          /* ★ w_crafting's own detail layout: the picture beside the name, not above it; the
-             facts as tiles; the bars under a ruled heading. Every class here is already in
-             wc-base.css -- this is the crafting pane with the crafting taken out. */
-          <div className="wc-detail-main">
-            <div className="wc-preview">
-              <span className="wc-slot">
-                <Icon icon={detail?.image} fallback="menu_bar" />
-              </span>
-
-              <div>
-                <h2 className="wc-preview-name">{detail?.title ?? current?.title}</h2>
-                {(detail?.description || detail?.tag) && (
-                  <div className="wc-preview-tags">
-                    {detail?.tag && (
-                      <span className={detail.tagBad ? 'wc-tag-locked' : 'wc-badge'}>
-                        <Glyph tex={detail.tagBad ? 'cross' : 'tick'} />
-                        {detail.tag}
-                      </span>
+                            </button>
+                          </React.Fragment>
+                        );
+                      })
+                    ) : (
+                      <div className="wf-empty"><Txt s={state.emptyText || t('nothing')} /></div>
                     )}
-                    {detail?.description && <span>{detail.description}</span>}
                   </div>
-                )}
+                </div>
               </div>
             </div>
-
-            <MetaTiles
-              rows={
-                typeof detail?.endsIn === 'number'
-                  ? [
-                      { label: detail.endsInLabel ?? '', value: asClock(detail.endsIn - elapsed) },
-                      ...(detail.rows ?? []),
-                    ]
-                  : detail?.rows
-              }
-            />
-            <StatRows rows={detail?.stats} heading={state.statsLabel} />
-            <Requirements rows={detail?.requirements} heading={detail?.requirementsLabel} />
-          </div>
-        ) : (
-          <div className="wc-empty">
-            <Glyph tex="menu_bar" />
-            <p>{state.emptyText}</p>
-          </div>
+          </section>
         )}
 
-        <DashboardActions hints={state.progress ? undefined : state.hints}>
-          {state.progress ? (
-            /* ★ The actions are not merely disabled while something runs -- they are replaced.
-               A greyed 'Craft' next to a filling bar invites a second press; nothing to press
-               says the same thing without the invitation. */
-            <>
-              <div className="wc-progress">
-                <span className="wc-slot">
-                  <Icon icon={state.progress.image} fallback="menu_bar" />
-                </span>
+        {/* ── the detail and the actions ── */}
+        <section className="wk-main">
+          {single ? (
+            mast
+          ) : (
+            /* the same height as the list's masthead, so both columns start on one line */
+            <header className="wf-mast wk-main-mast wf-in">
+              <span className="wf-mast-rule" />
+              {aside}
+            </header>
+          )}
 
-                <span>
-                  <span className="wc-progress-name">{state.progress.label}</span>
-                  {state.progress.info && (
-                    <span className="wc-progress-info">
-                      <b dir="ltr">{state.progress.info}</b>
-                    </span>
-                  )}
-                  <Bar ratio={(state.progress.value ?? 0) / 100} bright />
-                </span>
-              </div>
-
-              {state.progress.cancelLabel && (
-                <button
-                  type="button"
-                  className="wc-cancel-btn"
-                  onClick={() => {
-                    play('deny');
-                    fetchNui('panelCancel');
-                  }}
-                >
-                  <Glyph tex="cross" />
-                  {state.progress.cancelLabel}
-                </button>
-              )}
-            </>
-          ) : null}
-
-          {!state.progress &&
-            state.actions?.map((action) => (
-              <React.Fragment key={action.id}>
-                {action.input && (
-                  <AmountField
-                    spec={action.input}
-                    value={amounts[action.id] ?? action.input.min ?? 0}
-                    onChange={(value) => setAmounts((prev) => ({ ...prev, [action.id]: value }))}
-                  />
+          <div className="wf-wrap wk-detail-wrap wf-in" style={{ ['--i' as string]: 2 }}>
+            <div className="wf-card">
+              <div className="wf-card-body wk-detail">
+                {state.blocks?.length ? (
+                  <Blocks blocks={state.blocks} ctx={blockCtx} />
+                ) : detailBlocks ? (
+                  <Blocks blocks={detailBlocks} ctx={blockCtx} />
+                ) : (
+                  <div className="wk-empty"><Txt s={state.emptyText || t('nothing')} /></div>
                 )}
+              </div>
+            </div>
+          </div>
 
-                <button
-                  type="button"
-                  /* ★ Past three, the buttons narrow. See .wc-craft-btn.is-compact -- a panel
-                     with six actions used to lay them off the edge of its own frame. */
-                  className={`wc-craft-btn${action.primary ? '' : ' is-ghost'}${
-                    (state.actions?.length ?? 0) > 3 ? ' is-compact' : ''
-                  }`}
-                  disabled={action.disabled}
-                  onClick={() => run(action)}
-                >
-                  <span>
-                    {action.icon && <Icon icon={action.icon} />}
-                    {action.label}
-                  </span>
-                </button>
-              </React.Fragment>
-            ))}
-        </DashboardActions>
-      </DashboardBody>
-    </Dashboard>
+          {state.progress || state.actions?.length || state.hints?.length ? (
+            <div className="wf-wrap wk-actions-wrap wf-in" style={{ ['--i' as string]: 3 }}>
+              <div className="wf-card">
+                <div className="wf-card-body wk-actbar">
+                  {state.progress ? (
+                    /* ★ The actions are not merely disabled while something runs -- they are replaced. */
+                    <div className="wk-busy">
+                      <Slot image={state.progress.image} />
+                      <span className="wk-busy-main">
+                        <span className="wk-busy-name">
+                          <Txt s={state.progress.label} />
+                          {state.progress.info && <> · <b className="wf-num">{state.progress.info}</b></>}
+                        </span>
+                        <Gauge value={state.progress.value} />
+                      </span>
+                      {state.progress.cancelLabel && (
+                        <button
+                          type="button"
+                          className="wk-btn"
+                          onClick={() => {
+                            play('deny');
+                            fetchNui('panelCancel');
+                          }}
+                        >
+                          <Txt s={state.progress.cancelLabel} />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="wk-acts">
+                      {state.actions?.map((a) => (
+                        <div className="wk-act-cell" key={a.id}>
+                          {a.input && (
+                            <AmountField
+                              spec={a.input}
+                              label={t('amount')}
+                              value={amounts[a.id] ?? a.input.min ?? 0}
+                              onChange={(n) => setAmounts((p) => ({ ...p, [a.id]: n }))}
+                            />
+                          )}
+                          <button
+                            type="button"
+                            className={cls('wk-btn', a.primary && 'is-main', a.danger && 'wk-danger', many && 'is-small')}
+                            aria-disabled={a.disabled ? 'true' : undefined}
+                            onClick={() => run(a)}
+                          >
+                            {a.icon && <span className="wk-btn-ico"><KitIcon icon={a.icon} /></span>}
+                            <span><Txt s={a.label} /></span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {!state.progress && state.hints?.length ? (
+                    <div className="wk-hints">
+                      {state.hints.map((h, i) => {
+                        const k = String(h.key).toLowerCase();
+                        const act = k === 'esc' || k === 'escape' ? close : k === 'enter' && main ? () => run(main) : undefined;
+                        return (
+                          <button type="button" key={i} className="wk-hint" onClick={act} disabled={!act}>
+                            <span className="wk-key">{h.key}</span>
+                            <Txt s={h.label} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </section>
+      </div>
+    </div>
   );
 };
 

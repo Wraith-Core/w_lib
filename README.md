@@ -6,6 +6,31 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.4.0 (2026-11-08)
+
+The shared UI moved onto the board kit (a copy of w_train's `kit.css`, in `web/src/kit/`). The public API, every option, the
+NUI messages, return values and keys are unchanged: no script needs an edit. Needs a full restart (w_lib).
+
+- Context menu and list menu: a masthead with the title, one torn card docked at the inline-start edge inside the 16:9
+  frame (the right in Arabic), bare icons, thin paper gauges (red only for a red/orange/danger `colorScheme`), kit
+  switches and steppers. Metadata entries with `progress` get their own labelled gauge line.
+- Input dialog: one torn card with kit fields; confirm is the red band. Alert: the kit's paper note, one frame.
+- `showPanel`: rebuilt as the w_crafting / w_train board (list card + detail card + actions strip); the row under the
+  cursor is the paper band, the picked row the red band. Every block type and field is kept.
+- Lockpick: one paper note that frames the whole lock (title in the top corner, picks left, hint and keys at the foot).
+- HUD pieces keep their game look but share one key chip (paper cap, EB Garamond) and the kit faces; the progress ring
+  lost its red tick; notices lost the icon box. Radial: kit inks and faces, still round.
+- New `ui.*` locale keys: on, off, search, nothing, amount, choose, of, lockpick, lockpick_hint, pins, turn, pick, mouse, leave.
+- Removed (no longer imported): `web/src/wc/Panel.tsx`, `Frame.tsx`, `Dashboard.tsx`, `features/panel/panel.css`.
+  The store theme (`store-theme.css`, `wst-*`) is untouched.
+
+بالعربي باختصار:
+- القوائم ونوافذ الإدخال والتنبيه واللوحات صارت بنفس شكل لوحات السكربتات الجديدة (ورق ممزق، الشريط الأبيض تحت الفأرة، والأحمر للشيء المختار فقط).
+- الأرقام إنجليزية في كل مكان، والخط العربي Lalezar.
+- فتح القفل صار داخل ورقة واحدة فيها العنوان والمحاولات الباقية والأزرار.
+- لا تحتاج السكربتات الأخرى أي تعديل. يحتاج إعادة تشغيل كاملة عند النشر.
+- يُختبر في اللعبة: قائمة الإسطبل، أي نافذة إدخال، لوحة متجر أو لوحة الإدارة، فتح قفل، الدائرة السريعة، الإشعارات وشريط التقدم.
+
 ## 4.2.0 (2026-11-02)
 
 - طلب المالك: «أبي أشكال مرسومة بدل اللمعة، واللمعة للوجهة فقط على شكل سهم». صارت كل أشكال `lib.glow` (`w.glow`) تُرسم

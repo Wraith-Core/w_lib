@@ -1,0 +1,1108 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   w_lib · kit/kit.css (4.4.0) - the board kit, copied from w_train/web/src/kit.css (md5 2fb372e9...) with ONE
+   change: the page reset below is scoped to the kit's roots (see the note there). Nothing else differs, so
+   a context menu, a dialog or a panel drawn here is the same card as on every board.
+   The original header follows.
+   w_farming · kit.css - the w_stables / w_camel design kit (copied verbatim from w_planefly/web/src/kit.css,
+   the prefix wp- renamed wf-): the pause menu's torn-paper cards, the same palette, faces, textures and motion.
+   Do not edit it to restyle one page: add the page's parts to app.css. Classes the page does not use yet
+   are kept so the kit stays a drop-in copy of the other resources' one.
+
+   Ink and paper in black and white, one red. The red is a mark and nothing else: the ribbon on
+   the card the cursor is in, the line under the action it is on, an invalid field's underline,
+   and nothing else.
+
+   1rem = 20px at 1920x1080 and 13.3px at 1280x720 (the height decides on wide screens), so the
+   board keeps its proportions at every resolution. Logical properties throughout: in Arabic the
+   whole board mirrors to the right of the screen by itself.
+
+   Textures (custom properties set by main.tsx, relative to the page):
+     --tex-tear     the torn edge, a 9-slice mask (256px, 64px slices)
+     --tex-grain    the paper grain
+     --tex-band     the game's brushed selection band (the cursor), a white mask
+     --tex-band-sm  its short form (tabs, buttons)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --ink: #0B0A0A;
+  --ink-2: #151313;
+  --ink-3: #1C1919;
+  --ink-4: #242020;
+  --paper: #F2F2F2;
+  --paper-dim: #B4B4B4;
+  --paper-faint: #7A7A7A;
+  --rule: rgba(242, 242, 242, 0.16);
+  --rule-2: rgba(242, 242, 242, 0.32);
+  /* 2026-11-05 (owner): the site look: the website inks, its red, the red mark band (a selected tab / row / chip, and a main
+     button drawn as a band: light text on it; the cursor keeps the paper band) and its soft green for ok states */
+  --red: #D0161B;
+  --red-deep: #8F0B0E;
+  --red-soft: rgba(208, 22, 27, 0.14);
+  --mark: #D0161B;
+  --mark-lit: #E01A1F;
+  --mark-deep: #8F0B0E;
+  --mark-ink: #F2F2F2;
+  --green: #9FC79A;
+  --amber: #E0A526;
+  --note: #E9E9E9;
+  --note-ink: #111111;
+  --note-dim: #555555;
+  --note-rule: rgba(17, 17, 17, 0.18);
+
+  --f-serif: 'EB Garamond', 'Amiri', Georgia, 'Times New Roman', serif;
+  --f-mark: 'RDR Lino', 'Lalezar', Georgia, serif;
+  --f-display: 'EB Garamond', 'Lalezar', Georgia, serif;
+  --f-label: 'EB Garamond', 'Tajawal', Georgia, serif;
+  --f-input: 'EB Garamond', 'Tajawal', Georgia, serif;
+
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --edge: 1.35rem;
+}
+[dir='rtl'] {
+  --f-serif: 'Amiri', 'EB Garamond', 'Noto Sans Arabic', Georgia, serif;
+  --f-display: 'Lalezar', 'EB Garamond', 'Tajawal', 'Noto Sans Arabic', serif;
+  --f-label: 'Tajawal', 'EB Garamond', 'Noto Sans Arabic', sans-serif;
+  --f-input: 'Tajawal', 'EB Garamond', 'Noto Sans Arabic', sans-serif;
+}
+
+/* w_lib: the page reset is SCOPED to the kit's roots (.wf, .wf-note) with :where() (no weight), because
+   this frame also draws the prompts, the voice cards and the minigames, which keep their own sheets. The
+   root size is the kit's own, so 1rem is the same 20px at 1080p here as on every board. */
+:where(.wf, .wf-note), :where(.wf, .wf-note) :where(*), :where(.wf, .wf-note) :where(*)::before, :where(.wf, .wf-note) :where(*)::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: clamp(12px, min(1.04vw, 1.85vh), 24px); }
+:where(.wf, .wf-note) {
+  font-family: var(--f-serif);
+  color: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  user-select: none;
+  font-synthesis: none;
+}
+:where(.wf, .wf-note) :where(button) { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-align: inherit; }
+:where(.wf, .wf-note) :where(input, textarea, select) { font: inherit; color: inherit; }
+:where(.wf, .wf-note) :where(ul) { list-style: none; }
+
+/* Figures: lining and tabular, left to right inside Arabic */
+.wf-num {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-variant-numeric: lining-nums tabular-nums;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* ══════════════════ The stage ══════════════════ */
+.wf { position: fixed; inset: 0; z-index: 10; }
+.wf.is-hidden { display: none; }
+
+.wf-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    rgba(11, 10, 10, 0.82) 0%, rgba(11, 10, 10, 0.64) 28%, rgba(11, 10, 10, 0.32) 48%,
+    rgba(11, 10, 10, 0.08) 62%, rgba(11, 10, 10, 0) 72%);
+  animation: wf-fade 220ms var(--ease) both;
+}
+[dir='rtl'] .wf-scrim { transform: scaleX(-1); }
+
+.wf-panel {
+  position: absolute;
+  inset-inline-start: calc(5.4rem + var(--ws-gutter)); /* ui-scale: inside the centred 16:9 frame on an ultrawide */
+  top: max(2rem, calc((100vh - 50rem) / 2));
+  width: 44rem;
+  height: 50rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  transition: opacity 180ms var(--ease), filter 180ms var(--ease);
+}
+.wf-panel.is-dim > :not(.wf-note) { opacity: 0.32; filter: saturate(0.6); }
+
+/* backwards, not both: a held end frame would keep overriding the opacity the dim (.is-dim) sets under a note */
+.wf-in { animation: wf-rise 260ms var(--ease) backwards; animation-delay: calc(var(--i, 0) * 34ms); }
+@keyframes wf-rise {
+  from { opacity: 0; transform: translate3d(0, 0.8rem, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes wf-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* The thin paper strip at the board's outer edge, a sheet pinned to a board */
+.wf-strip {
+  position: absolute;
+  inset-inline-start: -1.95rem;
+  top: 3rem;
+  height: 58%;
+  width: 0.7rem;
+  background: #CFCFCF var(--tex-grain);
+  background-blend-mode: multiply;
+  -webkit-mask-box-image: var(--tex-tear) 64 fill / 0.26rem round;
+  filter: drop-shadow(0 0.3rem 0.5rem rgba(0, 0, 0, 0.5));
+  animation: wf-fade 400ms var(--ease) 120ms both;
+}
+
+/* ══════════════════ The masthead ══════════════════ */
+.wf-mast {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  height: 2rem;
+  padding-inline: 0.4rem;
+  color: var(--paper-dim);
+  font: 400 0.95rem/1 var(--f-label);
+  text-shadow: 0 1px 0.4rem rgba(0, 0, 0, 0.6);
+}
+.wf-mark {
+  font: 400 1.45rem/1 var(--f-mark);
+  color: var(--paper);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.wf-mast-rule { flex: 1; height: 1px; background: var(--rule); }
+.wf-mast-item { display: inline-flex; align-items: center; gap: 0.45rem; white-space: nowrap; }
+.wf:not(.is-rtl) .wf-mast-item { font-variant-caps: all-small-caps; letter-spacing: 0.08em; font-size: 1.05rem; }
+.wf-mast-item b { color: var(--paper); font-weight: 500; font-size: 1.05rem; letter-spacing: 0.02em; font-variant-caps: normal; }
+
+/* ══════════════════ The cards ══════════════════
+   A wrapper carries the shadow (a mask clips its own element's shadow), the card inside is torn by
+   the mask; the lighter band inside the tear is an inset shadow the mask cuts along the tear. */
+.wf-wrap {
+  position: relative;
+  min-height: 0;
+  filter: drop-shadow(0 0.55rem 0.9rem rgba(0, 0, 0, 0.55));
+  transition: transform 160ms var(--ease);
+}
+.wf-card {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--ink-2);
+  background-image: linear-gradient(160deg, rgba(242, 242, 242, 0.035), rgba(242, 242, 242, 0) 55%);
+  box-shadow:
+    inset 0 0 1.25rem rgba(242, 242, 242, 0.11),
+    inset 0 0 0.45rem rgba(242, 242, 242, 0.1);
+  -webkit-mask-box-image: var(--tex-tear) 64 fill / var(--edge) round;
+  transition: background-color 160ms var(--ease), box-shadow 160ms var(--ease);
+}
+.wf-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--tex-grain);
+  background-size: 256px 256px;
+  opacity: 0.1;
+  mix-blend-mode: screen;
+  filter: invert(1);
+}
+.wf-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 0 rgba(242, 242, 242, 0), inset 0 0 0 0 rgba(242, 242, 242, 0);
+  transition: box-shadow 160ms var(--ease);
+}
+.wf-wrap.is-focus .wf-card {
+  background-color: var(--ink-3);
+  box-shadow:
+    inset 0 0 1.4rem rgba(242, 242, 242, 0.17),
+    inset 0 0 0.5rem rgba(242, 242, 242, 0.16);
+}
+.wf-wrap.is-focus .wf-card::before {
+  box-shadow: inset 0 0 0 0.45rem rgba(242, 242, 242, 0.12), inset 0 0 1.7rem rgba(242, 242, 242, 0.24);
+}
+
+/* The red ribbon on the card the cursor is in */
+.wf-tick {
+  position: absolute;
+  inset-inline-start: 0.15rem;
+  top: 1.5rem;
+  width: 0.4rem;
+  height: 3.2rem;
+  background: var(--red);
+  -webkit-mask-box-image: var(--tex-tear) 64 fill / 0.22rem round;
+  opacity: 0;
+  transform: scaleY(0.4);
+  transform-origin: top;
+  transition: opacity 140ms var(--ease), transform 180ms var(--ease);
+  pointer-events: none;
+  z-index: 5;
+}
+.wf-wrap.is-focus > .wf-tick { opacity: 1; transform: none; }
+
+.wf-card-body { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; padding: 1.5rem 1.8rem 1.25rem; }
+.wf-card-head { flex: none; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.wf-h {
+  font: 600 1.95rem/1.05 var(--f-display);
+  color: var(--paper);
+  letter-spacing: 0.005em;
+  text-shadow: 0 1px 0.6rem rgba(0, 0, 0, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf-sub { margin-top: 0.35rem; font: 400 1.02rem/1.38 var(--f-serif); color: var(--paper-dim); }
+.wf-kicker {
+  margin-bottom: 0.35rem;
+  font: 500 0.95rem/1.2 var(--f-label);
+  color: var(--paper-dim);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+}
+.wf-ico {
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
+  margin-top: 0.2rem;
+  color: var(--paper-dim);
+  transition: color 160ms var(--ease);
+}
+.is-focus .wf-ico { color: var(--paper); }
+
+/* ══════════════════ The list of missions ══════════════════ */
+.wf-list-wrap { flex: 1; }
+.wf-search {
+  flex: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 2.4rem;
+  margin: 1rem 0 0.7rem;
+  padding: 0 0.8rem;
+  background: var(--ink-2);
+  box-shadow: inset 0 -1px 0 var(--rule-2);
+  transition: background-color 120ms var(--ease), box-shadow 120ms var(--ease);
+}
+.wf-search .wf-glyph { width: 1.05rem; height: 1.05rem; color: var(--paper-faint); flex: none; }
+.wf-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: none;
+  background: none;
+  color: var(--paper);
+  font: 500 1.05rem/1.2 var(--f-input);
+  caret-color: var(--paper);
+}
+.wf-search input::placeholder { color: var(--paper-faint); opacity: 1; }
+.wf-search.is-here, .wf-search:focus-within { background: var(--ink-3); box-shadow: inset 0 -2px 0 var(--paper); }
+
+.wf-rows { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.wf-row {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  height: 2.95rem;
+  padding: 0 0.9rem;
+  border-bottom: 1px solid var(--rule);
+  color: var(--paper);
+  cursor: pointer;
+  transition: color 120ms var(--ease), border-color 120ms var(--ease);
+}
+.wf-row::before {
+  content: '';
+  position: absolute;
+  inset: -1px -0.25rem 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--paper);
+  opacity: 0;
+  -webkit-mask: var(--tex-band) center / 100% 100% no-repeat;
+  transition: opacity 120ms var(--ease);
+}
+.wf-row.is-here { color: var(--ink); border-bottom-color: transparent; }
+.wf-row.is-here::before { opacity: 1; }
+.wf-row-state { flex: none; width: 1.25rem; height: 1.25rem; color: var(--paper-dim); }
+.wf-row.is-here .wf-row-state { color: var(--ink); }
+.wf-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.12rem; }
+.wf-row-name {
+  font: 500 1.14rem/1.15 var(--f-serif);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf-row-meta {
+  display: flex;
+  gap: 0.5rem;
+  font: 500 0.82rem/1.1 var(--f-label);
+  color: var(--paper-faint);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.wf:not(.is-rtl) .wf-row-meta { font-variant-caps: all-small-caps; letter-spacing: 0.08em; font-size: 0.92rem; }
+.wf-row.is-here .wf-row-meta { color: rgba(17, 17, 17, 0.62); }
+.wf-row-end {
+  flex: none;
+  font: 500 0.85rem/1 var(--f-label);
+  color: var(--paper-dim);
+  white-space: nowrap;
+}
+.wf:not(.is-rtl) .wf-row-end { font-variant-caps: all-small-caps; letter-spacing: 0.1em; font-size: 0.98rem; }
+.wf-row.is-here .wf-row-end { color: var(--ink); }
+.wf-row.is-new .wf-row-name::after {
+  content: '';
+  display: inline-block;
+  width: 0.42rem;
+  height: 0.42rem;
+  margin-inline-start: 0.5rem;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: var(--red);
+}
+.wf-empty {
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--rule);
+  font: italic 400 1rem/1.4 var(--f-serif);
+  color: var(--paper-faint);
+}
+
+.wf-pager {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  height: 2.2rem;
+  margin-top: 0.6rem;
+  font: 500 0.95rem/1 var(--f-label);
+  color: var(--paper-dim);
+}
+.wf-pager button {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--paper-dim);
+  transition: color 120ms var(--ease);
+}
+.wf-pager button:hover:not(:disabled) { color: var(--paper); }
+.wf-pager button:disabled { opacity: 0.3; cursor: default; }
+.wf-pager .wf-glyph { width: 1rem; height: 1rem; }
+[dir='rtl'] .wf-pager .wf-glyph { transform: scaleX(-1); }
+
+/* ══════════════════ The mission: its head, its tabs, its page ══════════════════ */
+.wf-head-wrap { flex: none; height: 6.4rem; }
+.wf-head .wf-card-body { justify-content: center; padding-block: 1.1rem; }
+.wf-head .wf-h { font-size: 1.8rem; }
+
+.wf-tabs {
+  flex: none;
+  display: flex;
+  gap: 0.3rem;
+  padding: 0 0.2rem 0.35rem;
+  border-bottom: 1px solid var(--rule);
+}
+.wf-tab {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.05rem;
+  padding: 0 0.85rem;
+  color: var(--paper-dim);
+  white-space: nowrap;
+  font: 500 0.98rem/1 var(--f-label);
+  transition: color 120ms var(--ease);
+}
+.wf:not(.is-rtl) .wf-tab { font-variant-caps: all-small-caps; letter-spacing: 0.1em; font-size: 1.08rem; }
+.wf-tab::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--paper);
+  opacity: 0;
+  -webkit-mask: var(--tex-band-sm) center / 100% 100% no-repeat;
+  transition: opacity 120ms var(--ease);
+}
+.wf-tab::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0.85rem;
+  bottom: -0.4rem;
+  height: 2px;
+  background: var(--paper);
+  opacity: 0;
+  transition: opacity 120ms var(--ease);
+}
+.wf-tab.is-active { color: var(--paper); }
+.wf-tab.is-active::after { opacity: 1; }
+.wf-tab.is-here { color: var(--ink); }
+.wf-tab.is-here::before { opacity: 1; }
+.wf-tab.is-active, .wf-tab.is-active.is-here { color: var(--mark-ink); }
+.wf-tab.is-active::before { opacity: 1; background: var(--mark); }
+.wf-tab.is-active.is-here::before { background: var(--mark-lit); }
+.wf-tab.is-active:active::before { background: var(--mark-deep); }
+.wf-tab.is-active::after { opacity: 0; }
+.wf-tab-num { font-family: 'EB Garamond', Georgia, serif; font-variant-numeric: lining-nums tabular-nums; direction: ltr; unicode-bidi: isolate; opacity: 0.7; font-size: 0.9em; }
+
+.wf-page-wrap { flex: 1; }
+.wf-page { flex: 1; min-height: 0; overflow: hidden; padding-top: 1rem; }
+.wf-page.is-scroll { overflow-y: auto; padding-inline-end: 0.3rem; }
+.wf-page::-webkit-scrollbar { width: 3px; }
+.wf-page::-webkit-scrollbar-thumb { background: var(--rule-2); }
+.wf-note-line {
+  margin-bottom: 0.8rem;
+  font: 400 0.98rem/1.4 var(--f-serif);
+  color: var(--paper-faint);
+}
+
+/* ── Fields ── */
+.wf-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.85rem 1.1rem; }
+.wf-grid .is-wide { grid-column: 1 / -1; }
+.wf-field { display: flex; flex-direction: column; gap: 0.32rem; min-width: 0; }
+.wf-label {
+  font: 500 0.88rem/1.1 var(--f-label);
+  color: var(--paper-dim);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf-input {
+  width: 100%;
+  height: 2.3rem;
+  padding: 0 0.75rem;
+  border: 0;
+  outline: none;
+  background: var(--ink-2);
+  color: var(--paper);
+  box-shadow: inset 0 -1px 0 var(--rule-2);
+  font: 500 1.02rem/1.2 var(--f-input);
+  caret-color: var(--paper);
+  transition: background-color 120ms var(--ease), box-shadow 120ms var(--ease);
+}
+.wf-input::placeholder { color: var(--paper-faint); opacity: 1; }
+.wf-input::selection { background: rgba(242, 242, 242, 0.85); color: var(--ink); }
+.wf-input.is-num { font-family: 'EB Garamond', Georgia, serif; font-variant-numeric: lining-nums tabular-nums; direction: ltr; text-align: start; }
+[dir='rtl'] .wf-input.is-num { text-align: end; }
+.wf-input.is-here, .wf-input:focus { background: var(--ink-3); box-shadow: inset 0 -2px 0 var(--paper); }
+.wf-input.is-invalid { box-shadow: inset 0 -2px 0 var(--red); }
+.wf-error {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  margin-top: 0.2rem;
+  font: 400 0.9rem/1.35 var(--f-serif);
+  color: var(--paper);
+}
+.wf-error::before { content: ''; flex: none; width: 6px; height: 6px; background: var(--red); transform: translateY(-0.15em); }
+
+/* The pause menu's on / off rows */
+.wf-switches { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 1.1rem; margin-top: 1.1rem; }
+.wf-switch-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.45rem 0.1rem;
+  border-top: 1px solid var(--rule);
+  font: 500 0.98rem/1.2 var(--f-serif);
+  color: var(--paper-dim);
+  text-align: start;
+  transition: color 140ms var(--ease);
+}
+.wf-switch-row > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wf-switch-row.is-here { color: var(--paper); }
+.wf-switch-row.is-locked { opacity: 0.45; cursor: default; }
+.wf-switch {
+  flex: none;
+  min-width: 3.2rem;
+  padding: 0.18rem 0.55rem 0.24rem;
+  border: 1px solid rgba(242, 242, 242, 0.35);
+  text-align: center;
+  font: 500 0.85rem/1.1 var(--f-label);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.08em;
+  color: var(--paper-dim);
+}
+.wf-switch[data-on='true'] { background: var(--mark); border-color: var(--mark); color: var(--mark-ink); }
+.wf-switch-row.is-here .wf-switch { border-color: var(--paper); box-shadow: inset 0 -0.14rem 0 var(--red); }
+
+/* A choice among a few (◀ value ▶): the game's own selection arrows */
+.wf-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.3rem;
+  padding: 0 0.35rem;
+  background: var(--ink-2);
+  box-shadow: inset 0 -1px 0 var(--rule-2);
+  transition: background-color 120ms var(--ease), box-shadow 120ms var(--ease);
+}
+.wf-stepper.is-here { background: var(--ink-3); box-shadow: inset 0 -2px 0 var(--paper); }
+.wf-stepper-arrow { display: grid; place-items: center; flex: none; width: 1.6rem; height: 1.6rem; color: var(--paper-dim); }
+.wf-stepper-arrow:hover { color: var(--paper); }
+.wf-stepper-arrow .wf-glyph { width: 0.9rem; height: 0.9rem; }
+[dir='rtl'] .wf-stepper-arrow .wf-glyph { transform: scaleX(-1); }
+.wf-stepper-value {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font: 500 1rem/1.2 var(--f-input);
+  color: var(--paper);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf-play { display: grid; place-items: center; flex: none; width: 1.6rem; height: 1.6rem; color: var(--paper-dim); }
+.wf-play:hover, .wf-play.is-here { color: var(--paper); }
+.wf-play .wf-glyph { width: 0.95rem; height: 0.95rem; }
+
+/* ── The lists inside a mission: steps, items, enemies, waves ── */
+.wf-lines { display: flex; flex-direction: column; }
+.wf-line {
+  display: grid;
+  align-items: end;
+  gap: 0.7rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--rule);
+}
+.wf-line:last-child { border-bottom: 1px solid var(--rule); }
+.wf-line-num {
+  align-self: center;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--paper-faint);
+  font-size: 0.95rem;
+  min-width: 1.4rem;
+}
+.wf-line .wf-switch-row { border-top: 0; padding: 0; height: 2.3rem; }
+.wf-x {
+  display: grid;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  color: var(--paper-faint);
+  transition: color 120ms var(--ease), background-color 120ms var(--ease);
+}
+.wf-x .wf-glyph { width: 0.95rem; height: 0.95rem; }
+.wf-x:hover, .wf-x.is-here { color: var(--paper); background: var(--ink-3); box-shadow: inset 0 -2px 0 var(--red); }
+
+.wf-add {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  height: 2.2rem;
+  padding: 0 1rem;
+  color: var(--paper-dim);
+  font: 500 0.98rem/1 var(--f-label);
+  transition: color 120ms var(--ease);
+}
+.wf:not(.is-rtl) .wf-add { font-variant-caps: all-small-caps; letter-spacing: 0.1em; font-size: 1.08rem; }
+.wf-add::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--ink-3);
+  -webkit-mask: var(--tex-band-sm) center / 100% 100% no-repeat;
+  transition: background-color 120ms var(--ease);
+}
+.wf-add .wf-glyph { width: 0.85rem; height: 0.85rem; }
+.wf-add.is-here, .wf-add:hover { color: var(--ink); }
+.wf-add.is-here::before, .wf-add:hover::before { background: var(--paper); }
+.wf-add:disabled { opacity: 0.4; cursor: default; }
+
+/* ══════════════════ The actions strip ══════════════════ */
+.wf-actions-wrap { flex: none; height: 3.7rem; }
+.wf-actions { display: flex; align-items: center; justify-content: space-around; padding: 0 1.2rem; }
+.wf-act {
+  position: relative;
+  padding: 0.45rem 0.55rem 0.55rem;
+  font: 500 1.12rem/1 var(--f-serif);
+  color: var(--paper-dim);
+  white-space: nowrap;
+  transition: color 140ms var(--ease);
+}
+.wf:not(.is-rtl) .wf-act { font-variant-caps: all-small-caps; letter-spacing: 0.09em; font-size: 1.24rem; }
+.wf-act::after {
+  content: '';
+  position: absolute;
+  inset-inline: 18%;
+  bottom: 0.05rem;
+  height: 0.16rem;
+  background: var(--red);
+  opacity: 0;
+  transform: scaleX(0.3);
+  transition: opacity 140ms var(--ease), transform 180ms var(--ease);
+}
+.wf-act.is-here { color: var(--paper); }
+.wf-act.is-here::after { opacity: 1; transform: none; }
+.wf-act:disabled { opacity: 0.35; cursor: default; }
+.wf-act.is-primary { color: var(--paper); }
+.wf-actions.is-dense { padding: 0 0.6rem; }
+.wf-actions.is-dense .wf-act { padding-inline: 0.3rem; }
+.wf:not(.is-rtl) .wf-actions.is-dense .wf-act { font-size: 1.08rem; letter-spacing: 0.06em; }
+.is-rtl .wf-actions.is-dense .wf-act { font-size: 1.02rem; }
+
+/* ══════════════════ The paper note: are you sure? ══════════════════
+   The one light sheet: a note on paper, ink on it. */
+.wf-note {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0.8rem 1.4rem rgba(0, 0, 0, 0.6));
+  animation: wf-fade 160ms var(--ease) both;
+}
+.wf-note.is-alone { position: fixed; background: radial-gradient(60% 55% at 50% 50%, rgba(11, 10, 10, 0.55), rgba(11, 10, 10, 0) 100%); }
+.wf-note-plate {
+  position: relative;
+  width: 27rem;
+  padding: 2.2rem 2.4rem 1.7rem;
+  background: var(--note);
+  color: var(--ink);
+  text-align: center;
+  -webkit-mask-box-image: var(--tex-tear) 64 fill / var(--edge) round;
+  box-shadow: inset 0 0 2.4rem rgba(0, 0, 0, 0.28);
+  animation: wf-rise 220ms var(--ease) both;
+}
+.wf-note-plate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--tex-grain);
+  background-size: 256px 256px;
+  opacity: 0.45;
+}
+.wf-note-plate > * { position: relative; }
+.wf-note-kicker {
+  margin-bottom: 0.45rem;
+  font: 500 0.92rem/1.2 var(--f-label);
+  color: var(--note-dim);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+}
+.wf-note-q { font: 600 1.7rem/1.25 var(--f-display); color: var(--note-ink); }
+.wf-note-sub { margin-top: 0.45rem; font: 400 1rem/1.4 var(--f-serif); color: var(--note-dim); }
+.wf-note-row { display: flex; justify-content: center; gap: 3.4rem; margin-top: 1.5rem; }
+.wf-choice {
+  position: relative;
+  padding: 0.3rem 0.8rem 0.45rem;
+  font: 600 1.3rem/1 var(--f-serif);
+  color: rgba(17, 17, 17, 0.6);
+}
+.wf:not(.is-rtl) .wf-choice, .wf-note:not(.is-rtl) .wf-choice { font-variant-caps: all-small-caps; letter-spacing: 0.1em; font-size: 1.45rem; }
+.wf-choice::after {
+  content: '';
+  position: absolute;
+  inset-inline: 15%;
+  bottom: 0;
+  height: 0.18rem;
+  background: var(--red);
+  opacity: 0;
+  transition: opacity 140ms var(--ease);
+}
+.wf-choice.is-here { color: var(--ink); }
+.wf-choice.is-here::after { opacity: 1; }
+
+/* ══════════════════ The mission's own marks ══════════════════
+   An invalid tab / step line / note carries the one red as a mark, nothing more. */
+.wf-tab.is-invalid::after { content: ''; display: inline-block; width: 0.32rem; height: 0.32rem; margin-inline-start: 0.35rem; border-radius: 50%; background: var(--red); vertical-align: middle; }
+.wf-line.is-invalid .wf-line-num { color: var(--red); }
+.wf-note-line.is-invalid { box-shadow: inset 0 -2px 0 var(--red); }
+.wf-line-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 1rem/1.4 var(--f-serif); color: var(--paper-dim); }
+.wf-line-text b { color: var(--paper); font-weight: 600; }
+
+/* ══════════════════ The glyphs ══════════════════ */
+.wf-glyph { display: block; flex: none; }
+
+/* ══════════════════ Arabic ══════════════════
+   Never letter-spaced, never small caps. Lalezar is a poster face: a little smaller than the
+   Garamond it stands in for; Amiri runs small, a little larger. */
+.is-rtl .wf-label,
+.is-rtl .wf-kicker,
+.is-rtl .wf-switch,
+.is-rtl .wf-tab,
+.is-rtl .wf-row-meta,
+.is-rtl .wf-row-end,
+.is-rtl .wf-mast,
+.is-rtl .wf-note-kicker { letter-spacing: 0; font-variant-caps: normal; }
+.is-rtl .wf-h { font-weight: 400; font-size: 1.8rem; line-height: 1.3; letter-spacing: 0; }
+.is-rtl .wf-head .wf-h { font-size: 1.7rem; }
+.wf-ar { letter-spacing: 0; word-spacing: normal; font-variant-caps: normal; text-transform: none; font-style: normal; }
+.wf-h .wf-ar, .wf-row-name .wf-ar, .wf-mark .wf-ar, .wf-note-q .wf-ar { font-weight: 400; }
+.wf-mark .wf-ar { font-family: 'Lalezar', 'Tajawal', serif; font-size: 1.1em; }
+.is-rtl .wf-sub { font-size: 1.08rem; line-height: 1.55; }
+.is-rtl .wf-note-q { font-weight: 400; font-size: 1.6rem; line-height: 1.5; }
+.is-rtl .wf-label { font-weight: 700; font-size: 0.82rem; }
+.is-rtl .wf-kicker { font-weight: 700; font-size: 0.86rem; }
+.is-rtl .wf-switch { font-weight: 700; font-size: 0.8rem; }
+.is-rtl .wf-mast { font-size: 0.9rem; font-weight: 700; }
+.is-rtl .wf-act { font-weight: 700; font-size: 1.1rem; }
+.is-rtl .wf-tab { font-weight: 700; font-size: 0.95rem; }
+.is-rtl .wf-add { font-weight: 700; font-size: 0.95rem; }
+.is-rtl .wf-choice { font-weight: 700; font-size: 1.35rem; }
+.is-rtl .wf-switch-row { font-weight: 700; }
+.is-rtl .wf-row-name { font-size: 1.18rem; line-height: 1.3; }
+.is-rtl .wf-row-meta { font-weight: 700; font-size: 0.8rem; }
+.is-rtl .wf-row-end { font-weight: 700; font-size: 0.85rem; }
+.is-rtl .wf-empty { font-style: normal; font-size: 1.02rem; }
+.is-rtl .wf-note-kicker { font-weight: 700; font-size: 0.88rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wf-in, .wf-scrim, .wf-strip, .wf-note, .wf-note-plate { animation: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   The missions board's own parts (BOARD) - the same ink, paper and one red as everything above
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Fields: a long text, a warning, a value chosen on a note ── */
+.wf-textarea { height: 6.2rem; padding: 0.55rem 0.75rem; resize: none; line-height: 1.5; font-family: var(--f-serif); }
+.wf-warn {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  margin-top: 0.2rem;
+  font: 400 0.9rem/1.35 var(--f-serif);
+  color: var(--paper-dim);
+}
+.wf-warn::before { content: ''; flex: none; width: 5px; height: 5px; border: 1px solid var(--paper-dim); transform: translateY(-0.15em); }
+.wf-stepper.is-invalid { box-shadow: inset 0 -2px 0 var(--red); }
+.wf-stepper.is-locked { opacity: 0.5; }
+.wf-grid.is-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wf-grid .is-span { grid-column: 1 / -1; }
+.wf-grid > .wf-switch-row { align-self: end; height: 2.3rem; padding: 0 0.1rem; border-top: 0; box-shadow: inset 0 -1px 0 var(--rule); }
+.wf-switches.is-tight { margin-top: 0.4rem; grid-template-columns: minmax(0, 1fr); }
+.wf-note-line.is-tight { margin: 0.35rem 0 0; font-size: 0.92rem; }
+.wf-rows.is-scroll { overflow-y: auto; }
+
+.wf-pickfield {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  height: 2.3rem;
+  padding: 0 0.75rem;
+  background: var(--ink-2);
+  box-shadow: inset 0 -1px 0 var(--rule-2);
+  color: var(--paper);
+  text-align: start;
+  font: 500 1rem/1.2 var(--f-input);
+  transition: background-color 120ms var(--ease), box-shadow 120ms var(--ease);
+}
+.wf-pickfield .wf-glyph { width: 1rem; height: 1rem; color: var(--paper-faint); }
+.wf-pickfield-value { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wf-pickfield.is-empty .wf-pickfield-value { color: var(--paper-faint); }
+.wf-pickfield.is-here, .wf-pickfield:hover { background: var(--ink-3); box-shadow: inset 0 -2px 0 var(--paper); }
+.wf-pickfield.is-invalid { box-shadow: inset 0 -2px 0 var(--red); }
+
+/* ── The small actions on the band (the pause menu's buttons) ── */
+.wf-btns { display: flex; flex-wrap: wrap; gap: 0.45rem 0.55rem; margin-top: 0.45rem; }
+.wf-btn {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 2.1rem;
+  padding: 0 0.9rem;
+  color: var(--paper-dim);
+  white-space: nowrap;
+  font: 500 0.95rem/1 var(--f-label);
+  transition: color 120ms var(--ease);
+}
+.wf:not(.is-rtl) .wf-btn, .wf-lobby:not(.is-rtl) .wf-btn { font-variant-caps: all-small-caps; letter-spacing: 0.09em; font-size: 1.05rem; }
+.wf-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--ink-3);
+  -webkit-mask: var(--tex-band-sm) center / 100% 100% no-repeat;
+  transition: background-color 120ms var(--ease);
+}
+.wf-btn .wf-glyph { width: 0.95rem; height: 0.95rem; }
+.wf-btn.is-quiet::before { background: transparent; }
+.wf-btn.is-here, .wf-btn:hover { color: var(--ink); }
+.wf-btn.is-here::before, .wf-btn:hover::before { background: var(--paper); }
+.wf-btn[aria-disabled="true"], .wf-add[aria-disabled="true"] { opacity: 0.4; }
+.wf-btn[aria-disabled="true"].is-here, .wf-add[aria-disabled="true"].is-here { opacity: 0.6; }
+.wf-x.is-off { opacity: 0.35; }
+
+/* ── A place: where it is, and how it is set ── */
+.wf-place-at { padding: 0.25rem 0 0.15rem; font: 500 1rem/1.35 var(--f-serif); color: var(--paper); }
+.wf-place-at.is-empty { color: var(--paper-faint); font-style: italic; }
+.is-rtl .wf-place-at.is-empty { font-style: normal; }
+.wf-place-at.is-invalid { box-shadow: inset 0 -2px 0 var(--red); }
+.wf-place-src { color: var(--paper-faint); font-size: 0.9rem; }
+
+/* ── A section inside a tab ── */
+.wf-sec {
+  margin: 1.15rem 0 0.6rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--rule);
+  font: 500 0.88rem/1.1 var(--f-label);
+  color: var(--paper-dim);
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.1em;
+}
+.wf-tag {
+  display: inline-block;
+  margin-inline-start: 0.5rem;
+  padding: 0.06rem 0.45rem 0.12rem;
+  border: 1px solid rgba(242, 242, 242, 0.35);
+  font: 500 0.72rem/1.1 var(--f-label);
+  color: var(--paper-dim);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.wf-row.is-here .wf-tag { border-color: rgba(17, 17, 17, 0.5); color: var(--ink); }
+
+/* ── The step list ── */
+.wf-line.is-row { align-items: center; }
+.wf-stepline { align-items: center; }
+.wf-stepline-main {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  height: 2.3rem;
+  padding: 0 0.6rem;
+  color: var(--paper-dim);
+  font: 400 1rem/1.3 var(--f-serif);
+  transition: color 120ms var(--ease);
+}
+.wf-stepline-main::before {
+  content: '';
+  position: absolute;
+  inset: -1px -0.2rem 0;
+  z-index: -1;
+  background: var(--paper);
+  opacity: 0;
+  -webkit-mask: var(--tex-band) center / 100% 100% no-repeat;
+  transition: opacity 120ms var(--ease);
+}
+.wf-stepline-main b { flex: none; color: var(--paper); font-weight: 600; white-space: nowrap; }
+.wf-stepline-sum { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wf-stepline-main.is-here, .wf-stepline-main.is-here b { color: var(--ink); }
+.wf-stepline-main.is-here::before { opacity: 1; }
+.wf-step-ico { flex: none; width: 1.15rem; height: 1.15rem; }
+
+/* ── A step's form ── */
+.wf-stepform-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.35rem; }
+.wf-stepform-title { display: flex; align-items: center; gap: 0.5rem; min-width: 0; font: 600 1.25rem/1.2 var(--f-display); color: var(--paper); }
+.wf-stepform-title .wf-step-ico { width: 1.3rem; height: 1.3rem; }
+.wf-look { padding: 0.6rem 0 0.2rem; border-top: 1px solid var(--rule); }
+.wf-look-title { margin-bottom: 0.35rem; }
+.wf-wave { padding: 0.55rem 0 0.7rem; border-top: 1px solid var(--rule); }
+.wf-wave-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem; font: 600 0.98rem/1.2 var(--f-label); color: var(--paper); }
+.wf-wave-head .wf-x { width: 2rem; height: 2rem; }
+
+/* ══════════════════ The notes over the board: the 13 blocks, a checklist, the items ══════════════════
+   On paper the cursor turns: the board's paper band becomes an ink band with paper letters. */
+.wf-note-plate.is-wide { width: 38rem; padding-inline: 1.8rem; }
+.wf-palette { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.15rem 0.8rem; margin-top: 1rem; text-align: start; }
+.wf-pal, .wf-check, .wf-item {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.4rem 0.6rem;
+  color: var(--note-ink);
+  text-align: start;
+  transition: color 120ms var(--ease);
+}
+.wf-pal::before, .wf-check::before, .wf-item::before {
+  content: '';
+  position: absolute;
+  inset: 0 -0.2rem;
+  z-index: -1;
+  background: var(--note-ink);
+  opacity: 0;
+  -webkit-mask: var(--tex-band) center / 100% 100% no-repeat;
+  transition: opacity 120ms var(--ease);
+}
+.wf-pal.is-here, .wf-check.is-here, .wf-item.is-here { color: var(--note); }
+.wf-pal.is-here::before, .wf-check.is-here::before, .wf-item.is-here::before { opacity: 0.92; }
+.wf-pal-ico { flex: none; width: 1.35rem; height: 1.35rem; }
+.wf-pal-text { display: flex; flex-direction: column; min-width: 0; }
+.wf-pal-name { font: 600 1.02rem/1.25 var(--f-serif); }
+.wf-pal-desc { font: 400 0.82rem/1.3 var(--f-label); opacity: 0.72; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.wf-checks { margin-top: 0.9rem; max-height: 22rem; overflow-y: auto; text-align: start; }
+.wf-checks::-webkit-scrollbar, .wf-items::-webkit-scrollbar { width: 3px; }
+.wf-checks::-webkit-scrollbar-thumb, .wf-items::-webkit-scrollbar-thumb { background: var(--note-rule); }
+.wf-box { flex: none; display: grid; place-items: center; width: 1.15rem; height: 1.15rem; border: 1.5px solid currentColor; }
+.wf-box .wf-glyph { width: 0.85rem; height: 0.85rem; }
+.wf-check.is-on .wf-box { background: currentColor; }
+.wf-check.is-on .wf-box .wf-glyph { color: var(--note); }
+.wf-check.is-on.is-here .wf-box .wf-glyph { color: var(--note-ink); }
+.wf-check-label { min-width: 0; font: 500 1rem/1.3 var(--f-serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.wf-note-search {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 2.3rem;
+  margin-top: 1rem;
+  padding: 0 0.75rem;
+  background: rgba(17, 17, 17, 0.06);
+  box-shadow: inset 0 -1px 0 var(--note-rule);
+  transition: box-shadow 120ms var(--ease);
+}
+.wf-note-search .wf-glyph { width: 1rem; height: 1rem; color: var(--note-dim); }
+.wf-note-search input { flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: none; color: var(--note-ink); font: 500 1rem/1.2 var(--f-input); caret-color: var(--note-ink); }
+.wf-note-search input::placeholder { color: var(--note-dim); opacity: 1; }
+.wf-note-search.is-here, .wf-note-search:focus-within { box-shadow: inset 0 -2px 0 var(--note-ink); }
+.wf-items { margin-top: 0.6rem; max-height: 20rem; overflow-y: auto; text-align: start; }
+.wf-item-img { flex: none; width: 2.1rem; height: 2.1rem; }
+.wf-item-img img { width: 100%; height: 100%; object-fit: contain; filter: grayscale(1) contrast(1.1); }
+.wf-item-label { flex: 1; min-width: 0; font: 500 1rem/1.25 var(--f-serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wf-item-name { flex: none; font: 500 0.78rem/1 'EB Garamond', Georgia, serif; opacity: 0.6; direction: ltr; unicode-bidi: isolate; }
+
+/* ══════════════════ The player's surfaces: the offer, the invite (paper), the party card (a torn card) ══════════════════ */
+.wf-offer { width: 32rem; }
+.wf-offer-story {
+  margin-top: 0.75rem;
+  max-height: 12rem;
+  overflow-y: auto;
+  white-space: pre-line;
+  text-align: start;
+  font: 400 1.04rem/1.6 var(--f-serif);
+  color: var(--note-dim);
+}
+.wf-offer-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4rem 1.4rem; margin-top: 1rem; font: 500 0.95rem/1.3 var(--f-label); color: var(--note-ink); }
+.wf-offer-reward { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--note-rule); }
+.wf-offer-reward ul { display: flex; flex-direction: column; gap: 0.2rem; font: 500 1rem/1.35 var(--f-serif); color: var(--note-ink); }
+.wf-offer-cool { margin-top: 1rem; font: italic 500 1.05rem/1.4 var(--f-serif); color: var(--note-ink); }
+.is-rtl .wf-offer-cool { font-style: normal; }
+
+.wf-lobby {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(60% 60% at 50% 50%, rgba(11, 10, 10, 0.6), rgba(11, 10, 10, 0) 100%);
+  animation: wf-fade 180ms var(--ease) both;
+}
+.wf-lobby-wrap { width: 31rem; }
+.wf-lobby-wrap .wf-card { height: auto; max-height: 86vh; }
+.wf-lobby-wrap .wf-card-body { height: auto; }
+.wf-lobby-members { flex: none; max-height: 14rem; overflow-y: auto; margin-top: 0.6rem; }
+.wf-lobby-near { flex: none; max-height: 10rem; margin-top: 0.4rem; }
+.wf-row.is-static { cursor: default; }
+.wf-member-dot { flex: none; width: 6px; height: 6px; background: var(--paper-dim); }
+.wf-member-dot.is-down { background: var(--red); }
+.wf-act.is-small { padding: 0.3rem 0.4rem 0.4rem; font-size: 0.98rem; }
+.wf-lobby-invite { margin-top: 0.8rem; }
+.wf-lobby-cid { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.6rem; align-items: end; margin-top: 0.7rem; }
+.wf-lobby-actions { display: flex; justify-content: space-around; margin-top: 1rem; padding-top: 0.55rem; border-top: 1px solid var(--rule); }
+.wf-lobby .wf-row-name { font-size: 1.05rem; }
+
+/* ══════════════════ The objective strip (no focus) ══════════════════
+   A small torn sheet in the corner the board uses (inline start: the right in Arabic). */
+.wf-hud {
+  position: fixed;
+  top: 2.2rem;
+  inset-inline-start: 2.4rem;
+  z-index: 5;
+  width: 21rem;
+  pointer-events: none;
+  filter: drop-shadow(0 0.4rem 0.7rem rgba(0, 0, 0, 0.5));
+  animation: wf-rise 260ms var(--ease) both;
+}
+.wf-hud-card {
+  position: relative;
+  padding: 0.85rem 1.15rem 0.9rem;
+  background-color: rgba(21, 19, 19, 0.92);
+  box-shadow: inset 0 0 1rem rgba(242, 242, 242, 0.1);
+  -webkit-mask-box-image: var(--tex-tear) 64 fill / 0.9rem round;
+}
+.wf-hud-head { display: flex; align-items: baseline; gap: 0.5rem; }
+.wf-hud-title { flex: 1; min-width: 0; font: 400 1.1rem/1.25 var(--f-display); color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wf-hud-count { flex: none; font-size: 1rem; color: var(--paper-dim); }
+.wf-hud-obj { margin-top: 0.35rem; font: 500 1.02rem/1.4 var(--f-serif); color: var(--paper); }
+.wf-hud-say { margin-top: 0.35rem; font: italic 400 0.98rem/1.45 var(--f-serif); color: var(--paper-dim); }
+.is-rtl .wf-hud-say { font-style: normal; }
+.wf-hud-line { margin-top: 0.25rem; font: 500 0.88rem/1.3 var(--f-label); color: var(--paper-dim); }
+.wf-hud-members { display: flex; flex-wrap: wrap; gap: 0.2rem 0.9rem; margin-top: 0.5rem; padding-top: 0.45rem; border-top: 1px solid var(--rule); font: 500 0.85rem/1.3 var(--f-label); color: var(--paper-dim); }
+.wf-hud-members li { display: inline-flex; align-items: center; gap: 0.4rem; }
+.wf-hud-members li.is-down { color: var(--paper); }
+.wf-hud-down { color: var(--paper-faint); }
+
+/* ══════════════════ The banner: a paper sheet in the middle, 4 s ══════════════════ */
+.wf-shard {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 17vh;
+  pointer-events: none;
+  filter: drop-shadow(0 0.8rem 1.4rem rgba(0, 0, 0, 0.6));
+  animation: wf-fade 220ms var(--ease) both;
+  transition: opacity 400ms var(--ease);
+}
+.wf-shard.is-leaving { opacity: 0; }
+.wf-shard-plate {
+  position: relative;
+  min-width: 24rem;
+  max-width: 40rem;
+  padding: 1.35rem 2.8rem 1.4rem;
+  background: var(--note);
+  color: var(--note-ink);
+  text-align: center;
+  -webkit-mask-box-image: var(--tex-tear) 64 fill / var(--edge) round;
+  box-shadow: inset 0 0 2.4rem rgba(0, 0, 0, 0.28);
+  animation: wf-rise 260ms var(--ease) both;
+}
+.wf-shard-plate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--tex-grain);
+  background-size: 256px 256px;
+  opacity: 0.45;
+}
+.wf-shard-plate > * { position: relative; }
+.wf-shard-title { font: 600 2.1rem/1.2 var(--f-display); color: var(--note-ink); }
+.wf-shard-rule { display: block; width: 5rem; height: 0.16rem; margin: 0.75rem auto 0; background: var(--note-ink); opacity: 0.7; }
+.wf-shard-plate.is-fail .wf-shard-rule { background: var(--red); opacity: 1; }
+
+/* ══════════════════ Arabic, for the new parts ══════════════════ */
+.is-rtl .wf-sec, .is-rtl .wf-tag, .is-rtl .wf-btn { letter-spacing: 0; font-variant-caps: normal; font-weight: 700; }
+.is-rtl .wf-sec { font-size: 0.84rem; }
+.is-rtl .wf-btn { font-size: 0.92rem; }
+.is-rtl .wf-stepform-title, .is-rtl .wf-shard-title, .is-rtl .wf-hud-title { font-weight: 400; }
+.is-rtl .wf-shard-title { font-size: 1.95rem; line-height: 1.45; }
+.is-rtl .wf-pal-desc, .is-rtl .wf-hud-line, .is-rtl .wf-offer-facts { font-weight: 700; }
+.is-rtl .wf-pal-name, .is-rtl .wf-check-label, .is-rtl .wf-item-label { font-size: 1.06rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wf-lobby, .wf-hud, .wf-shard, .wf-shard-plate { animation: none; }
+}
+
+/* a glyph that points along the line (back, forward) turns with the language */
+.wf-flip { display: inline-flex; }
+[dir='rtl'] .wf-flip { transform: scaleX(-1); }

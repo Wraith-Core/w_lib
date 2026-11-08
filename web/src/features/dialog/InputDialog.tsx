@@ -2,12 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { fetchNui } from '../../utils/fetchNui';
 import { InputProps, OptionValue } from '../../typings';
-import { Glyph, Head, Layer, Panel, play } from '../../wc/Panel';
-import Icon from '../../wc/Icon';
+import { play } from '../../wc/sound';
+import { Card, cls, KitIcon, latinDigits, Txt, useKit } from '../../kit/ui';
 import DateFields from '../../components/DateFields';
 import PaletteField from '../../components/PaletteField';
 import WSelect from '../../components/WSelect';
-import { useLocales } from '../../providers/LocaleProvider';
 
 type Row = InputProps['rows'][number] & Record<string, any>;
 
@@ -24,23 +23,20 @@ const onlyAllowed = (allow: unknown, value: string): string => {
   return re ? value.replace(re, '') : value;
 };
 
-const sizeClass = (size?: string) =>
-  size === 'lg' || size === 'xl' ? ' is-lg' : size === 'xs' || size === 'sm' ? ' is-sm' : '';
+const sizeClass = (size?: string) => (size === 'lg' || size === 'xl' ? 'is-lg' : size === 'xs' || size === 'sm' ? 'is-sm' : undefined);
 
-/** The label line: icon, text, and the red asterisk a required field carries. */
+/** The label line (icon, text, the red mark a required field carries) and the help line under the control. */
 const FieldLabel: React.FC<{ row: Row }> = ({ row }) => (
-  <>
-    <span className="lb-label">
-      {row.icon && <Icon icon={row.icon} />}
-      {row.label}
-      {row.required && <span className="req">*</span>}
-    </span>
-    {row.description && <span className="lb-desc">{row.description}</span>}
-  </>
+  <span className="wf-label">
+    {row.icon && <span className="wk-ico"><KitIcon icon={row.icon} /></span>}
+    <Txt s={row.label} />
+    {row.required && <span className="wk-req">*</span>}
+  </span>
 );
+const Help: React.FC<{ row: Row }> = ({ row }) => (row.description ? <span className="wk-help"><Txt s={row.description} /></span> : null);
 
 const InputDialog: React.FC = () => {
-  const { locale, rtl } = useLocales();
+  const { rtl, t } = useKit();
   const [data, setData] = useState<InputProps | null>(null);
   const [values, setValues] = useState<Record<number, any>>({});
   const firstField = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null>(null);
@@ -110,51 +106,52 @@ const InputDialog: React.FC = () => {
   };
 
   return (
-    <Layer name="dialog">
-      <div className="lb-scrim" />
+    <div className={cls('wf', 'wk-dialog', rtl && 'is-rtl')}>
+      <div className="wk-veil" />
 
-      <Panel className={`lb-dialog${sizeClass(data.options?.size)}`}>
-        <Head title={data.heading} />
+      <div className={cls('wk-dialog-col', sizeClass(data.options?.size))}>
+        <Card focus i={0}>
+          <div className="wf-h"><Txt s={data.heading} /></div>
 
-        <div className="lb-dialog-body is-form">
-          {rows.map((row, i) => {
-            const type = String(row.type || 'input').toLowerCase();
-            const first = i === 0 ? (el: any) => (firstField.current = el) : undefined;
+          <div className="wk-form">
+            {rows.map((row, i) => {
+              const type = String(row.type || 'input').toLowerCase();
+              const first = i === 0 ? (el: any) => (firstField.current = el) : undefined;
 
-            if (type === 'checkbox') {
-              /* ★ wst-check: the native input IS the checkbox -- the theme's square (store-theme.css
-                 .wst-check input), with the keyboard and the change event the browser gives it.
-                 The drawn .lb-check-box stays in the markup for older sheets and is hidden. */
-              return (
-                <div className="lb-field" key={i}>
-                  <label className="lb-check wst-check">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(values[i])}
+              if (type === 'checkbox') {
+                /* the pause menu's on / off row: the whole row is the switch, red when on */
+                return (
+                  <div className="wf-field" key={i}>
+                    <button
+                      type="button"
+                      ref={first}
+                      className="wf-switch-row wk-switch"
                       disabled={row.disabled}
-                      onChange={(e) => set(i, e.target.checked)}
-                    />
-                    <span className="lb-check-box">
-                      <Glyph tex="tick" />
-                    </span>
-                    <span>{row.label}</span>
-                  </label>
-                  {row.description && <span className="lb-desc">{row.description}</span>}
-                </div>
-              );
-            }
+                      aria-pressed={Boolean(values[i])}
+                      onClick={() => { set(i, !values[i]); play('hover'); }}
+                    >
+                      <span>
+                        <Txt s={row.label} />
+                        {row.required && <span className="wk-req">*</span>}
+                      </span>
+                      <span className="wf-switch" data-on={values[i] ? 'true' : 'false'}>{values[i] ? t('on') : t('off')}</span>
+                    </button>
+                    <Help row={row} />
+                  </div>
+                );
+              }
 
-            if (type === 'select' || type === 'multi-select') {
-              const multi = type === 'multi-select';
+              if (type === 'select' || type === 'multi-select') {
+                const multi = type === 'multi-select';
 
-              return (
-                <div className="lb-field" key={i}>
-                  <FieldLabel row={row} />
-                  <div className="lb-input">
+                return (
+                  <div className="wf-field" key={i}>
+                    <FieldLabel row={row} />
                     {multi ? (
                       // a multi-select is drawn open in the page (size=4): no popup, so the native one stays
                       <select
                         ref={first}
+                        className="wk-multi"
                         multiple
                         size={4}
                         disabled={row.disabled}
@@ -173,169 +170,190 @@ const InputDialog: React.FC = () => {
                       </select>
                     ) : (
                       // the page's own dropdown: a native <select> opens a popup the game paints as noise
-                      <WSelect
-                        buttonRef={first}
-                        value={String(values[i] ?? '')}
-                        allowEmpty
-                        placeholder=""
-                        disabled={row.disabled}
-                        ariaLabel={row.label}
-                        options={(row.options || []).map((o: any) => {
-                          const value = o?.value != null ? o.value : o;
-                          return { value: String(value), label: String(o?.label != null ? o.label : value) };
-                        })}
-                        onChange={(v) => set(i, v)}
-                      />
+                      <span className="wk-selectbox">
+                        <WSelect
+                          buttonRef={first}
+                          value={String(values[i] ?? '')}
+                          allowEmpty
+                          placeholder={t('choose')}
+                          disabled={row.disabled}
+                          ariaLabel={row.label}
+                          options={(row.options || []).map((o: any) => {
+                            const value = o?.value != null ? o.value : o;
+                            return { value: String(value), label: latinDigits(String(o?.label != null ? o.label : value)) };
+                          })}
+                          onChange={(v) => set(i, v)}
+                        />
+                      </span>
                     )}
+                    <Help row={row} />
                   </div>
-                </div>
-              );
-            }
+                );
+              }
 
-            if (type === 'slider') {
-              // ★ How far the paper runs along the track (lib-ui.css .lb-slider): the theme's
-              //   slider draws its fill from this, since a native track has no fill of its own.
-              const lo = Number(row.min ?? 0);
-              const hi = Number(row.max ?? 100);
-              const fill = hi > lo ? Math.min(100, Math.max(0, ((Number(values[i]) - lo) / (hi - lo)) * 100)) : 0;
+              if (type === 'slider') {
+                // ★ How far the paper runs along the track: a native track has no fill of its own.
+                const lo = Number(row.min ?? 0);
+                const hi = Number(row.max ?? 100);
+                const fill = hi > lo ? Math.min(100, Math.max(0, ((Number(values[i]) - lo) / (hi - lo)) * 100)) : 0;
 
-              return (
-                <div className="lb-field" key={i}>
-                  <FieldLabel row={row} />
-                  <div className="lb-slider" style={{ '--lb-fill': `${fill}%` } as React.CSSProperties}>
-                    <input
-                      type="range"
-                      min={row.min ?? 0}
-                      max={row.max ?? 100}
-                      step={row.step || 1}
-                      value={values[i]}
-                      disabled={row.disabled}
-                      onChange={(e) => set(i, Number(e.target.value))}
-                    />
-                    <b dir="ltr">{values[i]}</b>
+                return (
+                  <div className="wf-field" key={i}>
+                    <FieldLabel row={row} />
+                    <div className="wk-slider" style={{ '--wk-fill': `${fill}%` } as React.CSSProperties}>
+                      <input
+                        ref={first}
+                        type="range"
+                        min={row.min ?? 0}
+                        max={row.max ?? 100}
+                        step={row.step || 1}
+                        value={values[i]}
+                        disabled={row.disabled}
+                        onChange={(e) => set(i, Number(e.target.value))}
+                      />
+                      <b dir="ltr">{values[i]}</b>
+                    </div>
                   </div>
-                </div>
-              );
-            }
+                );
+              }
 
-            if (type === 'textarea') {
-              return (
-                <div className="lb-field" key={i}>
-                  <FieldLabel row={row} />
-                  <div className="lb-input">
+              if (type === 'textarea') {
+                return (
+                  <div className="wf-field" key={i}>
+                    <FieldLabel row={row} />
                     <textarea
                       ref={first}
+                      className="wf-input wf-textarea"
+                      dir="auto"
                       placeholder={row.placeholder || ''}
                       disabled={row.disabled}
                       required={row.required}
+                      minLength={row.minLength}
+                      maxLength={row.maxLength}
                       value={values[i] ?? ''}
                       onChange={(e) => set(i, e.target.value)}
                     />
+                    <Help row={row} />
                   </div>
-                </div>
-              );
-            }
+                );
+              }
 
-            if (type === 'date') {
-              // ★ Day, month by name, year -- see components/DateFields for why not the native
-              //   box. It hands back the native box's own "YYYY-MM-DD" (or "" until complete).
+              if (type === 'date') {
+                // ★ Day, month by name, year -- see components/DateFields for why not the native
+                //   box. It hands back the native box's own "YYYY-MM-DD" (or "" until complete).
+                return (
+                  <div className="wf-field" key={i}>
+                    <FieldLabel row={row} />
+                    <DateFields
+                      value={values[i]}
+                      rtl={rtl}
+                      label={row.label}
+                      disabled={row.disabled}
+                      required={row.required}
+                      firstRef={first}
+                      onChange={(v) => set(i, v)}
+                    />
+                    <Help row={row} />
+                  </div>
+                );
+              }
+
+              if (type === 'color') {
+                // ★ The palette's eight tones, not the machine's full-spectrum picker (see
+                //   components/PaletteField). The row keeps its default until a tone is picked.
+                return (
+                  <div className="wf-field" key={i}>
+                    <FieldLabel row={row} />
+                    <PaletteField
+                      value={values[i]}
+                      rtl={rtl}
+                      label={row.label}
+                      disabled={row.disabled}
+                      firstRef={first}
+                      onChange={(v) => set(i, v)}
+                    />
+                    <Help row={row} />
+                  </div>
+                );
+              }
+
+              if (type === 'number') {
+                /* the kit's stepper: minus, the value, plus - always left to right like the figures in it */
+                return (
+                  <div className="wf-field" key={i}>
+                    <FieldLabel row={row} />
+                    <div className="wf-stepper wk-num" dir="ltr">
+                      <button type="button" className="wf-stepper-arrow" tabIndex={-1} aria-label="-" disabled={row.disabled} onClick={() => spin(i, row, -1)}>
+                        <span className="wk-pm">−</span>
+                      </button>
+                      <input
+                        ref={first}
+                        className="wk-num-input"
+                        type="number"
+                        placeholder={row.placeholder || ''}
+                        disabled={row.disabled}
+                        required={row.required}
+                        min={row.min}
+                        max={row.max}
+                        step={row.step}
+                        value={values[i] ?? ''}
+                        onChange={(e) => set(i, e.target.value)}
+                      />
+                      <button type="button" className="wf-stepper-arrow" tabIndex={-1} aria-label="+" disabled={row.disabled} onClick={() => spin(i, row, 1)}>
+                        <span className="wk-pm">+</span>
+                      </button>
+                    </div>
+                    <Help row={row} />
+                  </div>
+                );
+              }
+
+              const htmlType = type === 'time' ? 'time' : row.password ? 'password' : 'text';
+
               return (
-                <div className="lb-field" key={i}>
+                <div className="wf-field" key={i}>
                   <FieldLabel row={row} />
-                  <DateFields
-                    value={values[i]}
-                    rtl={rtl}
-                    label={row.label}
-                    disabled={row.disabled}
-                    required={row.required}
-                    firstRef={first}
-                    onChange={(v) => set(i, v)}
-                  />
-                </div>
-              );
-            }
-
-            if (type === 'color') {
-              // ★ The palette's eight tones, not the machine's full-spectrum picker (see
-              //   components/PaletteField). The row keeps its default until a tone is picked.
-              return (
-                <div className="lb-field" key={i}>
-                  <FieldLabel row={row} />
-                  <PaletteField
-                    value={values[i]}
-                    rtl={rtl}
-                    label={row.label}
-                    disabled={row.disabled}
-                    firstRef={first}
-                    onChange={(v) => set(i, v)}
-                  />
-                </div>
-              );
-            }
-
-            const htmlType =
-              type === 'number' ? 'number'
-              : type === 'time' ? 'time'
-              : row.password ? 'password'
-              : 'text';
-
-            return (
-              <div className="lb-field" key={i}>
-                <FieldLabel row={row} />
-                <div className="lb-input">
                   <input
                     ref={first}
+                    className={cls('wf-input', (type === 'time' || row.allow) && 'is-num')}
                     type={htmlType}
                     placeholder={row.placeholder || ''}
                     disabled={row.disabled}
                     required={row.required}
-                    min={type === 'number' ? row.min : undefined}
-                    max={type === 'number' ? row.max : undefined}
-                    step={type === 'number' ? row.step : undefined}
-                    minLength={type !== 'number' ? row.minLength : undefined}
-                    maxLength={type !== 'number' ? row.maxLength : undefined}
+                    minLength={row.minLength}
+                    maxLength={row.maxLength}
                     value={values[i] ?? ''}
-                    dir={type !== 'number' && row.allow ? 'ltr' : undefined}
-                    onChange={(e) => set(i, type === 'number' ? e.target.value : onlyAllowed(row.allow, e.target.value))}
+                    dir={row.allow || type === 'time' ? 'ltr' : 'auto'}
+                    spellCheck={false}
+                    onChange={(e) => set(i, onlyAllowed(row.allow, e.target.value))}
                   />
-
-                  {type === 'number' && (
-                    <span className="lb-spin">
-                      <button type="button" className="lb-spin-btn is-up" tabIndex={-1} aria-label="+" onClick={() => spin(i, row, 1)} />
-                      <button type="button" className="lb-spin-btn is-down" tabIndex={-1} aria-label="-" onClick={() => spin(i, row, -1)} />
-                    </span>
-                  )}
+                  <Help row={row} />
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </Card>
 
-        <div className="wc-hr-thin" />
-
-        {/* ★ Confirm is FIRST in the DOM, which puts it at the inline start: on the right in
-            Arabic and on the left in English. Reordering here rather than with CSS `order`
-            keeps the focus order the same as the visual order, which is what a keyboard and a
-            screen reader both follow. */}
-        <div className="lb-actions">
-          <button type="button" className="lb-btn" onClick={submit}>
-            <span>
-              <Glyph tex="tick" />
-              {locale.ui.confirm}
-            </span>
-          </button>
-
-          {data.options?.allowCancel !== false && (
-            <button type="button" className="lb-btn-ghost" onClick={() => close(null)}>
-              <span>
-                <Glyph tex="cross" />
-                {locale.ui.cancel}
-              </span>
+        {/* ★ Confirm is FIRST in the DOM, which puts it at the inline start (the right in Arabic): the focus order
+            is the visual order. Confirm is the red band; cancel a plain band. */}
+        <Card i={1} className="wk-actions-wrap" bodyClass="wk-actbar">
+          <div className="wk-acts">
+            <button type="button" className="wk-btn is-main" onClick={submit}>
+              <Txt s={t('confirm')} />
             </button>
-          )}
-        </div>
-      </Panel>
-    </Layer>
+            {data.options?.allowCancel !== false && (
+              <button type="button" className="wk-btn" onClick={() => close(null)}>
+                <Txt s={t('cancel')} />
+              </button>
+            )}
+          </div>
+          <div className="wk-hints" aria-hidden="true">
+            <span className="wk-hint"><span className="wk-key">Enter</span><Txt s={t('confirm')} /></span>
+            {data.options?.allowCancel !== false && <span className="wk-hint"><span className="wk-key">Esc</span><Txt s={t('cancel')} /></span>}
+          </div>
+        </Card>
+      </div>
+    </div>
   );
 };
 

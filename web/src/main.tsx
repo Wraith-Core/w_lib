@@ -4,6 +4,10 @@ import './index.css';
 import './wc/wc-base.css';
 import './wc/wc.css';
 import './wc/lib-ui.css';
+/* 4.4.0: the board kit (a copy of w_train's) and this frame's parts on it, after the older sheets */
+import './kit/kit.css';
+import './kit/kit-lib.css';
+import './kit/kit-hud.css';
 import { bootstrapWcAssets } from './wc/bootstrap';
 import { initButtonSfx, preloadSfx } from './wc/sound';
 import App from './App';

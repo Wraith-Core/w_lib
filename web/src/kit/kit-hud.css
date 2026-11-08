@@ -1,0 +1,55 @@
+/* ══════════════════════════════════════════════════════════════════════════════════════════════
+   4.4.0 -- the HUD pieces keep their game look (no cards: they sit over the world) but share the
+   board kit's key chip and faces. Families only: the store layer's sizes (body[data-store-theme])
+   are left alone, and nothing here names a wst-* class.
+
+   ★ One key chip everywhere: a paper cap, an ink letter in EB Garamond 600 (kit-lib .wk-key).
+   ★ Faces: EB Garamond for words and small figures, Lalezar for Arabic; RDR Catalogue stays for
+     big figures only (the location plate's clock, prices on prompts).
+   ══════════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* the text hint's [E] */
+html .lb-textui .lb-key {
+  min-width: 1.45em;
+  padding: 0.2em 0.38em 0.14em;
+  border: 0;
+  border-radius: 0.1em;
+  background: var(--w-paper, #F2F2F2);
+  color: var(--w-ink, #0B0A0A);
+  font-family: 'EB Garamond', Georgia, serif;
+  font-weight: 600;
+  font-variant-numeric: lining-nums;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* the prompt's key caps: same letter face as every other chip */
+html .wl-prompt-root .keyboardKey .text {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-weight: 600;
+  font-variant-numeric: lining-nums;
+  letter-spacing: 0.02em;
+}
+
+/* the progress ring: paper on its track, no red tick (red is for the chosen thing); the value in
+   EB Garamond lining figures */
+html .lb-core-tick { display: none; }
+html .lb-core-value {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: 0;
+}
+
+/* notices: the icon bare, no outline box behind it */
+html .lb-toast-icon:before { display: none; }
+
+/* the floating notices and the location plate's region line: EB Garamond / Lalezar, not the slab */
+html .wn-note.has-plate .wn-desc,
+html .wn-text3d {
+  font-family: 'EB Garamond', 'Lalezar', Georgia, serif;
+  font-weight: 600;
+}
+html .wn-note.has-plate .wn-desc { letter-spacing: 0.16em; }
+html [dir='rtl'] .wn-note.has-plate .wn-desc,
+html [dir='rtl'] .wn-text3d { font-family: 'Lalezar', 'EB Garamond', Georgia, serif; font-weight: 400; letter-spacing: 0; }

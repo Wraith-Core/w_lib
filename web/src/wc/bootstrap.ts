@@ -157,6 +157,13 @@ export function bootstrapWcAssets(): void {
     for (const name of names) root.setProperty(`--tex-${name}`, tex(`${dir}/${name}.png`));
   }
 
+  /* ★ 4.4.0: the board kit's own four (kit/kit.css): the torn edge and the grain (tex/kit, copied from w_train),
+     and the game's brushed selection band in its long and short form. */
+  root.setProperty('--tex-tear', tex('tex/kit/tear.png'));
+  root.setProperty('--tex-grain', tex('tex/kit/grain.png'));
+  root.setProperty('--tex-band', tex('tex/ui/selection_box_bg_1a.png'));
+  root.setProperty('--tex-band-sm', tex('tex/ui/selection_box_bg_1c.png'));
+
   // ★ The faces come from the theme's fonts.css. It is a <link> in <head>, so by 'load' it has
   //   been parsed and every @font-face is known; ask for them then.
   if (document.readyState === 'complete') warmFaces();

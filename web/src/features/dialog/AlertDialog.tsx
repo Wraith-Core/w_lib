@@ -2,19 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { fetchNui } from '../../utils/fetchNui';
 import { AlertProps } from '../../typings';
-import { Glyph, Head, Layer, Panel, play } from '../../wc/Panel';
-import { useLocales } from '../../providers/LocaleProvider';
+import { play } from '../../wc/sound';
+import { cls, Txt, useKit } from '../../kit/ui';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import MarkdownComponents from '../../config/MarkdownComponents';
 
-/** lg/xl widen the plate, xs/sm narrow it; anything else keeps the default. */
-const sizeClass = (size?: string) =>
-  size === 'lg' || size === 'xl' ? ' is-lg' : size === 'xs' || size === 'sm' ? ' is-sm' : '';
+/** lg/xl widen the note, xs/sm narrow it; anything else keeps the default. */
+const sizeClass = (size?: string) => (size === 'lg' || size === 'xl' ? 'is-wide' : size === 'xs' || size === 'sm' ? 'is-sm' : undefined);
 
+/**
+ * The alert, on the board kit (4.4.0): the kit's paper note -- light paper, ink lettering, a torn edge, and the
+ * answers as words. ONE frame: the inner double frame of the old dialog is gone.
+ *
+ * ★ The answer the keys and the mouse would take is underlined in red (the kit's .wf-choice.is-here): confirm by
+ *   default (Enter), the other one while the mouse is on it. The contract is unchanged: sendAlert /
+ *   closeAlertDialog in, closeAlert 'confirm' | 'cancel' out, Enter confirms, Escape cancels.
+ */
 const AlertDialog: React.FC = () => {
-  const { locale } = useLocales();
+  const { rtl, t } = useKit();
   const [data, setData] = useState<AlertProps | null>(null);
+  const [here, setHere] = useState<'confirm' | 'cancel'>('confirm');
 
   const answer = (value: 'confirm' | 'cancel') => {
     // ★ Confirming is a selection, cancelling is a close -- the two cues the bench uses.
@@ -27,6 +35,7 @@ const AlertDialog: React.FC = () => {
 
   useNuiEvent<AlertProps>('sendAlert', (payload) => {
     setData(payload);
+    setHere('confirm');
     play('open');
   });
 
@@ -45,60 +54,46 @@ const AlertDialog: React.FC = () => {
 
   if (!data) return null;
 
-  const cancelLabel = data.labels?.cancel || (data.cancel ? locale.ui.cancel : null);
-  const confirmLabel = data.labels?.confirm || locale.ui.confirm;
+  const cancelLabel = data.labels?.cancel || (data.cancel ? t('cancel') : null);
+  const confirmLabel = data.labels?.confirm || t('confirm');
 
   return (
-    <Layer name="dialog">
-      <div className="lb-scrim" />
+    <div className={cls('wf-note', 'is-alone', 'wk-alert', rtl && 'is-rtl')} role="alertdialog" aria-modal="true">
+      <div className={cls('wf-note-plate', sizeClass(data.size))}>
+        {data.header && <div className="wf-note-q"><Txt s={data.header} /></div>}
 
-      {/* ★ The alert is the pause menu's paper note (lib-ui.css, "the alert"): light paper, ink
-          lettering, a torn edge, the answers as words with the one the Enter key takes underlined
-          in red. The wrap carries the drop shadow, because the note's torn mask clips its own. */}
-      <div className="lb-note-wrap">
-        <Panel className={`lb-dialog is-note${sizeClass(data.size)}`}>
-          <Head title={data.header} />
+        {/* ★ Markdown is the alert's documented contract. react-markdown escapes HTML by default (the reason this
+            is not dangerouslySetInnerHTML); remark-gfm adds tables and strikethrough. */}
+        <div className="wk-md" dir="auto">
+          <ReactMarkdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>
+            {String(data.content ?? '')}
+          </ReactMarkdown>
+        </div>
 
-          {/* ★ Markdown, which is the alert's documented contract -- the demo's own body says
-              "**Markdown** works here too" and it was printing the asterisks. This was lost in the
-              port: the content had been reduced to raw HTML with newlines swapped for <br>, so
-              bold, links and lists all came through as literal punctuation.
+        {/* ★ Confirm is FIRST in the DOM: the inline start, the right in Arabic. */}
+        <div className="wf-note-row" onMouseLeave={() => setHere('confirm')}>
+          <button
+            type="button"
+            className={cls('wf-choice', here === 'confirm' && 'is-here')}
+            onMouseEnter={() => setHere('confirm')}
+            onClick={() => answer('confirm')}
+          >
+            <Txt s={confirmLabel} />
+          </button>
 
-              ⚠️ react-markdown escapes HTML by default, which is the safer default and the
-                 reason this is not dangerouslySetInnerHTML. remark-gfm adds the table and
-                 strikethrough syntax the upstream library documents. */}
-          <div className="lb-dialog-body">
-            <ReactMarkdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>
-              {String(data.content ?? '')}
-            </ReactMarkdown>
-          </div>
-
-          <div className="wc-hr-thin" />
-
-          {/* ★ Confirm is FIRST in the DOM, which puts it at the inline start: on the right in
-              Arabic and on the left in English. Reordering here rather than with CSS `order`
-              keeps the focus order the same as the visual order, which is what a keyboard and a
-              screen reader both follow. */}
-          <div className="lb-actions">
-            <button type="button" className="lb-btn" onClick={() => answer('confirm')}>
-              <span>
-                <Glyph tex="tick" />
-                {confirmLabel}
-              </span>
+          {cancelLabel && (
+            <button
+              type="button"
+              className={cls('wf-choice', here === 'cancel' && 'is-here')}
+              onMouseEnter={() => setHere('cancel')}
+              onClick={() => answer('cancel')}
+            >
+              <Txt s={cancelLabel} />
             </button>
-
-            {cancelLabel && (
-              <button type="button" className="lb-btn-ghost" onClick={() => answer('cancel')}>
-                <span>
-                  <Glyph tex="cross" />
-                  {cancelLabel}
-                </span>
-              </button>
-            )}
-          </div>
-        </Panel>
+          )}
+        </div>
       </div>
-    </Layer>
+    </div>
   );
 };
 

@@ -10,6 +10,7 @@ import {
   useEscapeCancel,
   useUiScaler,
 } from './shared';
+import { cls, useKit } from '../../kit/ui';
 
 const MIN_ROT = -90;
 const MAX_ROT = 90;
@@ -39,9 +40,9 @@ const Lockpick: React.FC<Props> = ({ config, onDone }) => {
   const cylinderEl = useRef<HTMLDivElement>(null);
   const driverEl = useRef<HTMLDivElement>(null);
 
-  const [pinsRemaining, setPinsRemaining] = useState(() =>
-    Math.max(1, Math.floor(configNumber(config, 'pins', 1)))
-  );
+  const { rtl, t } = useKit();
+  const [pinsTotal] = useState(() => Math.max(1, Math.floor(configNumber(config, 'pins', 1))));
+  const [pinsRemaining, setPinsRemaining] = useState(pinsTotal);
   const [damaged, setDamaged] = useState(false);
   const [broken, setBroken] = useState(false);
 
@@ -277,9 +278,33 @@ const Lockpick: React.FC<Props> = ({ config, onDone }) => {
 
   return (
     <main className="wl-lockpick">
-      <section ref={stage} className="wl-lockpick-stage fade-in-bottom">
-        <div className="wl-lockpick-pins">x{pinsRemaining}</div>
+      {/* ★ 4.4.0: ONE frame, the heists' paper note (w_heists' lockpick): the title, the lock on the paper, the picks
+          left as squares, the hint and the keys. The game art and its geometry are untouched; the tools may lie
+          across the note's edge, as they would on a table. */}
+      <div className="wk-pick-veil" />
+      <div className="wk-pick-shadow">
+        <div className={cls('wk-pick-note', rtl && 'is-rtl')} dir={rtl ? 'rtl' : 'ltr'}>
+          <div className="wk-pick-head">
+            <div className="wf-note-q">{t('lockpick')}</div>
+            <i className="wk-pick-rule" />
+          </div>
+          <div className="wk-pick-foot">
+            <div className="wk-pick-pins" aria-label={`${t('pins')}: ${pinsRemaining}`}>
+              {Array.from({ length: pinsTotal }, (_, i) => (
+                <span key={i} className={cls('wk-pick-pin', i < pinsRemaining && 'is-done', i === pinsRemaining - 1 && broken && 'is-now')} />
+              ))}
+            </div>
+            <div className="wk-pick-hint">{t('lockpick_hint')}</div>
+            <div className="wk-pick-keys">
+              <span><b className="wk-key">{t('mouse')}</b>{t('pick')}</span>
+              <span><b className="wk-key">W A S D</b>{t('turn')}</span>
+              <span><b className="wk-key">Esc</b>{t('leave')}</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
+      <section ref={stage} className="wl-lockpick-stage fade-in-bottom">
         <img className="wl-lockpick-collar" src="./img/lockpick/collar.webp" alt="" draggable={false} />
 
         <div ref={cylinderEl} className="wl-lockpick-cylinder" />
