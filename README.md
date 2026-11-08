@@ -6,6 +6,10 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.4.2 (2026-11-08)
+
+- وضع القتال بين اللاعبين يتوقف مؤقتًا على جهازك وقت ما تركب خلف لاعب على حصانه أو معه في عربته (w_stables)، ويرجع بعد ما تنزل.
+
 ## 4.4.1 (2026-11-08)
 
 القائمة وقائمة الخيارات عادت إلى مكانها القديم في العربية والإنجليزية: القائمة على اليسار، وقائمة الخيارات على اليمين دائمًا.

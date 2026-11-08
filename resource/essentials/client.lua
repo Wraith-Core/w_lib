@@ -104,7 +104,10 @@ if E.pvp.enabled then
         CreateThread(function()
             while alive(r) do
                 local now = GetRelationshipBetweenGroups(`PLAYER`, `PLAYER`)
-                if now ~= relation then
+                -- w_stables' ride-along (2026-11-08): while this player gets on behind another rider or into his
+                -- wagon, or sits there, players are respected on this client (the game refuses a hostile rider's
+                -- seat); the PvP relation comes back once the flag is false
+                if now ~= relation and LocalPlayer.state.wRideAlong ~= true then
                     if found == nil then found = now end
                     NetworkSetFriendlyFireOption(pvp)
                     SetRelationshipBetweenGroups(relation, `PLAYER`, `PLAYER`)
