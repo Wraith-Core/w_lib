@@ -369,6 +369,30 @@ if context == 'client' then
     cache.serverId = GetPlayerServerId(cache.playerId)
 
     -- ══════════════════════════════════════════════════════════════════════
+    -- /closeui (w_lib's command, resource/closeui/client.lua): every wraith MENU closes.
+    --   A resource says how its menus close with w.onCloseUi(fn) (its page told to close, its
+    --   state cleared). Whatever it registered, every resource then gives back the cursor and
+    --   the keyboard it holds: NUI focus is held per resource, so only the holder can free it.
+    --   The overlays that take no focus (a mission tracker, a HUD) and w_lib's prompts are left
+    --   alone: they are not menus.
+    -- ══════════════════════════════════════════════════════════════════════
+    local closeUiFns = {}
+
+    ---@param fn function called (protected) when /closeui runs
+    function lib.onCloseUi(fn)
+        if type(fn) == 'function' then closeUiFns[#closeUiFns + 1] = fn end
+    end
+
+    AddEventHandler('w_lib:closeUi', function()
+        for i = 1, #closeUiFns do
+            local ok, err = pcall(closeUiFns[i])
+            if not ok then print(('^1[%s] /closeui: %s^0'):format(cache.resource, tostring(err))) end
+        end
+        SetNuiFocus(false, false)
+        pcall(SetNuiFocusKeepInput, false)
+    end)
+
+    -- ══════════════════════════════════════════════════════════════════════
     -- ★ The built app asks ITS OWN resource, not w_lib.
     --
     --   fetchNui() in web/build resolves GetParentResourceName() -- the resource that owns

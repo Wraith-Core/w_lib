@@ -241,6 +241,14 @@ end)
 -- تعمل فقط حين تكون هناك مجموعة معروضة، وتبث حدثاً عند الاكتمال
 -- فلا يستطلع أي سكربت خارجي شيئاً
 -- ============================================================
+-- ★ While one of our groups is on screen the game's own prompts are hidden that frame (the owner,
+--   2026-11-11: two prompt boxes at once read as one mess). _UI_PROMPT_DISABLE_PROMPTS_THIS_FRAME, the
+--   native the placer already uses (modules/placer/client.lua:115, 842). The cost: a native prompt
+--   (another script's horse / wagon interaction) cannot be used while ours shows; it is back the frame
+--   ours hides. `setr w_lib:hideNativePrompts false` turns this off.
+local DISABLE_NATIVE_PROMPTS = 0xF1622CE88A1946FB
+local hideNative = GetConvar('w_lib:hideNativePrompts', 'true') ~= 'false'
+
 CreateThread(function()
     while true do
         local sleep = 250
@@ -249,6 +257,7 @@ CreateThread(function()
 
         if entry and entry.visible then
             sleep = 0
+            if hideNative then Citizen.InvokeNative(DISABLE_NATIVE_PROMPTS) end
 
             for i = 1, #entry.keys do
                 local key = entry.keys[i]
