@@ -96,6 +96,86 @@ local groupName = "interaction_GizmoPrompts"
 local rotationSnap = nil
 local onlyOnMove = false
 
+-- the key cards in the player's language (w_lib's locale, as the placer's): Arabic, else English
+local LABELS = {
+    en = { title = "Place it", move = "Move", rotate = "Rotate", cancel = "Cancel", confirm = "Confirm", toRotate = "Switch to rotate", toMove = "Switch to move",
+        snap = "Snap to ground", finish = "Finish", freeCam = "Free camera", focus = "Look at the object",
+        speed = "Camera speed: x%.3f", rotSnap = "Rotation snap (hold)", moveLR = "Camera left / right",
+        moveFB = "Camera forward / back", moveUp = "Camera up", moveDown = "Camera down" },
+    ar = { title = "ضعه", move = "تحريك", rotate = "تدوير", cancel = "إلغاء", confirm = "تأكيد", toRotate = "التبديل إلى التدوير", toMove = "التبديل إلى التحريك",
+        snap = "إلصاق بالأرض", finish = "إنهاء", freeCam = "كاميرا حرة", focus = "النظر إلى الشيء",
+        speed = "سرعة الكاميرا: x%.3f", rotSnap = "تدوير بخطوات (اضغط مطولاً)", moveLR = "الكاميرا يمين / يسار",
+        moveFB = "الكاميرا أمام / خلف", moveUp = "الكاميرا للأعلى", moveDown = "الكاميرا للأسفل" },
+}
+-- (the owner 2026-11-10: Arabic players get Arabic on w_lib's own cards; every other language: the game's native
+-- prompts, in English)
+local function language()
+    local okKey, k = pcall(function() return lib.getLocaleKey() end)
+    return okKey and k or "en"
+end
+local function L(key)
+    local set = LABELS[language()] or LABELS.en
+    return set[key] or LABELS.en[key] or key
+end
+
+--- the texts of the buttons on the screen (features/gizmo/Toolbar)
+local function uiLabels()
+    return { move = L("move"), rotate = L("rotate"), confirm = L("confirm"), cancel = L("cancel") }
+end
+
+-- the buttons on the screen, clicked: { action = 'mode' (mode) | 'confirm' | 'cancel' | 'snap' | 'camera' }
+local webActions = {}
+RegisterNUICallback("gizmo:Action", function(data, cb)
+    if gizmoActive and type(data) == "table" and type(data.action) == "string" then webActions[#webActions + 1] = data end
+    cb({ status = "ok" })
+end)
+
+--- The gizmo's key cards: J keep, R move / turn, C camera, G ground, X leave -> { add, label, show, next, close }
+---   Arabic   w_lib's own cards (its frame, its fonts): the game's prompts draw Arabic as white squares
+---   other    the game's native prompts (English), each card on its gizmo key (config.keys)
+local NATIVE = { J = "confirm", X = "cancel", R = "switchMode", C = "focusEntity", G = "snapToGround" }
+local function makeCards(title)
+    if language() == "ar" then
+        local group = w.prompt.createGroup(title, "bottom-right")
+        local pressed = {}
+        local handler = AddEventHandler("w_lib:promptCompleted", function(id, key)
+            if id == group.id then pressed[#pressed + 1] = tostring(key):upper() end
+        end)
+        return {
+            add = function(k, label) group.addPrompt(k, label, false) end,
+            label = function(k, label) pcall(group.setLabel, k, label) end,
+            show = function() group.display() end,
+            next = function()
+                if not group.isVisible() then pcall(group.display) end
+                return table.remove(pressed, 1)
+            end,
+            close = function()
+                RemoveEventHandler(handler)
+                pcall(group.hide)
+                pcall(group.delete)
+            end,
+        }
+    end
+    local keys = {}
+    return {
+        add = function(k, label)
+            local c = config.keys[NATIVE[k] or ""]
+            if c then keys[#keys + 1] = { k = k, c = c } w.prompt.create(groupName, label, c) end
+        end,
+        label = function(k, label)
+            local c = config.keys[NATIVE[k] or ""]
+            if c then w.prompt.editKeyLabel(groupName, c, label) end
+        end,
+        show = function() end,
+        next = function()
+            for _, e in ipairs(keys) do
+                if w.prompt.isCompleted(groupName, e.c) then return e.k end
+            end
+        end,
+        close = function() w.prompt.deleteGroup(groupName) end,
+    }
+end
+
 local function pointEntity()
     PointCamAtEntity(cam, target)
     needUpdateCamNUI = true
@@ -343,7 +423,7 @@ local function updateCamNUI()
 end
 
 local function refreshSpeedPrompt()
-    w.prompt.editKeyLabel(groupName, config.keys.cameraSpeedUp, ("Camera speed: x%.3f"):format(movementSpeed))
+    w.prompt.editKeyLabel(groupName, config.keys.cameraSpeedUp, L("speed"):format(movementSpeed))
 end
 
 --- Setup a gizmo interface to move an entity in 3D space
@@ -441,6 +521,7 @@ function w.gizmo.moveEntity(entity, cfg, allowPlace)
             allowRotateZ = allowRotateZ,
             rotationSnap = rotationSnap,
             allowSnapToGround = allowSnapToGround,
+            labels = uiLabels(),
         }
     })
 
@@ -458,56 +539,41 @@ function w.gizmo.moveEntity(entity, cfg, allowPlace)
     end)
 
 
-    w.prompt.create(groupName, "Cancel", config.keys.cancel)
-    w.prompt.create(groupName, "Confirm", config.keys.confirm)
-    w.prompt.create(groupName, "Switch to Rotate Mode", config.keys.switchMode)
-    if allowSnapToGround then
-        w.prompt.create(groupName, "Snap to Ground", config.keys.snapToGround)
-    end
-    w.prompt.create(groupName, "Finish", config.keys.enter)
-    w.prompt.create(groupName, "Free cam", config.keys.focusEntity)
-    w.prompt.create(groupName, ("Camera speed: x%.3f"):format(movementSpeed),
-        { config.keys.cameraSpeedUp, config.keys.cameraSpeedDown })
-    w.prompt.create(groupName, "Rotation snap", config.keys.rotationSnap)
-    w.prompt.setVisible(groupName, config.keys.rotationSnap, false)
-    if (cam) then
-        w.prompt.create(groupName, "Move L/R", config.keys.moveX)
-        w.prompt.create(groupName, "Move F/B", config.keys.moveY)
-        w.prompt.create(groupName, "Move Up", config.keys.moveDown)
-        w.prompt.create(groupName, "Move Down", config.keys.moveUp)
-    end
+    -- ★ The key cards are w_lib's own (its frame and its fonts: Arabic shows), not the game's native prompts -- those
+    --   drew Arabic as white squares. Their keys come back as w_lib:promptCompleted; the buttons on the screen
+    --   (gizmo:Action, the mouse is free while the gizmo is open) do the same.
+    local cards = makeCards(L("title"))
+    cards.add("J", L("confirm"))
+    cards.add("R", L("toRotate"))
+    if cam then cards.add("C", L("freeCam")) end
+    if allowSnapToGround then cards.add("G", L("snap")) end
+    cards.add("X", L("cancel"))
+    cards.show()
+    webActions = {}
+    -- turning goes in steps of rotationSnap degrees
+    SendNUIMessage({ action = "EnableRotationSnap", data = true })
 
-    dprint("[GIZMO DEBUG] Entering main prompt handling loop")
-    local loopCount = 0
+    local function setMode(m)
+        if m ~= "translate" and m ~= "rotate" then return end
+        mode = m
+        SendNUIMessage({ action = "SetGizmoMode", data = mode })
+        cards.label("R", mode == "translate" and L("toRotate") or L("toMove"))
+    end
+    local function on(v) return v == true or v == 1 end
+
     while gizmoActive do
-        loopCount = loopCount + 1
-        if loopCount % 1000 == 0 then -- Every 1000 iterations (~10 seconds)
-            dprint("[GIZMO DEBUG] Main loop iteration:", loopCount, "gizmoActive:", gizmoActive)
-        end
+        local key = cards.next()
+        local act = table.remove(webActions, 1)
+        local action = act and act.action
 
-        if w.prompt.isCompleted(groupName, config.keys.switchMode) then
-            local oldMode = mode
-            mode = (mode == "translate" and "rotate" or "translate")
-            dprint("[GIZMO DEBUG] Switching gizmo mode from", oldMode, "to", mode)
-            SendNUIMessage({
-                action = "SetGizmoMode",
-                data = mode
-            })
-            w.prompt.editKeyLabel(groupName, config.keys.switchMode,
-                mode == "translate" and "Switch to Rotate mode" or "Switch to Translate mode")
-            dprint("[GIZMO DEBUG] Gizmo mode switch complete")
-            w.prompt.setVisible(groupName, config.keys.rotationSnap, mode == "rotate")
-        end
+        if key == "R" then setMode(mode == "translate" and "rotate" or "translate") end
+        if action == "mode" then setMode(act.mode) end
 
-        if allowSnapToGround and w.prompt.isCompleted(groupName, config.keys.snapToGround) then
-            dprint("[GIZMO DEBUG] Snapping entity to ground")
+        if allowSnapToGround and (key == "G" or action == "snap") then
             PlaceObjectOnGroundProperly(entity)
             local newPos = GetEntityCoords(entity)
             local newRot = GetEntityRotation(entity)
-            if onMove then
-                onMove(newPos, newRot)
-            end
-            dprint("[GIZMO DEBUG] Entity snapped - New pos:", json.encode(newPos), "New rot:", json.encode(newRot))
+            if onMove then onMove(newPos, newRot) end
             SendNUIMessage({
                 action = "SetupGizmo",
                 data = {
@@ -521,25 +587,24 @@ function w.gizmo.moveEntity(entity, cfg, allowPlace)
                     allowRotateX = allowRotateX,
                     allowRotateY = allowRotateY,
                     allowRotateZ = allowRotateZ,
-                    rotationSnap = rotationSnap
+                    rotationSnap = rotationSnap,
+                    allowSnapToGround = allowSnapToGround,
+                    labels = uiLabels(),
                 }
             })
-            dprint("[GIZMO DEBUG] Snap to ground message sent")
         end
 
-        if w.prompt.isCompleted(groupName, config.keys.cameraSpeedUp) then
+        -- the camera's speed: the mouse wheel
+        if on(IsControlJustPressed(0, config.keys.cameraSpeedUp)) then
             movementSpeed = math.min(config.maxMovementSpeed, movementSpeed + config.movementSpeedIncrement)
-            refreshSpeedPrompt()
         end
-
-        if w.prompt.isCompleted(groupName, config.keys.cameraSpeedDown) then
+        if on(IsControlJustPressed(0, config.keys.cameraSpeedDown)) then
             movementSpeed = math.max(config.minMovementSpeed, movementSpeed - config.movementSpeedIncrement)
-            refreshSpeedPrompt()
         end
 
-        if w.prompt.isCompleted(groupName, config.keys.focusEntity) then
+        if cam and (key == "C" or action == "camera") then
             focusEntity = not focusEntity
-            w.prompt.editKeyLabel(groupName, config.keys.focusEntity, focusEntity and "Free cam" or "Focus entity")
+            cards.label("C", focusEntity and L("freeCam") or L("focus"))
             if focusEntity then
                 pointEntity()
             else
@@ -549,7 +614,7 @@ function w.gizmo.moveEntity(entity, cfg, allowPlace)
             needUpdateCamNUI = true
         end
 
-        if w.prompt.isCompleted(groupName, config.keys.confirm) then
+        if key == "J" or action == "confirm" then
             local coords = GetEntityCoords(entity)
             responseData = {
                 entity = entity,
@@ -569,7 +634,7 @@ function w.gizmo.moveEntity(entity, cfg, allowPlace)
             break
         end
 
-        if w.prompt.isCompleted(groupName, config.keys.cancel) then
+        if key == "X" or action == "cancel" then
             responseData = {
                 canceled = true,
                 entity = entity,
@@ -585,25 +650,11 @@ function w.gizmo.moveEntity(entity, cfg, allowPlace)
             break
         end
 
-        if w.prompt.isCompleted(groupName, config.keys.rotationSnap) then
-            SendNUIMessage({
-                action = "EnableRotationSnap",
-                data = true
-            })
-            while w.prompt.isCompleted(groupName, config.keys.rotationSnap, true) do
-                Wait(0)
-            end
-            SendNUIMessage({
-                action = "EnableRotationSnap",
-                data = false
-            })
-        end
-
         Wait(0)
     end
 
-    dprint("[GIZMO DEBUG] Exited main loop, cleaning up prompts")
-    w.prompt.deleteGroup(groupName)
+    cards.close()
+    webActions = {}
     DisplayHud(true)
     dprint("[GIZMO DEBUG] Cleanup complete, returning response data:", json.encode(responseData))
 

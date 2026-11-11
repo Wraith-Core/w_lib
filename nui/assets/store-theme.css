@@ -136,8 +136,8 @@
 .wst-check{display:inline-flex!important;align-items:center;gap:calc(8 * var(--ws-px))!important;cursor:pointer;font-family:var(--wst-f-body);font-size:clamp(calc(13 * var(--ws-fpx)),1.6vh,calc(17 * var(--ws-fpx)));color:var(--w-paper)}
 .wst-check input[type=checkbox]{appearance:none!important;width:calc(18 * var(--ws-px))!important;height:calc(18 * var(--ws-px))!important;min-width:calc(18 * var(--ws-px));min-height:calc(18 * var(--ws-px));box-sizing:border-box!important;border:max(2px, calc(2 * var(--ws-px))) solid var(--w-paper-faint)!important;background:var(--w-ink)!important;cursor:pointer;display:grid!important;place-items:center;flex:none!important;padding:0!important;margin:0!important;border-radius:0!important;box-shadow:none!important;outline:none!important}
 .wst-check input[type=checkbox]::after{content:none}
-.wst-check input[type=checkbox]:checked{background:var(--w-paper)!important;border-color:var(--w-paper)!important}
-.wst-check input[type=checkbox]:checked::after{content:'';position:static;width:calc(8 * var(--ws-px));height:calc(8 * var(--ws-px));background:var(--w-ink);border:0;box-shadow:none;transform:none}
+.wst-check input[type=checkbox]:checked{background:var(--w-ink)!important;border-color:var(--w-paper)!important}
+.wst-check input[type=checkbox]:checked::after{content:'';position:static;box-sizing:border-box;width:calc(6 * var(--ws-px));height:calc(11 * var(--ws-px));margin-top:calc(-2 * var(--ws-px));background:none;border:solid var(--w-paper);border-width:0 max(2px, calc(2 * var(--ws-px))) max(2px, calc(2 * var(--ws-px))) 0;box-shadow:none;transform:rotate(45deg)}
 .wst-check input[type=checkbox]:focus-visible{box-shadow:0 0 0 max(2px, calc(2 * var(--ws-px))) var(--w-ink),0 0 0 calc(3 * var(--ws-px)) var(--w-paper)!important}
 .wst-check input[type=checkbox]:disabled{opacity:.4!important;cursor:default!important}
 /* Arabic. The label face everywhere except titles, which keep the title role (Lalezar). Arabic is

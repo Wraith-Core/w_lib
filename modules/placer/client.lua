@@ -13,6 +13,9 @@
 --     keys   = { place = 'J', skip = 'G', remove = 'DELETE', back = 'BACK', cancel = 'X', look = 'C' },
 --     labels = { place, skip, keep, remove, back, cancel, look, save, rotate, confirm,
 --                step = 'Step %d/%d - %s' | fn(n, total, text), tooFar = '... %d m ...' },
+--     extraKeys = { { key = 'Q', label = 'Option', press = function(ctx, relabel) end }, ... },  -- the caller's own
+--                                                 -- cards beside the editor's (a choice made while placing: the
+--                                                 -- snap / capture read it); relabel(i, text) renames card i
 --     steps  = { {
 --       id = 'preview',                           -- key of the value in the result
 --       kind = 'ped' | 'object' | 'vehicle' | 'point' | 'camera',
@@ -32,6 +35,10 @@
 --       lookAt = 'preview' | { 'wagonPreview', 'wagonSpawn' }, lookHeight = 0.4,   -- camera steps
 --       frame = function(spot, target, ctx) return camCoords, pointAt, fov end,     -- C look-through
 --       create = function(model, coords, heading) return entity end,              -- own ghost
+--       snap = function(pos, heading, ctx) return pos, heading end,  -- moves the spot each frame (a wall, a
+--                                                 -- shelf...); nil [, reason] = no spot here: red, place refused
+--       lift = 0.0,                               -- metres between the spot and the ghost's origin (default:
+--                                                 -- the model's base, so it stands on the ground)
 --     }, ... },
 --   })
 --   w.placer.cancel()  w.placer.isActive()  w.placer.canStart() -> ok, reason
@@ -61,13 +68,13 @@ local DEFAULT_LABELS = {
     place = "Place", skip = "Skip", keep = "Keep current", remove = "Clear", back = "Back",
     cancel = "Cancel", look = "Look through", save = "Save", step = "Step %d/%d - %s",
     confirm = "Check the spots, then save", rotate = "mouse wheel turns it",
-    tooFar = "Too far from the first spot (%d m max)",
+    tooFar = "Too far from the first spot (%d m max)", invalid = "It cannot go here",
   },
   ar = {
     place = "وضع", skip = "تخطٍّ", keep = "إبقاء الحالي", remove = "حذف", back = "رجوع",
     cancel = "إلغاء", look = "نظرة الكاميرا", save = "حفظ", step = "الخطوة %d/%d — %s",
     confirm = "راجع النقاط ثم احفظ", rotate = "عجلة الفأرة للتدوير",
-    tooFar = "بعيد جدًا عن النقطة الأولى (%d م كحد أقصى)",
+    tooFar = "بعيد جدًا عن النقطة الأولى (%d م كحد أقصى)", invalid = "لا يمكن وضعه هنا",
   },
 }
 
@@ -257,7 +264,7 @@ local function spawnGhost(step, pos, heading)
 
   if not entity or entity == 0 or not DoesEntityExist(entity) then return nil end
   ghostify(entity, step.kind)
-  return { entity = entity, viaLib = viaLib, lift = step.kind == "ped" and 0.0 or baseLift(hash) }
+  return { entity = entity, viaLib = viaLib, lift = step.kind == "ped" and 0.0 or (tonumber(step.lift) or baseLift(hash)) }
 end
 
 local function removeGhost(g)
@@ -502,7 +509,19 @@ local function candidate(s, step, p)
     base = tonumber(step.heading) or s.entryHeading
   end
 
-  return pos, norm(base + s.rotation)
+  local heading = norm(base + s.rotation)
+  -- the step's own snap (a flag on a wall): the spot moved, or none here (a reason, else true: red, place refused)
+  if step.snap then
+    local ok, sp, sh, why = pcall(step.snap, pos, heading, { ped = p.ped, playerCoords = p.coords,
+      reach = tonumber(step.distance) or s.aimDistance, rotation = s.rotation })
+    if not ok then
+      eprint(("w.placer: snap() of step '%s' failed: %s"):format(step.id, tostring(sp)))
+      return pos, heading, true
+    end
+    if sp == nil then return pos, heading, why or true end
+    return sp, sh and norm(sh) or heading, nil
+  end
+  return pos, heading, nil
 end
 
 -- ---------------------------------------------------------------------------
@@ -658,6 +677,21 @@ local function act(s, action, p)
   end
   if action == "back" then return goBack(s, p) end
 
+  -- the caller's own card: its press, which may rename any of its cards
+  local xi = tonumber(tostring(action):match("^extra(%d+)$"))
+  if xi then
+    local e = s.extra[xi]
+    if not e then return end
+    local function relabel(i, text)
+      local x = s.extra[i]
+      if x and s.group then x.label = tostring(text) pcall(s.group.setLabel, x.key, x.label) end
+    end
+    local st = s.steps[s.index]
+    local ok, err = pcall(e.press, st and contextFor(s, st, p) or { playerCoords = p.coords }, relabel)
+    if not ok then eprint(("w.placer: the %s key's press failed: %s"):format(e.key, tostring(err))) end
+    return
+  end
+
   local step = s.steps[s.index]
   if not step then                            -- the confirm step
     if action == "place" then
@@ -679,6 +713,7 @@ local function act(s, action, p)
   if action == "place" then
     local pos = s.candidate
     if not pos then return end
+    if s.bad then return flash(s, type(s.bad) == "string" and s.bad or s.labels.invalid) end
     if tooFar(s, pos) then return flash(s, tooFarText(s)) end
 
     local value = pos
@@ -843,10 +878,18 @@ local function loop(s)
           s.rotation = s.rotation - s.rotateStep
         end
       end
-      local pos, heading = candidate(s, step, p)
-      s.candidate, s.heading = pos, heading
-      if s.ghost then moveGhost(s.ghost, step.kind, pos, heading) end
-      drawStep(s, step, pos, tooFar(s, pos), p)
+      local pos, heading, bad = candidate(s, step, p)
+      s.candidate, s.heading, s.bad = pos, heading, bad
+      if s.ghost then
+        moveGhost(s.ghost, step.kind, pos, heading)
+        -- no spot here (a snap found none): the ghost is not shown hanging in the air
+        local show = bad == nil
+        if s.ghost.entity and s.ghost.shown ~= show and DoesEntityExist(s.ghost.entity) then
+          SetEntityVisible(s.ghost.entity, show)
+          s.ghost.shown = show
+        end
+      end
+      drawStep(s, step, pos, tooFar(s, pos) or bad ~= nil, p)
     end
 
     drawResolved(s)
@@ -902,6 +945,17 @@ local function build(opts)
     if KEY_CONTROLS[key] then controls[#controls + 1] = KEY_CONTROLS[key] end
   end
 
+  -- the caller's own cards: action 'extra<i>' (a key the editor already uses is left out)
+  local extra = {}
+  for i, e in ipairs(type(opts.extraKeys) == "table" and opts.extraKeys or {}) do
+    local key = type(e) == "table" and tostring(e.key or ""):upper() or ""
+    if key ~= "" and not actions[key] and type(e.press) == "function" then
+      extra[#extra + 1] = { key = key, label = tostring(e.label or key), press = e.press }
+      actions[key] = "extra" .. #extra
+      if KEY_CONTROLS[key] then controls[#controls + 1] = KEY_CONTROLS[key] end
+    end
+  end
+
   local steps, byId = {}, {}
   for i, raw in ipairs(opts.steps) do
     if type(raw) ~= "table" or type(raw.id) ~= "string" or byId[raw.id] then return nil end
@@ -914,7 +968,7 @@ local function build(opts)
   end
 
   return {
-    steps = steps, byId = byId, keys = keys, actions = actions, controls = controls, labels = labels,
+    steps = steps, byId = byId, keys = keys, actions = actions, controls = controls, labels = labels, extra = extra,
     maxDistance = tonumber(opts.maxDistance) or 60.0,
     aimDistance = tonumber(opts.aimDistance) or 12.0,
     rotateStep = tonumber(opts.rotateStep) or 5.0,
@@ -938,6 +992,7 @@ local function openGroup(s)
   group.addPrompt(K.back, L.back, false)
   group.addPrompt(K.look, L.look, false)
   group.addPrompt(K.cancel, L.cancel, s.cancelHold)
+  for _, e in ipairs(s.extra or {}) do group.addPrompt(e.key, e.label, false) end
   group.display()
   s.group = group
 end

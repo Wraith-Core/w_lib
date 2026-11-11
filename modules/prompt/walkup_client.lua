@@ -175,10 +175,14 @@ end
 local function walkupEnsureLoop()
   if walkupLoop then return end
   walkupLoop = true
+  -- ★ Near a record: 10 times a second, not every frame. Nothing here has to be per frame -- w_lib's own
+  --   thread draws the shown group and catches its keys (they come back as w_lib:promptCompleted), and a
+  --   claim lives 250 ms. Every frame it was two calls into w_lib (WalkupClaim, isVisible) plus the
+  --   caller's canInteract, charged to the calling script: ~0.08 ms standing at a flag pole.
   CreateThread(function()
     while next(walkups) do
       local near = walkupTick()
-      Wait(near and 0 or 250)
+      Wait(near and 100 or 250)
     end
     walkupLoop = false
   end)

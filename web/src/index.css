@@ -137,6 +137,49 @@ body mark {
   z-index: 1;
 }
 
+/* The gizmo's buttons (features/gizmo/Toolbar): Move / Rotate, Confirm, Cancel -- top centre, over the canvas. */
+.wl-gizmo-bar {
+  position: absolute;
+  top: calc(24 * var(--lb-px, 1px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: calc(6 * var(--lb-px, 1px));
+  padding: calc(6 * var(--lb-px, 1px));
+  background: rgba(10, 10, 10, 0.88);
+  box-shadow: 0 0 0 1px rgba(242, 242, 242, 0.12), 0 12px 32px -12px rgba(0, 0, 0, 0.9);
+  font-family: var(--w-f-label);
+  pointer-events: auto;
+}
+.wl-gizmo-btn {
+  min-width: calc(92 * var(--lb-px, 1px));
+  padding: calc(8 * var(--lb-px, 1px)) calc(16 * var(--lb-px, 1px));
+  border: 0;
+  cursor: pointer;
+  background: rgba(242, 242, 242, 0.06);
+  color: var(--w-paper-dim, #b4b4b4);
+  font: inherit;
+  font-size: calc(15 * var(--lb-px, 1px));
+  line-height: 1.2;
+}
+.wl-gizmo-btn:hover {
+  background: rgba(242, 242, 242, 0.14);
+  color: var(--w-paper, #f2f2f2);
+}
+.wl-gizmo-btn.is-on,
+.wl-gizmo-btn.is-primary {
+  background: var(--w-paper, #f2f2f2);
+  color: var(--w-ink, #0a0a0a);
+}
+.wl-gizmo-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 0 calc(4 * var(--lb-px, 1px));
+  background: rgba(242, 242, 242, 0.16);
+}
+
 /* ============================================================================
    The page itself must never paint.
 

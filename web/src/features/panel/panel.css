@@ -325,16 +325,21 @@ body[data-store-theme] .wl-panel-list .lb-item.wst-card.is-active::before,
   cursor: pointer;
 }
 
+/* on: a tick in the box (the owner 2026-11-10: not the inverted square) */
 .wl-panel-check:checked {
-  background: var(--w-paper);
+  background: var(--w-ink);
   border-color: var(--w-paper);
 }
 
 .wl-panel-check:checked::after {
   content: '';
-  width: 8px;
-  height: 8px;
-  background: var(--w-ink);
+  box-sizing: border-box;
+  width: 6px;
+  height: 11px;
+  margin-top: -2px;
+  border: solid var(--w-paper);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .wl-panel-check:focus-visible {

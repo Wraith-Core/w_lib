@@ -26,6 +26,9 @@ export interface GizmoEntity {
   allowRotateY?: boolean;
   allowRotateZ?: boolean;
   rotationSnap?: number;
+  allowSnapToGround?: boolean;
+  /** The buttons on the screen, in the player's language (gizmo/client.lua uiLabels). */
+  labels?: { move?: string; rotate?: string; confirm?: string; cancel?: string };
 }
 
 export interface CameraData {

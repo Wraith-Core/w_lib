@@ -168,7 +168,9 @@ function Notify(data)
     -- ⚠️ Notices only. A town banner (useBackground) is not a notice: the game draws its own
     --    location feed at the top-left, and ours is meant to stand in for it, so it keeps the
     --    placement the caller chose (w_zonenotify Config.Placement) instead of the notice corner.
-    if FORCED_PLACEMENT and not data.useBackground then data.placement = FORCED_PLACEMENT end
+    -- keepPlacement = true: a script whose own panels sit on the right (w_missions, w_peds) keeps its notices clear of
+    -- them on the side it asks for; everybody else still lands on the one notice corner.
+    if FORCED_PLACEMENT and not data.useBackground and data.keepPlacement ~= true then data.placement = FORCED_PLACEMENT end
     -- every notice carries a state icon the frame can draw: a given name is checked against the
     -- frame's list, a plain notice with none gets its style's icon; a town banner (its own plate,
     -- no icon by design), the law banner and a notice with an item image are left as they are

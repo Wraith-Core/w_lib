@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import Frame from './Frame';
 import Glyph from './Glyph';
 import Icon from './Icon';
@@ -24,21 +24,69 @@ import Icon from './Icon';
  * ============================================================================
  */
 
-/** The plate everything sits on: the atmosphere wash, the 8-piece frame, and the column. */
+/**
+ * The plate everything sits on: the atmosphere wash, the 8-piece frame, and the column.
+ *
+ * ★ Held by its header (the title strip, not its buttons) it moves: the whole menu follows the
+ *   mouse, so what is behind it in the world can be seen. It stays where it was put while it is
+ *   open (a redraw keeps it), and opens centred again next time.
+ * ⚠️ Moved with left / top, not transform: .wc-shell's opening animation owns transform, and the
+ *    shell is already position:relative. Kept on screen: at least 80px of the header stays in view.
+ */
 export const Dashboard: React.FC<{
   /** Tints the shell -- wc-theme-* are declared in wc-base.css. */
   theme?: string;
   className?: string;
   children: React.ReactNode;
-}> = ({ theme, className, children }) => (
-  <div className="wc-viewport">
-    <section className={`wc-shell${theme ? ` wc-theme-${theme}` : ''}${className ? ` ${className}` : ''}`}>
-      <span className="wc-atmo" aria-hidden="true" />
-      <Frame px={13} opacity={0.5} />
-      {children}
-    </section>
-  </div>
-);
+}> = ({ theme, className, children }) => {
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const shellRef = useRef<HTMLElement | null>(null);
+  const drag = useRef<{ sx: number; sy: number; ox: number; oy: number; rect: DOMRect } | null>(null);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLElement>) => {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (!target.closest('.wc-header') || target.closest('button, input, select, textarea, a')) return;
+    const shell = shellRef.current;
+    if (!shell) return;
+    e.preventDefault();
+    drag.current = { sx: e.clientX, sy: e.clientY, ox: offset.x, oy: offset.y, rect: shell.getBoundingClientRect() };
+
+    const move = (ev: PointerEvent) => {
+      const d = drag.current;
+      if (!d) return;
+      const keep = 80;
+      let dx = ev.clientX - d.sx;
+      let dy = ev.clientY - d.sy;
+      // the header never leaves the screen: a sliver of it stays to grab again
+      dx = Math.min(window.innerWidth - keep - d.rect.left, Math.max(keep - d.rect.right, dx));
+      dy = Math.min(window.innerHeight - keep - d.rect.top, Math.max(-d.rect.top, dy));
+      setOffset({ x: d.ox + dx, y: d.oy + dy });
+    };
+    const up = () => {
+      drag.current = null;
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  return (
+    <div className="wc-viewport">
+      <section
+        ref={shellRef}
+        className={`wc-shell${theme ? ` wc-theme-${theme}` : ''}${className ? ` ${className}` : ''}`}
+        style={offset.x || offset.y ? { left: offset.x, top: offset.y } : undefined}
+        onPointerDown={onPointerDown}
+      >
+        <span className="wc-atmo" aria-hidden="true" />
+        <Frame px={13} opacity={0.5} />
+        {children}
+      </section>
+    </div>
+  );
+};
 
 /**
  * The header strip: a badge, the title and its subtitle, anything the caller wants on the far

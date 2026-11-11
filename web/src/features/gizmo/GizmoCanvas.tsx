@@ -4,6 +4,7 @@ import { PerspectiveCamera } from '@react-three/drei';
 import { MathUtils } from 'three';
 import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { Transform } from './Transform';
+import { Toolbar } from './Toolbar';
 import { CameraData, GizmoEntity } from './types';
 
 /**
@@ -53,6 +54,7 @@ const GizmoCanvas: React.FC<{ entity: GizmoEntity }> = ({ entity }) => (
       <GameCamera />
       <Transform entity={entity} />
     </Canvas>
+    <Toolbar entity={entity} />
   </div>
 );
 
