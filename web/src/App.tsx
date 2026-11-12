@@ -18,6 +18,7 @@ import Minigame from './features/minigame';
 import WNotify from './features/wnotify';
 import Voice from './features/voice';
 import RadialMenu from './features/menu/radial';
+import Pins from './features/pins';
 import { theme } from './theme';
 import { MantineProvider, createEmotionCache } from '@mantine/core';
 import { uiScaleStylis } from './utils/uiScale';
@@ -115,6 +116,7 @@ const App: React.FC = () => {
       {/* The preview scene, browser only -- see .wl-preview-bg in index.css for why it is an
           element rather than a background. */}
       {isEnvBrowser() && <div className="wl-preview-bg" />}
+      <Pins />
       <Progressbar />
       <Notifications />
       <TextUI />
