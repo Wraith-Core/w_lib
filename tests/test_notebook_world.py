@@ -375,6 +375,46 @@ class WorldEdit(Base):
         self.assertEqual(len(list(self.G.KEYS.values())), 0, 'the key listeners are removed')
         self.assertEqual(self.calls('stop')[0].args[1], 'stopped')
 
+    def test_rows_carry_ids(self):
+        self.lua.execute("""
+            ROWS = {}
+            EDIT.o.onRow = function(id, ctx) ROWS[#ROWS + 1] = { id = id, ctx = ctx } end
+            EDIT.o.ground = function(at) return {
+                { id = 'seller', title = 'ضع البائع هنا', onSelect = function(spot, id) GROUND_ID = id end },
+            } end
+            EDIT:setWorld(true); frames(10)
+        """)
+        self.lua.execute('PRESSED[0xF3830D8E] = true; frame(); pick(3); frames(3)')
+        self.assertEqual(self.G.ROWS[1].id, 'delete')
+        self.assertEqual(self.G.ROWS[1].ctx.id, 'npc', 'onRow gets the item')
+        self.lua.execute('frames(6); TOWN = 459833523; CAM.x = 100.0; frames(10); PRESSED[0xF3830D8E] = true; frame(); pick(1)')
+        self.assertEqual(self.G.GROUND_ID, 'seller', 'a ground row gets its own id')
+        self.assertEqual(self.G.ROWS[2].id, 'seller')
+
+    def test_pin_menu_ids_for_pinmenu(self):
+        self.lua.execute("""
+            IDS = {}
+            EDIT.o.pinMenu = function(it, rows) for _, r in ipairs(rows) do IDS[#IDS + 1] = r.id end return rows end
+            EDIT:setWorld(true); frames(10); PRESSED[0xF3830D8E] = true; frame()
+        """)
+        self.assertEqual(list(self.G.IDS.values()), ['move', 'turn', 'delete', 'open'])
+        titles = [o.title for o in self.G.MENU.options.values()]
+        self.assertEqual(titles, ['حرّكه', 'لفّه نحوي', 'احذفه', 'افتح الخطوة'], 'titles and order unchanged')
+
+    def test_set_world_too_soon_is_refused_or_queued(self):
+        self.lua.execute("EDIT:setWorld(true); frames(30); rawKey('TAB', true)")
+        self.assertFalse(self.lua.eval('EDIT:isWorld()'))
+        self.assertFalse(self.lua.eval('EDIT:setWorld(true)'), 'too soon: old callers read false')
+        self.assertFalse(self.lua.eval('EDIT:isPending()'), 'not queued unless asked')
+        self.lua.execute('WORLD_ON = 0; EDIT.o.onWorld = function(on) if on then WORLD_ON = WORLD_ON + 1 end end')
+        self.assertFalse(self.lua.eval('EDIT:setWorld(true, { queue = true })'))
+        self.assertTrue(self.lua.eval('EDIT:isPending()'))
+        self.lua.execute('frames(40, 16)')
+        self.assertTrue(self.lua.eval('EDIT:isWorld()'), 'the queued switch applied after the gap')
+        self.assertEqual(self.G.WORLD_ON, 1)
+        self.lua.execute("frames(30); rawKey('TAB', true); EDIT:setWorld(true, { queue = true }); EDIT:setWorld(false); frames(40, 16)")
+        self.assertFalse(self.lua.eval('EDIT:isWorld()'), 'setWorld(false) cancels the queue')
+
     def test_resource_stop_ends_it(self):
         self.lua.execute("frames(40, 16); TriggerEvent('onResourceStop', 'w_test'); frames(3)")
         self.assertEqual(self.calls('stop')[0].args[1], 'resource')

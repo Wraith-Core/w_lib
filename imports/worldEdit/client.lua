@@ -233,6 +233,8 @@ function Edit:setItems(list)
 end
 
 function Edit:isWorld() return self.world == true end
+--- true while a queued setWorld(true) waits for the 300 ms gap
+function Edit:isPending() return self.pending == true end
 
 function Edit:_hideCards()
     if self.group then
@@ -285,11 +287,17 @@ function Edit:_showCards(it)
 end
 
 --- World mode on / off. Off keeps the pins, ghosts and rings (the board is shown beside them).
-function Edit:setWorld(on)
+function Edit:setWorld(on, opts)
     if self.stopped then return false end
     on = on == true
+    if not on then self.pending = nil end
     if on == self.world then return self.world end
-    if on and now() - (self.since or 0) < TAB_GAP_MS then return self.world end
+    if on and now() - (self.since or 0) < TAB_GAP_MS then
+        -- too soon after the last switch: refused (old callers read false = stay on the board), or queued when the
+        -- caller asked for it (opts.queue / start's queueWorld) - it then turns on by itself and calls onWorld(true)
+        if (type(opts) == 'table' and opts.queue) or self.o.queueWorld then self.pending = true end
+        return self.world
+    end
     self.world = on
     self.since = now()
     if not on then
@@ -299,12 +307,13 @@ function Edit:setWorld(on)
 end
 
 -- the context menu (w_lib's frame): rows carry this edit's event; the picked row's function runs here
-function Edit:_menu(title, subtitle, rows)
+function Edit:_menu(title, subtitle, rows, ctx)
     local opts = {}
     self.rows = {}
+    self.rowCtx = ctx
     for i, r in ipairs(rows) do
         if type(r) == 'table' and r.title then
-            self.rows[i] = r.onSelect
+            self.rows[i] = { fn = r.onSelect, id = r.id }
             opts[#opts + 1] = { title = r.title, description = r.description, icon = r.icon, disabled = r.disabled,
                 coords = r.coords, where = r.where, event = self.event, args = { e = self.token, i = i } }
         end
@@ -330,8 +339,8 @@ function Edit:_groundMenu(at)
     for i, r in ipairs(rows) do
         if type(r) == 'table' then
             local fn = r.onSelect
-            wrapped[i] = { title = r.title, description = r.description, icon = r.icon, disabled = r.disabled,
-                onSelect = fn and function() fn(spot) end or nil }
+            wrapped[i] = { id = r.id, title = r.title, description = r.description, icon = r.icon, disabled = r.disabled,
+                coords = r.coords, where = r.where, onSelect = fn and function(_, id) fn(spot, id) end or nil }
         end
     end
     local sub = self.o.subtitle
@@ -343,26 +352,26 @@ function Edit:_groundMenu(at)
         local okP, d = pcall(function() return lib.place.describe(spot) end)
         sub = okP and d and d.text or nil
     end
-    self:_menu(self.o.title or word('what'), sub, wrapped)
+    self:_menu(self.o.title or word('what'), sub, wrapped, spot)
 end
 
 function Edit:_pinMenu(it)
     local o = self.o
     local rows = {}
     if o.onMove and it.move ~= false then
-        rows[#rows + 1] = { title = word('move'), description = word('move_d'), onSelect = function() self:_move(it) end }
+        rows[#rows + 1] = { id = 'move', title = word('move'), description = word('move_d'), onSelect = function() self:_move(it) end }
     end
     if o.onTurn and it.turn then
-        rows[#rows + 1] = { title = word('face'), description = word('face_d'), onSelect = function()
+        rows[#rows + 1] = { id = 'turn', title = word('face'), description = word('face_d'), onSelect = function()
             local pos = me()
             if pos and it.x then pcall(o.onTurn, it, headingTo(it.x, it.y, pos.x, pos.y)) end
         end }
     end
     if o.onRemove then
-        rows[#rows + 1] = { title = word('remove'), description = word('remove_d'), onSelect = function() pcall(o.onRemove, it) end }
+        rows[#rows + 1] = { id = 'delete', title = word('remove'), description = word('remove_d'), onSelect = function() pcall(o.onRemove, it) end }
     end
     if o.onOpen then
-        rows[#rows + 1] = { title = word('open'), description = word('open_d'), onSelect = function()
+        rows[#rows + 1] = { id = 'open', title = word('open'), description = word('open_d'), onSelect = function()
             self:setWorld(false)
             pcall(o.onOpen, it)
         end }
@@ -376,7 +385,7 @@ function Edit:_pinMenu(it)
         local okP, d = pcall(function() return lib.place.describe(vector3(it.x, it.y, it.z or 0.0)) end)
         sub = okP and d and d.text or nil
     end
-    self:_menu(it.label ~= '' and it.label or word('pin'), sub, rows)
+    self:_menu(it.label ~= '' and it.label or word('pin'), sub, rows, it)
 end
 
 --- «حرّكه»: the w_lib placer for that one spot (J places, its own cards); world mode comes back after it
@@ -408,12 +417,16 @@ end
 function Edit:_onPick(args)
     if type(args) ~= 'table' or args.e ~= self.token then return end
     self.menuOpen = false
-    local fn = self.rows and self.rows[tonumber(args.i) or 0]
-    self.rows = nil
-    if fn then
-        local ok, err = pcall(fn)
+    local row = self.rows and self.rows[tonumber(args.i) or 0]
+    local ctx = self.rowCtx
+    self.rows, self.rowCtx = nil, nil
+    if not row then return end
+    -- a row's function gets (item | ground spot, row id); onRow(id, item | spot) tells the caller which row ran
+    if row.fn then
+        local ok, err = pcall(row.fn, ctx, row.id)
         if not ok then print(('^1w_lib worldEdit: a menu row failed: %s^0'):format(tostring(err))) end
     end
+    if row.id ~= nil and self.o.onRow then pcall(self.o.onRow, row.id, ctx) end
 end
 
 -- the rings (lib.glow polygons) and the ghosts
@@ -477,6 +490,11 @@ end
 local function pressed(c) return yes(IsDisabledControlJustPressed(0, c)) end
 
 function Edit:_frame()
+    if self.pending and not self.world and now() - (self.since or 0) >= TAB_GAP_MS then
+        self.pending = nil
+        self.world, self.since = true, now()
+        if self.o.onWorld then pcall(self.o.onWorld, true) end
+    end
     local pos = me()
     if not pos then return end
     self:_rings(pos)

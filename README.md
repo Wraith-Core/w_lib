@@ -12375,7 +12375,7 @@ lib.clearPins('mission')
 
 ```lua
 local edit = lib.worldEdit.start(opts)
-edit:setItems(items)   edit:setWorld(on)   edit:isWorld()   edit:stop()
+edit:setItems(items)   edit:setWorld(on, { queue? })   edit:isWorld()   edit:isPending()   edit:stop()
 ```
 
 Side: client (an import: it runs in your resource and calls your functions)
@@ -12400,7 +12400,20 @@ callbacks. Nothing is saved here: every change is a callback, you keep the data 
 
 `opts`: `key`, `title`, `subtitle` (string or `function(at)`), `items`, `ground`, `onMove(item, spot)`,
 `onTurn(item, heading)`, `onRadius(item, radius)`, `onRemove(item)`, `onOpen(item)`, `pinMenu(item, rows)`,
-`onUndo()`, `onBoard()`, `onStop(reason)`, `range` (150), `near` (60), `ghostRange` (120), `maxGhosts` (24).
+`onUndo()`, `onBoard()`, `onStop(reason)`, `onRow(id, item | spot)`, `onWorld(on)`, `queueWorld` (false),
+`range` (150), `near` (60), `ghostRange` (120), `maxGhosts` (24).
+
+Row ids: every menu row carries a stable `id`. The pin menu's own rows are `'move'`, `'turn'`, `'delete'` and
+`'open'` (their titles and order are unchanged), so `pinMenu(item, rows)` can keep or drop rows by `row.id` instead of
+by their translated title. Your `ground(at)` rows (and rows you add in `pinMenu`) may carry their own `id`. A picked
+row's `onSelect` gets `(item | ground spot, id)` (ground rows: `onSelect(spot, id)`, as before plus the id), and
+`onRow(id, item | spot)` is called after any row with an id runs.
+
+Too-soon switches: `setWorld(true)` within 300 ms of the last switch returns `false` and changes nothing (as before,
+so "false = stay on the board" still holds). Pass `setWorld(true, { queue = true })` (or `queueWorld = true` in
+`opts`) to queue it instead: it still returns `false` at once, `isPending()` is true, and world mode turns on by
+itself when the gap has passed, then `onWorld(true)` is called (drop your NUI focus there). `setWorld(false)`
+cancels a queued switch.
 
 items: `{ id, n?, label, x, y, z?, h?, r?, model?, kind? = 'ped' | 'object' | 'vehicle' | 'point', state? = 'cur' |
 'miss', turn?, move? }`. Call `setItems` again after each change your callbacks make.
