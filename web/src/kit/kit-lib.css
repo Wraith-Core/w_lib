@@ -678,6 +678,8 @@
 .wk-form > .wf-sec { margin: 0.35rem 0 -0.35rem; }
 /* the actions strip never shrinks: a tall form (the advanced fold open) scrolls inside its card instead */
 .wk-dialog-col > .wk-actions-wrap { flex: none; }
+/* a texture icon (white art) on the paper band: drawn dark, like the glyph icons */
+.wf-row.is-here .wk-ico > img { filter: brightness(0.14); }
 .wk-form > .wf-sec:first-child { margin-top: 0; }
 
 /* a number as choices (a row's `levels`: سهل / عادي / صعب): band buttons, the chosen one on the red band */
