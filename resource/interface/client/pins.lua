@@ -29,6 +29,14 @@ end
 
 local function num(v) return tonumber(v) end
 
+-- the first n characters (UTF-8: an Arabic letter is 2 bytes, a byte cut would split it)
+local function cut(s, n)
+    if type(s) ~= 'string' then return nil end
+    local ok, at = pcall(utf8.offset, s, n + 1)
+    if ok and at then return s:sub(1, at - 1) end
+    return ok and s or s:sub(1, n)
+end
+
 local function clean(list)
     local out = {}
     if type(list) ~= 'table' then return out end
@@ -42,11 +50,11 @@ local function clean(list)
                 if t == 'vector3' or t == 'vector4' or t == 'table' then x, y = num(c.x), num(c.y) end
             end
             out[#out + 1] = {
-                id = tostring(p.id):sub(1, 64),
+                id = cut(tostring(p.id), 64),
                 x = x, y = y, z = num(p.z) or (type(c) ~= 'nil' and num(c.z)) or nil,
                 n = num(p.n) and math.floor(num(p.n)) or nil,
-                label = type(p.label) == 'string' and p.label:sub(1, 80) or '',
-                sub = type(p.sub) == 'string' and p.sub:sub(1, 40) or nil,
+                label = cut(p.label, 80) or '',
+                sub = cut(p.sub, 40),
                 state = (p.state == 'cur' or p.state == 'miss') and p.state or nil,
                 lift = num(p.lift) or 1.0,
             }
