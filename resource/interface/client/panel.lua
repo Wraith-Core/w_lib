@@ -47,6 +47,9 @@ end
 ---@field group? string       consecutive items sharing a group sit under one heading
 ---@field meta? PanelMeta[]
 ---@field detail? { title?: string, image?: string, description?: string, stats?: PanelMeta[], rows?: PanelMeta[] }
+---@field where? string       4.5.0: a place line under the row ('فالنتاين · 12 م منك'); whereMiss = drawn as missing
+---@field whereMiss? boolean
+---@field coords? vector3     4.5.0: the place itself; the line is written from it (lib.place.describe)
 
 ---@class PanelAction
 ---@field id string
@@ -83,6 +86,9 @@ end
 ---@field search? boolean
 ---@field searchPlaceholder? string
 ---@field items? PanelItem[]
+---@field tags? { label: string, bad?: boolean }[]   4.5.0: state words beside the subtitle (مسودة · ينقصها مكان)
+---@field ready? { ok?: boolean, text: string, fix?: string, fixNav?: boolean, fixLabel?: string }   4.5.0: the ready line
+---@field keys? { key: string, label?: string }[]   4.5.0: the keys row (default: the arrows, Enter, Esc)
 ---@field actions? PanelAction[]
 ---@field hints? { key: string, label: string }[]
 ---@field nav? PanelNavGroup[]
@@ -102,6 +108,27 @@ end
 ---@field onCancel? fun()|string
 --- onAction receives the amount when the action asked for one.
 ---@field onClose? fun()|string
+
+-- 4.5.0: an item with `coords` gets its place line (`where`, «فالنتاين · 12 م منك») here; the coords stay in Lua
+local function itemsForPage(items)
+    if type(items) ~= 'table' then return items or {} end
+    local out, changed = {}, false
+    for k, item in pairs(items) do
+        if type(item) == 'table' and item.coords ~= nil then
+            local copy = {}
+            for f, v in pairs(item) do copy[f] = v end
+            copy.coords = nil
+            if copy.where == nil then
+                local ok, d = pcall(function() return lib.place.describe(item.coords) end)
+                if ok and type(d) == 'table' then copy.where = d.text end
+            end
+            out[k], changed = copy, true
+        else
+            out[k] = item
+        end
+    end
+    return changed and out or items
+end
 
 ---Open the panel, or replace what is in it.
 ---@param data PanelProps
@@ -126,7 +153,7 @@ function lib.showPanel(data)
             theme = data.theme,
             search = data.search,
             searchPlaceholder = data.searchPlaceholder,
-            items = data.items or {},
+            items = itemsForPage(data.items),
             actions = data.actions,
             hints = data.hints,
             aside = data.aside,
@@ -164,6 +191,11 @@ function lib.showPanel(data)
             activeNav = data.activeNav,
             navCountLabel = data.navCountLabel,
             blocks = data.blocks,
+
+            -- 4.5.0 (the notebook): state words beside the subtitle, the ready line over the actions, the keys row
+            tags = data.tags,
+            ready = data.ready,
+            keys = data.keys,
         }
     })
 

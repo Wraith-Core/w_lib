@@ -6,6 +6,24 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.5.0 (2026-11-12)
+
+شكل الدفتر (تصميم أدوات البناء الجديدة) صار في واجهات المكتبة كلها، وأضيفت قطع مشتركة للسكربتات القادمة.
+لا شيء يحتاج تعديلًا في السكربتات: كل خيار جديد اختياري. يحتاج إعادة تشغيل كاملة (w_lib).
+
+- قائمة الخيارات والقائمة: سطر صغير تحت العنوان (`subtitle`)، صفوف أصغر، سطر المكان تحت الصف
+  (`where` أو `coords`)، وصف المفاتيح في الأسفل (`keys`، وإلا يكتب المفاتيح التي تعمل). Backspace يرجع في قائمة الخيارات.
+- نافذة الإدخال: سطر تحت العنوان (`options.subtitle`)، عناوين أقسام (`row.section`)، «خيارات متقدمة» مطوية
+  (`row.advanced`)، اختيارات بدل العداد (`row.levels`)، وسطر «ينقصه: …» مع زر «أصلحه» للحقول المطلوبة
+  (لا يمنع الإرسال، تحقق في Lua كما كان).
+- التنبيه: صف المفاتيح Enter / Esc. اللوحة (`lib.showPanel`): `tags`، `ready`، `keys`، و`where` / `coords` لكل عنصر.
+- لا تعتيم كامل للشاشة: العالم يبقى ظاهرًا. أماكن النوافذ لم تتغير في اللغتين.
+- جديد: `lib.place` (اسم المكان والبعد بالكلام)، `lib.setPins` (علامات مرقمة فوق العالم)، `lib.worldEdit`
+  (وضع البناء في العالم: TAB، J، العجلة، Q / Z، DELETE، Ctrl+Z).
+
+(The builders' notebook look in every shared window, plus `lib.place`, `lib.setPins` and `lib.worldEdit` for the next
+waves. Backward compatible: every new field is optional. No window changed its place.)
+
 ## 4.4.3 (2026-11-08)
 
 - تنظيف العربات العالقة صار ينظف عربات اللعبة العشوائية فقط، ولا يحذف عربة صنعها سكربت (مثل عربة الوظائف وعربات السرقات). كانت عربة الوظيفة تختفي بعد ظهورها بثواني.
@@ -284,6 +302,7 @@ Each section below covers one part of the library. Within a section, every call 
   - [exports.w_lib:Notify and exports.w_lib:NotifyPlayer](#exportswlibnotify-and-exportswlibnotifyplayer)
   - [w.notif.* (client)](#wnotif-client)
   - [w.notif.* (server)](#wnotif-server)
+  - [4.5.0 notebook options (context, list menu, input, alert, panel)](#450-notebook-options-context-list-menu-input-alert-panel)
   - [lib.alertDialog](#libalertdialog)
   - [lib.closeAlertDialog](#libclosealertdialog)
   - [lib.inputDialog](#libinputdialog)
@@ -691,6 +710,9 @@ Each section below covers one part of the library. Within a section, every call 
   - [lib.raycast.fromCoords](#libraycastfromcoords)
   - [lib.raycast.fromCamera](#libraycastfromcamera)
   - [lib.glow (shapes on the world: polygons, or the game's glitter)](#libglow-shapes-on-the-world-polygons-or-the-games-glitter)
+  - [lib.place (a place in words)](#libplace-a-place-in-words)
+  - [lib.setPins, lib.clearPins and lib.getAimedPin (numbered labels over the world)](#libsetpins-libclearpins-and-libgetaimedpin-numbered-labels-over-the-world)
+  - [lib.worldEdit (build in the world)](#libworldedit-build-in-the-world)
   - [lib.marker.new](#libmarkernew)
   - [Marker:draw](#markerdraw)
   - [lib.dui:new](#libduinew)
@@ -2200,6 +2222,63 @@ w.notif.left(source, 'Sheriff', 'Report to the office', 'blips_mp', 'blip_mp_she
 if not ok then return w.notif.rightError(source, 'No permission') end
 w.notif.simpleTop(source, 'Round over', 'You won', 5000)
 w.notif.print(source, 'debug', json.encode(payload))
+```
+
+### 4.5.0 notebook options (context, list menu, input, alert, panel)
+
+Every field below is optional; a script that sets none of them gets the same windows as before, in the notebook look.
+The windows keep their place in every language (the context menu on the right, the list menu on the left unless its
+`position` says otherwise, the input, the alert and the panel centred). The world is never fully dimmed.
+
+Context menu (`lib.registerContext`):
+- `subtitle` (string): a quiet line on top of the card (the kicker), e.g. the place.
+- `keys` (`{ key, label? }[]`, at most 8): the keys row at the bottom. Without it the row names what works: Esc (unless
+  `canClose = false`) and Backspace (when the menu has a parent `menu`; Backspace now goes back like the arrow).
+- option `where` (string) / `whereMiss` (boolean): a place line under the row, red when missing.
+- option `coords` (vector3 | `{x, y, z}`): the place itself; the line is written from it with `lib.place.describe`
+  («فالنتاين · 12 م منك»). The coords stay in Lua.
+
+List menu (`lib.registerMenu`): `subtitle` and `keys` as above. The default keys row: ↑↓, ←→ (when a row has
+`values`), Enter, Esc.
+
+Input dialog (`lib.inputDialog`):
+- `options.subtitle` (string): a line under the heading.
+- row `section` (string): a ruled heading before the row (a new heading each time the name changes).
+- row `advanced = true`: the row goes under «خيارات متقدمة», closed by default. Its value is kept and submitted in its
+  place in the result, like every other row.
+- row `levels` (`{ label, value }[]`, at most 8) on a `number` or `slider` row: choices instead of the stepper; the
+  chosen one is red. The result holds the chosen `value`.
+- With `required` rows, a ready line over the buttons names the first empty one («ينقصه: اسم الخطوة»); «أصلحه» opens
+  the fold if needed and puts the cursor in that field. Submit is still not blocked: check the values in Lua.
+
+Alert (`lib.alertDialog`): a keys row (Enter = confirm, Esc = cancel or close). No new fields.
+
+Panel (`lib.showPanel`):
+- `tags` (`{ label, bad? }[]`, at most 4): short state words beside the subtitle (مسودة · ينقصها مكان).
+- `ready` (`{ ok?, text, fix?, fixNav?, fixLabel? }`): the ready line over the actions. `fix` is sent like an action
+  (`onAction(fix, selectedItem)`), or as a nav id with `fixNav = true` (`onNav(fix)`).
+- `keys` (`{ key, label? }[]`): the keys row under the actions. Without it (and without the old `hints`) the row names
+  ↑↓, Enter (the primary action) and Esc. `hints` keeps its old place and meaning.
+- item `where` / `whereMiss` / `coords`: the place line under the row, as in the context menu.
+
+```lua
+lib.registerContext({
+    id = 'station', title = 'محطة القطار', subtitle = 'فالنتاين · محطة القطار',
+    options = {
+        { title = 'اشترِ تذكرة', description = 'إلى سانت دينيس', icon = 'blip_time_of_day',
+          coords = vector3(-176.2, 627.8, 114.1), event = 'myres:buyTicket' },
+        { title = 'مكان الحارس', description = 'لم يوضع بعد', icon = 'cross', where = 'ينقصه مكان', whereMiss = true },
+    },
+})
+lib.showContext('station')
+
+local values = lib.inputDialog('خطوة جديدة', {
+    { type = 'input', label = 'اسم الخطوة', section = 'الأساس', required = true },
+    { type = 'number', label = 'الصعوبة', section = 'اللعب', default = 2,
+      levels = { { label = 'سهل', value = 1 }, { label = 'متوسط', value = 2 }, { label = 'صعب', value = 3 } } },
+    { type = 'number', label = 'المهلة بالثواني', default = 90, advanced = true },
+}, { subtitle = 'مهمة سرقة القطار · الخطوة 3' })
+if values and (values[1] or '') == '' then return lib.notify({ type = 'error', description = 'اكتب اسم الخطوة' }) end
 ```
 
 ### lib.alertDialog
@@ -12237,6 +12316,113 @@ lib.glow.arrow(at, { particle = true, look = 3, heading = h, size = 1.0 })
 `/glow` (w_lib itself) shows every shape in front of the player for a minute as polygons, `/glow fx` in the glitter; `/glow wall 5`
 one shape in one glitter look; `/glow off`. `lib.marker`, the placer (`w.placer`) and the essentials teleports draw with `lib.glow`
 since 4.1.0; since 4.2.0 `lib.marker` with a game marker hash (e.g. 0x07DCE236) draws that marker with `DrawMarker` again.
+
+### lib.place (a place in words)
+
+```lua
+lib.place.describe(coords, from?) -> { zone, name, meters, far, text } | nil
+lib.place.zone(coords) -> 'valentine' | 'bayou_nwa' | ... | 'wild'
+lib.place.name(zoneKey) -> 'فالنتاين'
+lib.place.distance(meters) -> '12 م' | '460 م' | '1.2 كم'
+```
+
+Side: client (an import: it runs in your resource)
+
+A board never shows a raw coordinate: it says the town (else the district, else «البرية») and how far it is from the
+player, «فالنتاين · 12 م منك» («هنا» within 3 m). `coords` / `from` are a vector3 / vector4 or `{ x, y, z? }`; `from`
+defaults to the player's ped. The words are w_lib's (`locales/<lang>.json` → `place`) in the player's language and are
+read again when the language changes. The zone hashes are w_zonenotify's (`GetMapZoneAtCoords` type 1 = town,
+10 = district); a zone is remembered per 8 m cell, so describing every row each second asks the game once per place.
+The context menu and the panel write the line themselves when an option or item has `coords`.
+
+```lua
+local spot = lib.place.describe(vector3(-176.2, 627.8, 114.1))
+print(spot.text)        -- فالنتاين · 12 م منك
+print(spot.zone)        -- valentine
+```
+
+### lib.setPins, lib.clearPins and lib.getAimedPin (numbered labels over the world)
+
+```lua
+lib.setPins(key: string, pins: table[], opts?: { range?: number, near?: number, aim?: boolean })
+lib.clearPins(key: string)
+lib.getAimedPin(key: string) -> id | nil
+```
+
+Side: client (exports: the labels are drawn in w_lib's own frame, your resource needs no `ui_page`)
+
+The builders' pins: a numbered paper tag over each spot («1 بائع الجرائد»), drawn by the NUI (the game font has no
+Arabic) and projected from the world ~25 times a second. A set belongs to the calling resource and goes when it stops;
+`setPins` with the same key replaces it. Only changes are sent to the page.
+
+- pin fields: `id` (required), `x`, `y` (or `coords`), `z` (default: the ground), `n` (the number), `label` (80
+  characters), `sub` (a short second word, 40), `state` = `'cur'` (red, the current one) | `'miss'` (dashed: the spot is
+  still missing; a pin with no x / y floats in front of the camera), `lift` (metres above z; a ped 2.1, a wagon 2.6).
+- `range` (default 150 m, at most 500): farther pins are not drawn. `near` (default 60 m): farther ones are faded.
+- `aim` (default true): the pin nearest the screen's centre is marked and returned by `getAimedPin` (for "J on a pin").
+- At most 150 pins a set.
+
+```lua
+lib.setPins('mission', {
+    { id = 'npc', n = 1, label = 'بائع الجرائد', x = -176.2, y = 627.8, z = 114.1, lift = 2.1, state = 'cur' },
+    { id = 'guard', n = 3, label = 'الحارس', state = 'miss' },
+})
+local aimed = lib.getAimedPin('mission')   -- 'npc' while the player looks at it
+lib.clearPins('mission')
+```
+
+### lib.worldEdit (build in the world)
+
+```lua
+local edit = lib.worldEdit.start(opts)
+edit:setItems(items)   edit:setWorld(on)   edit:isWorld()   edit:stop()
+```
+
+Side: client (an import: it runs in your resource and calls your functions)
+
+The world mode of the builders (w_missions, w_jobs, w_heists) as one loop. Your board stays yours (its own page or a
+`lib.showPanel`); this draws what the board holds where it stands, and turns the keys pressed in the world into your
+callbacks. Nothing is saved here: every change is a callback, you keep the data (and the undo).
+
+- Board mode (the default after `start`, and `setWorld(false)`): the pins (`lib.setPins` under `opts.key`), the
+  see-through ghosts (local, frozen, no collision; at most `maxGhosts`, default 24, within `ghostRange`, default
+  120 m) and the rings (`lib.glow`) are drawn. No key is taken.
+- World mode (`setWorld(true)`; drop your NUI focus first): the placer look (key cards bottom-right, a line
+  bottom-centre, the walk-up claim, the game's prompts hidden); fire, aim and the weapon wheel are off.
+  - J on the ground: the context menu «ماذا يحدث هنا؟» with your `ground(at)` rows (`at` = vector4 of the spot looked at,
+    turned to the player; the menu's kicker is the place).
+  - J on a pin: حرّكه (the w_lib placer for that spot, J places, then world mode again) · لفّه نحوي · احذفه ·
+    افتح الخطوة (world mode ends, `onOpen`). Each row only when its callback is given; `pinMenu(item, rows)` may change them.
+  - The mouse wheel turns the aimed item by 15° (`turn = true`), Q / Z change its circle by 1 m (`r`), DELETE removes
+    it, Ctrl+Z calls `onUndo`, TAB ends world mode and calls `onBoard` (show your board again).
+- The interaction key is J, never E. It stops by itself when your resource stops; `stop()` removes the pins, ghosts,
+  cards and line and calls `onStop(reason)`.
+
+`opts`: `key`, `title`, `subtitle` (string or `function(at)`), `items`, `ground`, `onMove(item, spot)`,
+`onTurn(item, heading)`, `onRadius(item, radius)`, `onRemove(item)`, `onOpen(item)`, `pinMenu(item, rows)`,
+`onUndo()`, `onBoard()`, `onStop(reason)`, `range` (150), `near` (60), `ghostRange` (120), `maxGhosts` (24).
+
+items: `{ id, n?, label, x, y, z?, h?, r?, model?, kind? = 'ped' | 'object' | 'vehicle' | 'point', state? = 'cur' |
+'miss', turn?, move? }`. Call `setItems` again after each change your callbacks make.
+
+```lua
+local steps = { { id = 'npc', n = 1, label = 'بائع الجرائد', x = -176.2, y = 627.8, z = 114.1, h = 90.0, r = 2.5,
+                  kind = 'ped', model = 'U_M_M_BwmStablehand_01', turn = true } }
+local edit
+edit = lib.worldEdit.start({
+    key = 'mission', items = steps,
+    ground = function(at)
+        return { { title = 'ضع شخصًا هنا', description = 'بائع، حارس، أو شاهد', icon = 'blip_camp',
+                   onSelect = function(spot) TriggerServerEvent('myres:addPerson', spot) end } }
+    end,
+    onMove = function(item, spot) TriggerServerEvent('myres:moveStep', item.id, spot) end,
+    onTurn = function(item, heading) steps[1].h = heading; edit:setItems(steps) end,
+    onRadius = function(item, r) steps[1].r = r; edit:setItems(steps) end,
+    onRemove = function(item) TriggerServerEvent('myres:removeStep', item.id) end,
+    onBoard = function() SetNuiFocus(true, true) end,
+})
+-- the board's TAB: SetNuiFocus(false, false); edit:setWorld(true)
+```
 
 ### lib.marker.new
 
