@@ -154,8 +154,8 @@ export const KitIcon: React.FC<{ icon?: unknown; className?: string }> = ({ icon
  * The page gets locales/<lang>.json as `setLocale` (init.lua sendUiLocale), so ui.* keys added there arrive by
  * themselves. These are the fallbacks while one is missing (the other twelve locale files, the dev page). */
 const FALLBACK = {
-  en: { on: 'On', off: 'Off', search: 'Search…', nothing: 'Nothing here', amount: 'Amount', choose: '— Choose —', of: 'of', lockpick: 'Pick the lock', lockpick_hint: 'Move the pick with the mouse until it sits right, then turn the lock.', pins: 'Picks left', turn: 'Turn the lock', pick: 'Move the pick', mouse: 'Mouse', leave: 'Leave' },
-  ar: { on: 'نعم', off: 'لا', search: 'ابحث…', nothing: 'لا شيء هنا', amount: 'الكمية', choose: '— اختر —', of: 'من', lockpick: 'افتح القفل', lockpick_hint: 'حرّك الأداة بالفأرة حتى تستقر في مكانها، ثم أدر القفل.', pins: 'المحاولات الباقية', turn: 'أدر القفل', pick: 'حرّك الأداة', mouse: 'الفأرة', leave: 'اترك' },
+  en: { on: 'On', off: 'Off', search: 'Search…', nothing: 'Nothing here', amount: 'Amount', choose: '— Choose —', of: 'of', lockpick: 'Pick the lock', lockpick_hint: 'Move the pick with the mouse until it sits right, then turn the lock.', pins: 'Picks left', turn: 'Turn the lock', pick: 'Move the pick', mouse: 'Mouse', leave: 'Leave', key_move: 'Move', key_change: 'Change', key_pick: 'Choose', key_click: 'Click to choose', key_tick: 'Tick', fix: 'Fix it', ready: 'Ready', missing: 'Still missing: %s', missing_more: 'Still missing: %s and %d more', advanced: 'Advanced options' },
+  ar: { on: 'نعم', off: 'لا', search: 'ابحث…', nothing: 'لا شيء هنا', amount: 'الكمية', choose: '— اختر —', of: 'من', lockpick: 'افتح القفل', lockpick_hint: 'حرّك الأداة بالفأرة حتى تستقر في مكانها، ثم أدر القفل.', pins: 'المحاولات الباقية', turn: 'أدر القفل', pick: 'حرّك الأداة', mouse: 'الفأرة', leave: 'اترك', key_move: 'تنقّل', key_change: 'غيّر', key_pick: 'اختر', key_click: 'اضغط للاختيار', key_tick: 'علّم', fix: 'أصلحه', ready: 'جاهز', missing: 'ينقصه: %s', missing_more: 'ينقصه: %s و%d غيره', advanced: 'خيارات متقدمة' },
 } as const;
 export type KitWord = keyof typeof FALLBACK.en;
 
@@ -173,3 +173,65 @@ export function useKit() {
   };
   return { rtl, t };
 }
+
+/* ── the notebook's small parts (4.5.0, the builders' column look) ── */
+
+/** A map pin: a place line's glyph. */
+export const GlyphPin = () => (
+  <svg {...glyph}>
+    <path d="M12 21c-3.6-4.3-5.6-7.4-5.6-10.1a5.6 5.6 0 0 1 11.2 0c0 2.7-2 5.8-5.6 10.1z" />
+    <circle cx="12" cy="10.6" r="1.9" />
+  </svg>
+);
+
+export type KeyHint = { key: string; label?: string };
+
+/** Key hints from a script: [{ key, label }] (or 'KEY label' strings), at most 8, short words only. */
+export const keyList = (raw: unknown): KeyHint[] | null => {
+  if (!Array.isArray(raw)) return null;
+  const out: KeyHint[] = [];
+  for (const k of raw) {
+    if (out.length >= 8) break;
+    if (k && typeof k === 'object' && typeof (k as KeyHint).key === 'string') {
+      out.push({ key: String((k as KeyHint).key).slice(0, 16), label: (k as KeyHint).label != null ? String((k as KeyHint).label).slice(0, 48) : undefined });
+    }
+  }
+  return out;
+};
+
+/** The keys row: the keys that work on this screen, a chip and a word each. `foot` = with a rule above it. */
+export const Keys: React.FC<{ keys: KeyHint[]; foot?: boolean; className?: string }> = ({ keys, foot, className }) =>
+  keys.length ? (
+    <div className={cls('wk-keys', foot && 'is-foot', className)} aria-hidden="true">
+      {keys.map((k, i) => (
+        <span key={i}>
+          <span className="wk-key">{k.key}</span>
+          {k.label ? <Txt s={k.label} /> : null}
+        </span>
+      ))}
+    </div>
+  ) : null;
+
+/** A place line: the pin glyph and the words ("فالنتاين · 12 م منك"); `miss` draws it as missing. */
+export const Where: React.FC<{ text?: unknown; miss?: boolean }> = ({ text, miss }) =>
+  typeof text === 'string' && text !== '' ? (
+    <span className="wk-where">
+      <span className={miss ? 'is-miss' : undefined}>
+        <GlyphPin />
+        <Txt s={text} />
+      </span>
+    </span>
+  ) : null;
+
+/** The ready line: a dot, the words, and «أصلحه» when there is something to go to. */
+export const Ready: React.FC<{ ok?: boolean; text: React.ReactNode; fixLabel?: string; onFix?: () => void }> = ({ ok, text, fixLabel, onFix }) => (
+  <div className={cls('wk-ready', ok && 'is-ok')} role="status">
+    <i className="wk-ready-dot" aria-hidden="true" />
+    <span className="wk-ready-text">{typeof text === 'string' ? <Txt s={text} /> : text}</span>
+    {!ok && onFix && fixLabel ? (
+      <button type="button" className="wf-btn" onClick={onFix}>
+        <Txt s={fixLabel} />
+      </button>
+    ) : null}
+  </div>
+);

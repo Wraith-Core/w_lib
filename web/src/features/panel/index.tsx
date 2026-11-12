@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { fetchNui } from '../../utils/fetchNui';
 import { play } from '../../wc/sound';
-import { cls, Gauge, GlyphCross, GlyphDown, GlyphLock, GlyphSearch, KitIcon, Txt, useKit } from '../../kit/ui';
+import { cls, Gauge, GlyphCross, GlyphDown, GlyphLock, GlyphSearch, KitIcon, keyList, Keys, Ready, Txt, useKit, Where } from '../../kit/ui';
 import Blocks, { AmountField, Block, Slot } from './Blocks';
 
 /**
@@ -24,6 +24,14 @@ import Blocks, { AmountField, Block, Slot } from './Blocks';
  *    {action, item, amount}, panelTab id, panelNav id, panelField {id, value}, panelCancel out.
  *    Keys: arrows pick the next row (and tell Lua at once), Enter runs the primary action, Escape
  *    closes; inside a field Escape and Enter only leave the field.
+ *
+ * ★ 4.5.0, the notebook (the builders' look), every part optional:
+ *     tags          [{ label, bad? }] short state words beside the subtitle (مسودة · ينقصها شيء)
+ *     item.where    a place line under a row ("فالنتاين · 12 م منك"); item.whereMiss draws it as missing
+ *     ready         { ok?, text, fix?, fixLabel? } the ready line over the actions: what is still missing, in words;
+ *                   «أصلحه» sends panelAction { action = fix } (or panelNav fix when fixNav = true)
+ *     keys          the keys row under the actions; without `hints` the arrows, Enter (the main action) and Esc
+ *                   are named. `hints` keeps its old place and meaning.
  * ============================================================================
  */
 
@@ -89,6 +97,9 @@ interface Item {
   detail?: Detail;
   /** Seconds left, counted down by the UI. An auction lot, a black-market window. */
   endsIn?: number;
+  /** 4.5.0: a place line under the row; whereMiss draws it as missing. */
+  where?: string;
+  whereMiss?: boolean;
 }
 
 interface Action {
@@ -137,6 +148,12 @@ interface PanelState {
   navCountLabel?: string;
   /** The content, composed. When present it replaces the fixed detail pane entirely. */
   blocks?: Block[];
+  /** 4.5.0: short state words beside the subtitle. */
+  tags?: Array<{ label: string; bad?: boolean }>;
+  /** 4.5.0: the ready line over the actions. */
+  ready?: { ok?: boolean; text: string; fix?: string; fixNav?: boolean; fixLabel?: string };
+  /** 4.5.0: the keys row under the actions, [{ key, label }]. */
+  keys?: Array<{ key: string; label?: string }>;
 }
 
 /** A section of the browser column: a heading that folds open, and rows under it (w_crafting's category). */
@@ -450,6 +467,31 @@ const Panel: React.FC = () => {
   /* nothing to browse: one column, the masthead over the detail */
   const single = !isNav && items.length === 0 && !state.tabs?.length;
   const tally = navGroups.reduce((n, g) => n + (expandedKeys.includes(g.key) ? g.items.length : 0), 0);
+  const tags = Array.isArray(state.tags) ? state.tags.filter((g) => g && g.label).slice(0, 4) : [];
+  const tagLine = tags.length ? (
+    <span className="wk-head-tags">
+      {tags.map((g, i) => (
+        <span key={i} className={cls('wf-tag', g.bad && 'is-red')}><Txt s={g.label} /></span>
+      ))}
+    </span>
+  ) : null;
+  const ready = state.ready && typeof state.ready.text === 'string' && state.ready.text !== '' ? state.ready : null;
+  const fixReady = () => {
+    if (!ready?.fix) return;
+    play('select');
+    if (ready.fixNav) fetchNui('panelNav', ready.fix);
+    else fetchNui('panelAction', { action: ready.fix, item: selectedRef.current });
+  };
+  /* the keys row: the script's own, else what works here (only when it set no `hints`, which keep their place) */
+  const keys =
+    keyList(state.keys) ??
+    (state.hints?.length
+      ? []
+      : [
+          ...(items.length || isNav ? [{ key: '↑ ↓', label: t('key_move') }] : []),
+          ...(main && !state.progress ? [{ key: 'Enter', label: main.label }] : []),
+          { key: 'Esc', label: t('close') },
+        ]);
 
   const aside =
     typeof state.countdown === 'number' ? (
@@ -464,6 +506,7 @@ const Panel: React.FC = () => {
         <img className="wk-logo" src={state.logo} alt="" draggable={false} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
       )}
       <span className="wf-mark"><Txt s={state.title} /></span>
+      {single && tagLine}
       <span className="wf-mast-rule" />
       {single && aside}
       <button type="button" className="wk-x" onClick={close} aria-label={t('close')} title={t('close')}>
@@ -528,10 +571,11 @@ const Panel: React.FC = () => {
               <div className="wf-tick" />
               <div className="wf-card">
                 <div className="wf-card-body wk-list">
-                  {(state.icon || state.subtitle || (isNav && state.navCountLabel)) && (
+                  {(state.icon || state.subtitle || tags.length > 0 || (isNav && state.navCountLabel)) && (
                     <div className="wk-list-head">
                       {state.icon && <span className="wk-head-ico"><KitIcon icon={state.icon} /></span>}
                       <span className="wf-kicker"><Txt s={state.subtitle} /></span>
+                      {tagLine}
                       {isNav && state.navCountLabel && (
                         <span className="wk-tally">
                           <b className="wk-fig">{tally}</b>
@@ -696,6 +740,7 @@ const Panel: React.FC = () => {
                                     ))}
                                   </span>
                                 )}
+                                <Where text={item.where} miss={item.whereMiss === true} />
                               </span>
                             </button>
                           </React.Fragment>
@@ -737,10 +782,13 @@ const Panel: React.FC = () => {
             </div>
           </div>
 
-          {state.progress || state.actions?.length || state.hints?.length ? (
+          {state.progress || state.actions?.length || state.hints?.length || ready ? (
             <div className="wf-wrap wk-actions-wrap wf-in" style={{ ['--i' as string]: 3 }}>
               <div className="wf-card">
-                <div className="wf-card-body wk-actbar">
+                <div className={cls('wf-card-body', 'wk-actbar', ready && 'has-ready')}>
+                  {ready && !state.progress ? (
+                    <Ready ok={ready.ok === true} text={ready.text} fixLabel={ready.fixLabel || t('fix')} onFix={ready.fix ? fixReady : undefined} />
+                  ) : null}
                   {state.progress ? (
                     /* ★ The actions are not merely disabled while something runs -- they are replaced. */
                     <div className="wk-busy">
@@ -804,9 +852,12 @@ const Panel: React.FC = () => {
                       })}
                     </div>
                   ) : null}
+                  {keys.length ? <Keys keys={keys} className="wk-keys-row" /> : null}
                 </div>
               </div>
             </div>
+          ) : keys.length ? (
+            <Keys keys={keys} className="wk-keys-alone" />
           ) : null}
         </section>
       </div>

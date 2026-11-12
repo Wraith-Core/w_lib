@@ -3,7 +3,7 @@ import { useNuiEvent } from '../../../hooks/useNuiEvent';
 import { fetchNui } from '../../../utils/fetchNui';
 import { ContextMenuProps, Option } from '../../../typings';
 import { play } from '../../../wc/sound';
-import { Card, cls, Gauge, GlyphNext, HeadControl, isCriticalScheme, KitIcon, Txt, useKit } from '../../../kit/ui';
+import { Card, cls, Gauge, GlyphNext, HeadControl, isCriticalScheme, KitIcon, keyList, Keys, Txt, useKit, Where } from '../../../kit/ui';
 
 /**
  * The context menu, on the board kit (4.4.0): a masthead with the title at the start and the close / back control
@@ -17,6 +17,13 @@ import { Card, cls, Gauge, GlyphNext, HeadControl, isCriticalScheme, KitIcon, Tx
  *
  * ★ The contract is unchanged: showContext / hideContext in; closeContext, openContext {id, back} and
  *   clickContext (the numeric index or the key) out; Escape closes unless canClose is false.
+ *
+ * ★ 4.5.0, the notebook (the builders' column look), every part optional:
+ *     subtitle         a quiet line at the top of the card (where you are, what this is for)
+ *     option.where     a place line under the row ("فالنتاين · 12 م منك"); option.whereMiss draws it as missing.
+ *                      Lua turns option.coords into it by itself (lib.showContext, the w_lib place words).
+ *     keys             [{ key, label }] the keys row at the bottom; without it: Esc close, Backspace back (a sub menu)
+ *   Backspace goes back to the parent menu (when there is one), as the head's back arrow does.
  */
 
 /** Options arrive either as an array (index is the id) or as an object (key is the id). */
@@ -108,6 +115,7 @@ const ContextMenu: React.FC = () => {
 
     const onKey = (e: KeyboardEvent) => {
       if (e.code === 'Escape') close();
+      if (e.code === 'Backspace' && data?.menu) back();
     };
 
     window.addEventListener('keydown', onKey);
@@ -119,6 +127,12 @@ const ContextMenu: React.FC = () => {
 
   const entries = optionEntries(data.options);
   const withIcons = entries.some(({ opt }) => opt.icon || opt.image);
+  const keys =
+    keyList(data.keys) ??
+    [
+      ...(data.canClose !== false ? [{ key: 'Esc', label: t('close') }] : []),
+      ...(data.menu ? [{ key: 'Backspace', label: t('back') }] : []),
+    ];
 
   return (
     <div className={cls('wf', 'wk-ctx', rtl && 'is-rtl')}>
@@ -138,6 +152,7 @@ const ContextMenu: React.FC = () => {
         </header>
 
         <Card focus i={1}>
+          {data.subtitle ? <div className="wk-kick"><Txt s={data.subtitle} /></div> : null}
           <div className="wk-rows" onMouseLeave={() => setHere(null)}>
             {entries.map(({ id, opt }) => {
               const disabled = opt.disabled === true;
@@ -166,6 +181,7 @@ const ContextMenu: React.FC = () => {
                   <span className="wf-row-main">
                     <span className="wf-row-name"><Txt s={opt.title ?? String(id)} /></span>
                     {opt.description && <span className="wk-desc"><Txt s={opt.description} /></span>}
+                    <Where text={opt.where} miss={opt.whereMiss === true} />
                     <Meta metadata={opt.metadata} />
                     {typeof opt.progress === 'number' && (
                       <Gauge value={opt.progress} critical={isCriticalScheme(opt.colorScheme)} />
@@ -179,6 +195,7 @@ const ContextMenu: React.FC = () => {
               );
             })}
           </div>
+          <Keys keys={keys} foot />
         </Card>
       </div>
     </div>

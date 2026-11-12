@@ -3,7 +3,7 @@ import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { fetchNui } from '../../utils/fetchNui';
 import { InputProps, OptionValue } from '../../typings';
 import { play } from '../../wc/sound';
-import { Card, cls, KitIcon, latinDigits, Txt, useKit } from '../../kit/ui';
+import { Card, cls, GlyphDown, KitIcon, latinDigits, Ready, Txt, useKit } from '../../kit/ui';
 import DateFields from '../../components/DateFields';
 import PaletteField from '../../components/PaletteField';
 import WSelect from '../../components/WSelect';
@@ -23,6 +23,31 @@ const onlyAllowed = (allow: unknown, value: string): string => {
   return re ? value.replace(re, '') : value;
 };
 
+/** A value that counts as "not filled in" for a required row (a required switch must be on). */
+const isEmpty = (v: unknown) => v === undefined || v === null || v === '' || v === false || (Array.isArray(v) && v.length === 0);
+
+/** A number row's `levels` ([{ label, value }]): at most 8 choices drawn as band buttons instead of the stepper. */
+const levelsOf = (row: Row): Array<{ label: string; value: number | string }> | null => {
+  if (!Array.isArray(row.levels) || row.levels.length === 0) return null;
+  const out = row.levels
+    .filter((l: any) => l && typeof l === 'object' && l.value !== undefined && l.label !== undefined)
+    .slice(0, 8)
+    .map((l: any) => ({ label: String(l.label), value: l.value }));
+  return out.length ? out : null;
+};
+const sameValue = (a: unknown, b: unknown) =>
+  a === b || (a !== '' && b !== '' && a != null && b != null && !isNaN(Number(a)) && Number(a) === Number(b));
+
+/**
+ * ★ 4.5.0, the notebook (the builders' look), every part opt-in from Lua; nothing changes without it:
+ *     options.subtitle   a quiet line under the heading
+ *     row.section        a ruled heading before the row (a new one each time the name changes)
+ *     row.advanced       the row goes under «خيارات متقدمة», closed by default; its value is kept and submitted
+ *     row.levels         a number row as choices: { { label = 'سهل', value = 1 }, ... } (the chosen one red)
+ *     required rows      a ready line over the buttons says, in words, which one is still empty, and «أصلحه»
+ *                        opens the fold if needed and puts the cursor in it. Submitting is NOT blocked (as before:
+ *                        validate in Lua).
+ */
 const sizeClass = (size?: string) => (size === 'lg' || size === 'xl' ? 'is-lg' : size === 'xs' || size === 'sm' ? 'is-sm' : undefined);
 
 /** The label line (icon, text, the red mark a required field carries) and the help line under the control. */
@@ -40,6 +65,9 @@ const InputDialog: React.FC = () => {
   const [data, setData] = useState<InputProps | null>(null);
   const [values, setValues] = useState<Record<number, any>>({});
   const firstField = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null>(null);
+  const fieldRefs = useRef<Record<number, HTMLElement | null>>({});
+  const [advOpen, setAdvOpen] = useState(false);
+  const [flash, setFlash] = useState(-1);
 
   useNuiEvent('closeInputDialog', () => setData(null));
 
@@ -55,6 +83,9 @@ const InputDialog: React.FC = () => {
     });
 
     setValues(seeded);
+    setAdvOpen(false);
+    setFlash(-1);
+    fieldRefs.current = {};
     setData(payload);
     play('open');
   });
@@ -92,6 +123,30 @@ const InputDialog: React.FC = () => {
 
   const rows = data.rows as Row[];
   const set = (i: number, v: any) => setValues((prev) => ({ ...prev, [i]: v }));
+  const firstBasic = rows.findIndex((r) => r.advanced !== true);
+  const advanced = rows.map((r, i) => (r.advanced === true ? i : -1)).filter((i) => i >= 0);
+  const required = rows.map((r, i) => (r.required && !r.disabled ? i : -1)).filter((i) => i >= 0);
+  const missing = required.filter((i) => isEmpty(values[i]));
+
+  /** «أصلحه»: open the fold if the row is in it, then the cursor in the field and a red underline for a moment. */
+  const fix = (i: number) => {
+    play('hover');
+    if (rows[i]?.advanced === true) setAdvOpen(true);
+    setFlash(i);
+    setTimeout(() => {
+      const el = fieldRefs.current[i];
+      el?.scrollIntoView({ block: 'nearest' });
+      el?.focus?.();
+    }, 40);
+    setTimeout(() => setFlash((f) => (f === i ? -1 : f)), 1400);
+  };
+  const labelOf = (i: number) => String(rows[i]?.label ?? '').replace(/[:：]\s*$/, '');
+  const readyText =
+    missing.length === 0
+      ? t('ready')
+      : missing.length === 1
+        ? t('missing').replace('%s', labelOf(missing[0]))
+        : t('missing_more').replace('%s', labelOf(missing[0])).replace('%d', String(missing.length - 1));
 
   /** The RDR number stepper: the browser's own arrows are hidden in CSS and these replace them. */
   const spin = (i: number, row: Row, direction: 1 | -1) => {
@@ -112,11 +167,16 @@ const InputDialog: React.FC = () => {
       <div className={cls('wk-dialog-col', sizeClass(data.options?.size))}>
         <Card focus i={0}>
           <div className="wf-h"><Txt s={data.heading} /></div>
+          {data.options?.subtitle ? <div className="wf-sub"><Txt s={data.options.subtitle} /></div> : null}
 
           <div className="wk-form">
-            {rows.map((row, i) => {
+            {(() => {
+            const renderRow = (row: Row, i: number): React.ReactNode => {
               const type = String(row.type || 'input').toLowerCase();
-              const first = i === 0 ? (el: any) => (firstField.current = el) : undefined;
+              const first = (el: any) => {
+                fieldRefs.current[i] = el;
+                if (i === firstBasic) firstField.current = el;
+              };
 
               if (type === 'checkbox') {
                 /* the pause menu's on / off row: the whole row is the switch, red when on */
@@ -277,6 +337,36 @@ const InputDialog: React.FC = () => {
                 );
               }
 
+              const levels = type === 'number' || type === 'slider' ? levelsOf(row) : null;
+              if (levels) {
+                /* 4.5.0: the hard number as plain choices (سهل / عادي / صعب); the chosen one is the red band */
+                return (
+                  <div className="wf-field" key={i}>
+                    <FieldLabel row={row} />
+                    <div className="wk-levels" role="radiogroup" aria-label={row.label}>
+                      {levels.map((l, k) => {
+                        const on = sameValue(values[i], l.value);
+                        return (
+                          <button
+                            type="button"
+                            key={k}
+                            ref={k === 0 ? first : undefined}
+                            role="radio"
+                            aria-checked={on}
+                            className={cls('wf-btn', on && 'is-on')}
+                            disabled={row.disabled}
+                            onClick={() => { set(i, l.value); play('hover'); }}
+                          >
+                            <Txt s={l.label} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <Help row={row} />
+                  </div>
+                );
+              }
+
               if (type === 'number') {
                 /* the kit's stepper: minus, the value, plus - always left to right like the figures in it */
                 return (
@@ -330,13 +420,54 @@ const InputDialog: React.FC = () => {
                   <Help row={row} />
                 </div>
               );
-            })}
+            };
+
+            /* each row after its section heading (when the section changes), the «أصلحه» flash around it */
+            const out: React.ReactNode[] = [];
+            let section: string | undefined;
+            const push = (i: number) => {
+              const row = rows[i];
+              if (typeof row.section === 'string' && row.section !== '' && row.section !== section) {
+                section = row.section;
+                out.push(<div className="wf-sec" key={`s${i}`}><Txt s={row.section} /></div>);
+              }
+              const node = renderRow(row, i);
+              out.push(flash === i ? <div className="wk-flash" key={`f${i}`}>{node}</div> : node);
+            };
+            rows.forEach((row, i) => { if (row.advanced !== true) push(i); });
+            if (advanced.length) {
+              section = undefined;
+              out.push(
+                <button
+                  type="button"
+                  key="adv"
+                  className={cls('wk-adv', advOpen && 'is-open')}
+                  aria-expanded={advOpen}
+                  onClick={() => { setAdvOpen((o) => !o); play('hover'); }}
+                >
+                  <span className={cls('wk-fold', advOpen && 'is-open')}><GlyphDown /></span>
+                  <Txt s={t('advanced')} />
+                  <span className="wk-adv-count wk-fig">{advanced.length}</span>
+                </button>,
+              );
+              if (advOpen) advanced.forEach(push);
+            }
+            return out;
+            })()}
           </div>
         </Card>
 
         {/* ★ Confirm is FIRST in the DOM, which puts it at the inline start (the right in Arabic): the focus order
             is the visual order. Confirm is the red band; cancel a plain band. */}
-        <Card i={1} className="wk-actions-wrap" bodyClass="wk-actbar">
+        <Card i={1} className="wk-actions-wrap" bodyClass={cls('wk-actbar', required.length > 0 && 'has-ready')}>
+          {required.length > 0 && (
+            <Ready
+              ok={missing.length === 0}
+              text={readyText}
+              fixLabel={t('fix')}
+              onFix={missing.length ? () => fix(missing[0]) : undefined}
+            />
+          )}
           <div className="wk-acts">
             <button type="button" className="wk-btn is-main" onClick={submit}>
               <Txt s={t('confirm')} />

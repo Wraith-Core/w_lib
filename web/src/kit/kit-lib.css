@@ -602,6 +602,142 @@
 .wk-pick-keys span { display: inline-flex; align-items: center; gap: 0.4rem; }
 .wk-pick-note .wk-key { background: transparent; color: var(--note-ink); box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.5); }
 
+/* ══════════ The notebook (4.5.0): the builders' column look, shared by every window of this frame ══════════
+   (owner 2026-11-12: w_jobs / w_missions / w_heists «دفتر» everywhere). A window reads like the builders' column:
+     the kicker        a quiet line at the top of the card: where you are, what this is for
+     the rows          compact, a title and one plain line under it, a place line ("فالنتاين · 12 م منك") when given
+     the ready line    what is still missing, in words, with «أصلحه» that takes you to it
+     the fold          «خيارات متقدمة»: what most people never need, closed by default, its values kept
+     the keys row      the keys that work on this screen, as chips, at the bottom
+   Placement stays physical and the same in every language (owner 2026-11-08); only the content flips. */
+
+/* the kicker of a card (the context / list menu's subtitle, a dialog's subtitle) */
+.wk-kick {
+  flex: none;
+  padding: 0 0.1rem 0.5rem;
+  margin-bottom: 0.2rem;
+  border-bottom: 1px solid var(--rule);
+  font: 500 0.92rem/1.35 var(--f-label);
+  color: var(--paper-dim);
+}
+.is-rtl .wk-kick { font-weight: 400; }
+
+/* the compact menu rows (the builders' column): a title and one line under it */
+.wk-dock .wk-row { gap: 0.8rem; padding: 0.42rem 0.8rem; min-height: 2.6rem; }
+.wk-dock .wk-row .wk-desc { margin-top: 0; font-size: 0.9rem; line-height: 1.35; }
+.is-rtl .wk-dock .wk-row .wf-row-name { font-size: 1.12rem; line-height: 1.35; }
+.is-rtl .wk-dock .wk-row .wk-desc { font-size: 0.92rem; line-height: 1.38; }
+
+/* a place: the pin glyph, the town and how far ("فالنتاين · 12 م منك"); a missing one in soft red */
+.wk-where { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.8rem; margin-top: 0.12rem; font: 500 0.86rem/1.3 var(--f-label); color: var(--paper-dim); }
+.wk-where > span { display: inline-flex; align-items: center; gap: 0.25rem; min-width: 0; }
+.wk-where .wf-glyph { width: 0.95rem; height: 0.95rem; flex: none; }
+.wk-where .is-miss { color: #F2B4B4; }
+.wf-row.is-here .wk-where { color: rgba(17, 17, 17, 0.72); }
+.wf-row.is-here .wk-where .is-miss { color: var(--mark-deep); }
+.is-rtl .wk-where { font-weight: 400; font-size: 0.9rem; }
+
+/* the keys row: the keys that work here, chip + word (the builders' .mk-keys) */
+.wk-keys { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 1rem; font: 500 0.82rem/1.2 var(--f-label); color: var(--paper-faint); }
+.wk-keys > span { display: inline-flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
+.wk-keys.is-foot { margin-top: 0.45rem; padding-top: 0.5rem; border-top: 1px solid var(--rule); }
+.is-rtl .wk-keys { font-weight: 400; font-size: 0.86rem; }
+.wf-note .wk-keys { justify-content: center; margin-top: 1rem; padding-top: 0.55rem; border-top: 1px solid var(--note-rule); color: var(--note-dim); }
+.wf-note .wk-keys .wk-key { background: transparent; color: var(--note-ink); box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.5); }
+
+/* the ready line: a dot (soft green = ready, red = something missing), the words, «أصلحه» at the end */
+.wk-ready { flex: none; display: flex; align-items: center; gap: 0.6rem; min-width: 0; font: 500 0.95rem/1.35 var(--f-label); color: var(--paper-dim); }
+.wk-ready-dot { flex: none; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--red); }
+.wk-ready.is-ok .wk-ready-dot { background: var(--green); }
+.wk-ready.is-ok { color: var(--paper); }
+.wk-ready-text { flex: 1; min-width: 0; }
+.wk-ready .wf-btn { flex: none; margin: 0; }
+.is-rtl .wk-ready { font-weight: 400; font-size: 1rem; }
+.wk-actbar > .wk-ready { flex: 1 1 100%; }
+
+/* «خيارات متقدمة»: a fold between two rules, its count at the end */
+.wk-adv {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.2rem;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  color: var(--paper-dim);
+  font: 600 1rem/1.2 var(--f-label);
+  text-align: start;
+  transition: color 120ms var(--ease);
+}
+.wk-adv:hover, .wk-adv:focus-visible, .wk-adv.is-open { color: var(--paper); outline: none; }
+.wk-adv-count { margin-inline-start: auto; font: 500 0.85rem/1 var(--f-label); color: var(--paper-faint); }
+.wk-adv-body { display: flex; flex-direction: column; gap: 0.95rem; padding-top: 0.2rem; }
+.is-rtl .wk-adv { font-weight: 400; font-size: 1.04rem; }
+
+/* a section heading inside a form (a row's `section`) */
+.wk-form > .wf-sec { margin: 0.35rem 0 -0.35rem; }
+.wk-form > .wf-sec:first-child { margin-top: 0; }
+
+/* a number as choices (a row's `levels`: سهل / عادي / صعب): band buttons, the chosen one on the red band */
+.wk-levels { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.wk-levels .wf-btn { margin: 0; min-width: 5.2rem; justify-content: center; }
+.wk-levels .wf-btn.is-on { color: var(--mark-ink); }
+.wk-levels .wf-btn.is-on::before { background: var(--mark); }
+
+/* a field the ready line's «أصلحه» pointed at: a red underline for a moment */
+.wk-flash .wf-input, .wk-flash .wf-stepper, .wk-flash .wk-selectbox, .wk-flash .wk-switch { box-shadow: inset 0 -2px 0 var(--red); }
+
+/* the world stays visible behind the windows: lighter veils (the notebook sits beside the world) */
+.wk-veil { background: radial-gradient(80% 75% at 50% 50%, rgba(11, 10, 10, 0.34), rgba(11, 10, 10, 0.66)); }
+.wk-scrim { background: radial-gradient(120% 90% at 50% 50%, rgba(11, 10, 10, 0.4), rgba(11, 10, 10, 0.74)); }
+
+/* the panel: compact like the column, the keys row under its actions */
+.wk-board .wk-detail { padding: 1.25rem 1.5rem 1.05rem 1.6rem; }
+.wk-board .wk-prow { min-height: 2.9rem; padding: 0.3rem 0.7rem; }
+.wk-actbar.has-ready { row-gap: 0.65rem; }
+.wk-head-tags { display: inline-flex; flex-wrap: wrap; gap: 0.3rem; margin-inline-start: 0.4rem; }
+.wk-head-tags .wf-tag { margin: 0; }
+.wf-tag.is-red { border-color: var(--red); color: #F2B4B4; }
+.wf-tag.is-solid { border-color: var(--paper-dim); background: rgba(242, 242, 242, 0.08); color: var(--paper); }
+.wk-actbar > .wk-keys-row { flex: 1 1 100%; margin-top: 0.1rem; padding-top: 0.5rem; border-top: 1px solid var(--rule); }
+.wk-keys-alone { padding: 0 0.4rem; }
+
+/* ══════════ World pins (4.5.0): numbered labels over the world, drawn in this frame (lib.setPins) ══════════
+   The builders' .wh-pin: a paper tag with its step number, a stem down to the spot; the current one on the red band,
+   a missing one dashed, a far one faded, the aimed one outlined. Positions come from Lua ~25 times a second. */
+.wk-pins { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+.wk-pin {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: 19rem;
+  padding: 0.3rem 0.65rem 0.35rem;
+  background: var(--note);
+  color: var(--note-ink);
+  font: 600 1rem/1.2 var(--f-display);
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 0.9rem));
+  filter: drop-shadow(0 0.3rem 0.5rem rgba(0, 0, 0, 0.55));
+  transition: left 70ms linear, top 70ms linear, opacity 160ms var(--ease);
+}
+.wk-pin::after { content: ''; position: absolute; left: 50%; top: 100%; width: 1px; height: 0.9rem; background: rgba(242, 242, 242, 0.7); }
+.wk-pin-n {
+  flex: none; width: 1.45rem; height: 1.45rem; display: grid; place-items: center; border-radius: 50%;
+  background: var(--ink); color: var(--paper); font: 600 0.88rem/1 'EB Garamond', Georgia, serif; font-variant-numeric: lining-nums;
+}
+.wk-pin-dot { flex: none; width: 0.45rem; height: 0.45rem; background: var(--ink); }
+.wk-pin-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.wk-pin-sub { flex: none; font: 500 0.82rem/1 var(--f-label); opacity: 0.7; }
+.wk-pin.is-cur { background: var(--mark); color: var(--mark-ink); }
+.wk-pin.is-cur .wk-pin-n { background: var(--mark-ink); color: var(--mark); }
+.wk-pin.is-cur .wk-pin-dot { background: var(--mark-ink); }
+.wk-pin.is-miss { background: rgba(11, 10, 10, 0.72); color: #F09A9C; outline: 1px dashed #F09A9C; outline-offset: -1px; }
+.wk-pin.is-miss .wk-pin-n { background: transparent; color: #F09A9C; box-shadow: inset 0 0 0 1px #F09A9C; }
+.wk-pin.is-aim { outline: 2px solid var(--paper); outline-offset: 2px; z-index: 2; }
+.wk-pin.is-far { opacity: 0.55; font-size: 0.9rem; }
+.wk-pins.is-rtl .wk-pin { font-weight: 400; }
+
 /* ══════════ Arabic ══════════ */
 .is-rtl .wk-group-head, .is-rtl .wk-tally, .is-rtl .wk-hint, .is-rtl .wk-btn, .is-rtl .wk-line-value, .is-rtl .wk-line-sub, .is-rtl .wk-thead, .is-rtl .wk-state, .is-rtl .wk-caption { font-weight: 700; letter-spacing: 0; font-variant-caps: normal; }
 .is-rtl .wk-group-head { font-size: 0.95rem; }

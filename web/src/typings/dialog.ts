@@ -6,6 +6,8 @@ export interface InputProps {
   options?: {
     allowCancel?: boolean;
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+    /** 4.5.0: a quiet line under the heading. */
+    subtitle?: string;
   };
 }
 

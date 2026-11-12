@@ -3,7 +3,7 @@ import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { fetchNui } from '../../utils/fetchNui';
 import { AlertProps } from '../../typings';
 import { play } from '../../wc/sound';
-import { cls, Txt, useKit } from '../../kit/ui';
+import { cls, Keys, Txt, useKit } from '../../kit/ui';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import MarkdownComponents from '../../config/MarkdownComponents';
@@ -92,6 +92,9 @@ const AlertDialog: React.FC = () => {
             </button>
           )}
         </div>
+
+        {/* 4.5.0: the keys row of the notebook: Enter answers the first choice, Esc the other one (or closes) */}
+        <Keys keys={[{ key: 'Enter', label: confirmLabel }, { key: 'Esc', label: cancelLabel || t('close') }]} />
       </div>
     </div>
   );

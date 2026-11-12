@@ -35,6 +35,8 @@ local openMenu
 ---@field position? MenuPosition
 ---@field disableInput? boolean
 ---@field canClose? boolean
+---@field subtitle? string 4.5.0: a quiet line at the top of the card
+---@field keys? { key: string, label?: string }[] 4.5.0: the keys row at the bottom
 ---@field onClose? fun(keyPressed?: 'Escape' | 'Backspace')
 ---@field onSelected? MenuScrollSelectChangeFunction
 ---@field onSideScroll? MenuScrollSelectChangeFunction
@@ -89,6 +91,8 @@ function lib.showMenu(id, startIndex)
             position = menu.position,
             canClose = menu.canClose,
             title = menu.title,
+            subtitle = menu.subtitle, -- 4.5.0: a quiet line at the top of the card
+            keys = menu.keys,         -- 4.5.0: the keys row, { { key, label } } (default: the arrows, Enter, Esc)
             items = menu.options,
             startItemIndex = startIndex and startIndex - 1 or 0
         }
