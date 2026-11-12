@@ -676,6 +676,8 @@
 
 /* a section heading inside a form (a row's `section`) */
 .wk-form > .wf-sec { margin: 0.35rem 0 -0.35rem; }
+/* the actions strip never shrinks: a tall form (the advanced fold open) scrolls inside its card instead */
+.wk-dialog-col > .wk-actions-wrap { flex: none; }
 .wk-form > .wf-sec:first-child { margin-top: 0; }
 
 /* a number as choices (a row's `levels`: سهل / عادي / صعب): band buttons, the chosen one on the red band */
@@ -700,7 +702,7 @@
 .wf-tag.is-red { border-color: var(--red); color: #F2B4B4; }
 .wf-tag.is-solid { border-color: var(--paper-dim); background: rgba(242, 242, 242, 0.08); color: var(--paper); }
 .wk-actbar > .wk-keys-row { flex: 1 1 100%; margin-top: 0.1rem; padding-top: 0.5rem; border-top: 1px solid var(--rule); }
-.wk-keys-alone { padding: 0 0.4rem; }
+.wk-keys-alone { align-self: flex-start; padding: 0.35rem 0.75rem; background: rgba(17, 16, 16, 0.72); color: var(--paper-dim); }
 
 /* ══════════ World pins (4.5.0): numbered labels over the world, drawn in this frame (lib.setPins) ══════════
    The builders' .wh-pin: a paper tag with its step number, a stem down to the spot; the current one on the red band,
