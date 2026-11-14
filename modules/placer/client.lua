@@ -13,9 +13,11 @@
 --     keys   = { place = 'J', skip = 'G', remove = 'DELETE', back = 'BACK', cancel = 'X', look = 'C' },
 --     labels = { place, skip, keep, remove, back, cancel, look, save, rotate, confirm,
 --                step = 'Step %d/%d - %s' | fn(n, total, text), tooFar = '... %d m ...' },
---     extraKeys = { { key = 'Q', label = 'Option', press = function(ctx, relabel) end }, ... },  -- the caller's own
---                                                 -- cards beside the editor's (a choice made while placing: the
---                                                 -- snap / capture read it); relabel(i, text) renames card i
+--     extraKeys = { { key = 'Q', label = 'Option', press = function(ctx, relabel, remodel) end }, ... },  -- the caller's
+--                                                 -- own cards beside the editor's (a choice made while placing: the
+--                                                 -- snap / capture read it); relabel(i, text) renames card i;
+--                                                 -- remodel(model) swaps the active step's ghost for another model
+--                                                 -- where it stands (the turn of the wheel is kept) -> true when it did
 --     steps  = { {
 --       id = 'preview',                           -- key of the value in the result
 --       kind = 'ped' | 'object' | 'vehicle' | 'point' | 'camera',
@@ -571,6 +573,20 @@ local function configureKeys(s, p)
   end)
 end
 
+--- The active step's ghost, spawned in a thread: streaming a model takes frames, and the frame
+--- loop must keep disabling the game controls meanwhile. Born under the ground, moved on the next frame.
+local function spawnActive(s, step, p)
+  if not (step and ENTITY_KINDS[step.kind] and step.model ~= nil) then return end
+  local token = s.spawnToken
+  local at = vector3(p.coords.x, p.coords.y, p.coords.z - 25.0)
+  CreateThread(function()
+    local g = spawnGhost(step, at, p.heading)
+    if not g then return end
+    if s.closed or s.spawnToken ~= token then return removeGhost(g) end
+    s.ghost = g
+  end)
+end
+
 local function enter(s, index, p)
   lookOff(s)
   dropGhost(s)
@@ -581,20 +597,7 @@ local function enter(s, index, p)
   -- a second press queued behind the one that got here belongs to the step it was aimed at
   s.pressed = {}
   configureKeys(s, p)
-
-  local step = s.steps[index]
-  if step and ENTITY_KINDS[step.kind] and step.model ~= nil then
-    local token = s.spawnToken
-    -- spawned in a thread: streaming a model takes frames, and the frame loop must keep
-    -- disabling the game controls meanwhile. Born under the ground, moved on the next frame.
-    local at = vector3(p.coords.x, p.coords.y, p.coords.z - 25.0)
-    CreateThread(function()
-      local g = spawnGhost(step, at, p.heading)
-      if not g then return end
-      if s.closed or s.spawnToken ~= token then return removeGhost(g) end
-      s.ghost = g
-    end)
-  end
+  spawnActive(s, s.steps[index], p)
 end
 
 --- A resolved spot the admin kept: its ghost stands there for the rest of the run
@@ -687,7 +690,15 @@ local function act(s, action, p)
       if x and s.group then x.label = tostring(text) pcall(s.group.setLabel, x.key, x.label) end
     end
     local st = s.steps[s.index]
-    local ok, err = pcall(e.press, st and contextFor(s, st, p) or { playerCoords = p.coords }, relabel)
+    -- another model for the active step: the old ghost goes, the new one streams in where the aim is
+    local function remodel(model)
+      if not st or not ENTITY_KINDS[st.kind] or model == nil or model == st.model then return false end
+      st.model = model
+      dropGhost(s)
+      spawnActive(s, st, p)
+      return true
+    end
+    local ok, err = pcall(e.press, st and contextFor(s, st, p) or { playerCoords = p.coords }, relabel, remodel)
     if not ok then eprint(("w.placer: the %s key's press failed: %s"):format(e.key, tostring(err))) end
     return
   end
