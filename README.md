@@ -28,6 +28,9 @@ waves. Backward compatible: every new field is optional. No window changed its p
   لا تعمل وهو راكب أو في عربة أو يصوّب أو في يده سلاح أو مقيّد أو رافع يديه. المفتاح يتغير من إعدادات المفاتيح في اللعبة.
   (Essentials `point = { enabled, key = 'b' }`: hold to point with the game's online Point emote
   `script_mp@emotes@point@male@unarmed@upper` intro / loop / outro.)
+- جديد (2026-11-16): كل الأزرار في نوافذ المكتبة بخط ريد ديد الأصلي (RDR Lino، نفس حروف شعار اللعبة). الخط فيه حروف
+  إنجليزية وأرقام فقط، فالحروف العربية في الزر تبقى بخط Lalezar، والأرقام و$ بخط ريد ديد.
+  (`.wk-btn, .wf-btn` in web/src/kit/kit-lib.css: 'RDR Lino', then Lalezar for the Arabic letters.)
 
 ## 4.4.3 (2026-11-08)
 

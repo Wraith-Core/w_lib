@@ -761,6 +761,14 @@
 .is-rtl .wk-pick-keys { font-weight: 700; }
 .wf-mark .wf-ar { white-space: nowrap; }
 
+/* ══════════ The buttons' face (owner, 2026-11-16: "the buttons in the Red Dead letters, like the logo, in Arabic or
+   English") ══════════
+   RDR Lino is the game's own wood-type face, the lettering of the RED DEAD REDEMPTION logo. It has Latin letters,
+   figures and signs only, so the Arabic letters of a label fall through to Lalezar, the server's one Arabic face
+   (owner, 2026-10-22), and a figure or a $ inside an Arabic label stays in RDR Lino. One weight: the face is
+   declared 100-900 (nui/theme/fonts.css), so 600 / 700 never draw a false bold. After kit.css: this wins. */
+.wk-btn, .wf-btn { font-family: 'RDR Lino', 'Lalezar', 'EB Garamond', Georgia, serif; }
+
 @media (prefers-reduced-motion: reduce) {
   .wk-scrim, .wk-veil, .wk-side-scrim, .wk-pick-note { animation: none; }
 }
