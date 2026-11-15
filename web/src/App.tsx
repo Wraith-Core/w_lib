@@ -10,6 +10,7 @@ import { play, type Sfx } from './wc/sound';
 import { postNui } from './utils/postNui';
 import AlertDialog from './features/dialog/AlertDialog';
 import ListMenu from './features/menu/list';
+import JoMenu from './features/jomenu';
 import Dev from './features/dev';
 import { isEnvBrowser } from './utils/misc';
 import Prompt from './features/prompt';
@@ -125,6 +126,7 @@ const App: React.FC = () => {
       <ContextMenu />
       <Panel />
       <ListMenu />
+      <JoMenu />
       <RadialMenu />
       <Prompt />
       <Gizmo />

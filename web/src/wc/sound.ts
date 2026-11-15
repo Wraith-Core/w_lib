@@ -77,7 +77,8 @@ function warm(name: Sfx): HTMLAudioElement | null {
 
 let lastHover = 0;
 
-export function play(name: Sfx): void {
+/** `gain` scales the cue's own volume (w.menu.updateVolume); 1 = as designed. */
+export function play(name: Sfx, gain = 1): void {
   if (muted) return;
   if (!focused && !LIFECYCLE.has(name)) return;
 
@@ -93,7 +94,7 @@ export function play(name: Sfx): void {
 
   try {
     const node = source.cloneNode(true) as HTMLAudioElement;
-    node.volume = VOL[name];
+    node.volume = Math.max(0, Math.min(1, VOL[name] * (Number.isFinite(gain) ? gain : 1)));
     void node.play().catch(() => {});
   } catch {
     /* Sound is a luxury -- it never takes the interface down. */

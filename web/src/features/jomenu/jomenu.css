@@ -1,0 +1,271 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   w_lib · features/jomenu -- w.menu (the jo.menu API) in the board kit.
+   The dock, the card, the rows and the stepper are the kit's own (kit.css / kit-lib.css); this file adds
+   only the parts jo's menu has and the list menu does not: game icons, swatches, statistics, the
+   slider panel (boxes, tint strip, grid, sprites), prices and tiles. Paper and ink; red is a mark only.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.wjm .wjm-body { display: flex; flex-direction: column; }
+
+/* ── the rows ── */
+.wjm-rows {
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: calc(var(--wjm-on-screen, 8) * 2.6rem);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.wjm-rows.is-tall { max-height: calc(var(--wjm-on-screen, 8) * 2.95rem); }
+.wjm-rows::-webkit-scrollbar, .wjm-tiles::-webkit-scrollbar, .wjm-sprites::-webkit-scrollbar { width: 3px; height: 3px; }
+.wjm-rows::-webkit-scrollbar-thumb, .wjm-tiles::-webkit-scrollbar-thumb, .wjm-sprites::-webkit-scrollbar-thumb { background: var(--rule-2); }
+
+.wjm-row.is-tall { min-height: 2.95rem; }
+.wjm-row .wf-row-name { display: flex; align-items: center; gap: 0.45rem; }
+
+/* the game's icons are white engravings: on the paper band they turn to ink */
+.wjm-ico { flex: none; display: grid; place-items: center; width: 1.5rem; height: 1.5rem; }
+.wjm-row.is-tall .wjm-ico { width: 2.1rem; height: 2.1rem; }
+.wjm-ico > img, .wjm-prefix, .wjm-icon-right > img { width: 100%; height: 100%; object-fit: contain; transition: filter 120ms var(--ease); }
+.wjm-ico.is-empty { visibility: hidden; }
+.wjm-prefix { flex: none; width: 1.1rem; height: 1.1rem; }
+.wf-row.is-here .wjm-ico > img, .wf-row.is-here .wjm-prefix, .wf-row.is-here .wjm-icon-right > img { filter: invert(0.93); }
+.is-grey { filter: grayscale(1) opacity(0.6); }
+
+.wjm-text-right {
+  flex: none;
+  max-width: 40%;
+  font: 500 0.85rem/1.1 var(--f-label);
+  color: var(--paper-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wf:not(.is-rtl) .wjm-text-right { font-variant-caps: all-small-caps; letter-spacing: 0.08em; font-size: 0.98rem; }
+.wf-row.is-here .wjm-text-right { color: var(--ink); }
+.wjm-price-right { flex: none; color: var(--paper-dim); }
+.wf-row.is-here .wjm-price-right { color: var(--ink); }
+.wjm-icon-right { flex: none; width: 1.3rem; height: 1.3rem; }
+
+/* a switch slider inside its row: the value, its arrows only on the cursor row */
+.wjm-switch { flex: none; display: flex; align-items: center; gap: 0.2rem; min-width: 6.5rem; justify-content: center; }
+.wjm-switch-value { font: 500 1rem/1.2 var(--f-input); color: var(--paper-dim); white-space: nowrap; }
+.wjm-switch.is-here .wjm-switch-value { color: var(--ink); }
+.wjm-switch-arrow { display: grid; place-items: center; width: 1.5rem; height: 1.5rem; color: var(--ink); cursor: pointer; }
+.wjm-switch-arrow .wf-glyph { width: 0.85rem; height: 0.85rem; }
+[dir='rtl'] .wjm-switch-arrow .wf-glyph { transform: scaleX(-1); }
+.wjm-switch-arrow.is-dis, .wf-stepper-arrow.is-dis { opacity: 0.3; }
+
+/* the small colour square at the end of a row */
+.wjm-preview { flex: none; display: grid; place-items: center; }
+.wjm-swatch {
+  display: flex;
+  width: 1.3rem;
+  height: 1.3rem;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--rule-2);
+}
+.wf-row.is-here .wjm-swatch { box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.55); }
+.wjm-swatch > i { flex: 1; height: 100%; }
+.wjm-swatch:not(.is-lines) { flex-direction: column; }
+.wjm-swatch.is-lines { flex-direction: row; }
+
+/* ── a tally under the rows ── */
+.wjm-count {
+  flex: none;
+  padding-top: 0.35rem;
+  text-align: end;
+  font: 500 0.8rem/1 var(--f-label);
+  color: var(--paper-faint);
+}
+
+/* ── the item's detail: description, statistics, sliders ── */
+.wjm-detail { flex: none; display: flex; flex-direction: column; gap: 0.7rem; padding-top: 0.55rem; }
+.wjm-detail:empty { display: none; }
+.wjm-detail-title { display: flex; flex-direction: column; font: 500 1.14rem/1.2 var(--f-serif); color: var(--paper); }
+.wjm-desc { font: 400 1rem/1.4 var(--f-serif); color: var(--paper-dim); white-space: pre-line; }
+
+.wjm-stats { display: flex; flex-direction: column; gap: 0.4rem; }
+.wjm-stat { display: grid; grid-template-columns: minmax(0, 8rem) minmax(0, 1fr); align-items: center; gap: 0.8rem; }
+.wjm-stat-label { font: 500 0.82rem/1.15 var(--f-label); color: var(--paper-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wf:not(.is-rtl) .wjm-stat-label { font-variant-caps: all-small-caps; letter-spacing: 0.08em; font-size: 0.95rem; }
+.is-rtl .wjm-stat-label { font-weight: 700; }
+.wjm-stat-value { text-align: end; font: 500 0.98rem/1.2 var(--f-input); color: var(--paper); }
+.wjm-bars { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0.18rem; }
+.wjm-bars > i { height: 0.32rem; background: var(--rule); }
+.wjm-bars > i.is-maybe { background: var(--paper-faint); }
+.wjm-bars > i.is-on { background: var(--paper); }
+.wjm-bars.penalty > i.is-maybe, .wjm-bars > i.penalty { background: var(--red); }
+.wjm-stat-gauge { margin-top: 0; }
+.wjm-stat-icons { display: flex; justify-content: flex-end; gap: 0.3rem; }
+.wjm-stat-icons > img { width: 1.3rem; height: 1.3rem; object-fit: contain; }
+
+/* ── the slider panel ── */
+.wjm-sliders { display: flex; flex-direction: column; gap: 0.75rem; padding-top: 0.15rem; }
+.wjm-slider { display: flex; flex-direction: column; gap: 0.4rem; }
+.wjm-sl-title { font: 500 0.82rem/1.15 var(--f-label); color: var(--paper-faint); }
+.wf:not(.is-rtl) .wjm-sl-title { font-variant-caps: all-small-caps; letter-spacing: 0.08em; font-size: 0.95rem; }
+.is-rtl .wjm-sl-title { font-weight: 700; }
+.wjm-sl-desc { font: 400 0.9rem/1.35 var(--f-serif); color: var(--paper-faint); }
+.wjm-stepper { height: 2.15rem; }
+.wjm-stepper .wf-stepper-arrow { cursor: pointer; }
+.wjm-stepper .wf-stepper-value { display: flex; align-items: baseline; justify-content: center; gap: 0.5rem; }
+.wjm-of { font: 500 0.78rem/1 var(--f-label); color: var(--paper-faint); }
+
+/* the default slider's boxes: one per value, the chosen one in paper */
+.wjm-boxes { display: flex; gap: 0.18rem; }
+.wjm-boxes > i { flex: 1; height: 0.3rem; background: var(--rule); cursor: pointer; transition: background-color 120ms var(--ease); }
+.wjm-boxes > i.is-on { background: var(--paper-faint); }
+.wjm-boxes > i.is-here { background: var(--paper); box-shadow: 0 0.18rem 0 var(--red); }
+.wjm-boxes-gauge { margin-top: 0; }
+
+/* the tint strip: the game's palette, the cursor on the chosen tint */
+.wjm-strip { position: relative; display: flex; height: 1.35rem; cursor: pointer; box-shadow: 0 0 0 1px var(--rule-2); }
+.wjm-strip > i { flex: 1; height: 100%; }
+.wjm-strip-cursor {
+  position: absolute;
+  top: -0.3rem;
+  bottom: -0.3rem;
+  width: 0.38rem;
+  transform: translateX(-50%);
+  background: transparent;
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px var(--ink);
+  pointer-events: none;
+}
+[dir='rtl'] .wjm-strip-cursor { transform: translateX(50%); }
+
+/* the grid: a line (one axis) or a square (two), a marker to drag */
+.wjm-grid { display: flex; align-items: center; gap: 0.6rem; }
+.wjm-grid-l, .wjm-grid-r, .wjm-grid-t { font: 500 0.82rem/1.1 var(--f-label); color: var(--paper-faint); white-space: nowrap; }
+.wjm-grid-l:empty, .wjm-grid-r:empty { display: none; }
+.wjm-grid-mid { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+.wjm-grid-box {
+  position: relative;
+  width: 100%;
+  cursor: crosshair;
+  background:
+    linear-gradient(var(--rule), var(--rule)) center / 100% 1px no-repeat,
+    var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--rule-2);
+}
+.wjm-grid.is-1d .wjm-grid-box { height: 1.6rem; }
+.wjm-grid.is-2d .wjm-grid-box {
+  width: 10rem;
+  height: 10rem;
+  background:
+    linear-gradient(var(--rule), var(--rule)) center / 100% 1px no-repeat,
+    linear-gradient(var(--rule), var(--rule)) center / 1px 100% no-repeat,
+    var(--ink-2);
+}
+.wjm-grid-marker {
+  position: absolute;
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--paper);
+  box-shadow: 0 0 0 2px var(--ink), 0 0 0 3px var(--paper);
+  pointer-events: none;
+}
+
+/* sprite / colour values: a strip of swatches, the chosen one framed */
+.wjm-sprites { display: flex; gap: 0.35rem; overflow-x: auto; padding: 0.2rem 0.15rem 0.3rem; }
+.wjm-sprites.is-center { justify-content: center; }
+.wjm-sprite { position: relative; flex: none; display: grid; place-items: center; width: 2.4rem; height: 2.4rem; background: var(--ink-2); cursor: pointer; box-shadow: inset 0 0 0 1px var(--rule); }
+.wjm-sprite.is-here { box-shadow: inset 0 0 0 2px var(--paper); }
+.wjm-sprite-tick { position: absolute; inset-inline-end: 0.15rem; top: 0.15rem; width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--paper); }
+.wjm-sprite-box { position: relative; display: grid; place-items: center; width: 100%; height: 100%; }
+.wjm-sprite-box > img { width: 82%; height: 82%; object-fit: contain; }
+.wjm-sprite-box .wjm-swatch { width: 70%; height: 70%; }
+.wjm-preview .wjm-sprite-box { width: 1.4rem; height: 1.4rem; }
+.wjm-tag { position: absolute; bottom: 0; inset-inline: 0; font: 600 0.6rem/1.2 var(--f-label); text-align: center; }
+.wjm-sprite-icon { position: absolute; top: 0; inset-inline-end: 0; width: 0.8rem; height: 0.8rem; }
+
+/* ── prices ── */
+.wjm-price {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--rule-2);
+}
+.wjm-price-title { font: 500 0.95rem/1 var(--f-label); color: var(--paper-dim); }
+.wf:not(.is-rtl) .wjm-price-title { font-variant-caps: all-small-caps; letter-spacing: 0.1em; font-size: 1.1rem; }
+.is-rtl .wjm-price-title { font-weight: 700; }
+.wjm-price-amount { color: var(--paper); font-size: 1.35rem; }
+.wjm-cost { display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 0.35rem; direction: ltr; unicode-bidi: isolate; }
+.wjm-plus { color: var(--paper-faint); font-size: 0.85em; }
+.wjm-money { display: inline-flex; align-items: flex-start; line-height: 1; }
+.wjm-money > small { font: 500 0.6em/1 var(--f-serif); margin-top: 0.1em; }
+.wjm-money > b { font-weight: 600; font-size: 1em; }
+.wjm-money > .wjm-cents { text-decoration: underline; text-underline-offset: 0.12em; }
+.wjm-gold { display: inline-flex; align-items: center; gap: 0.2rem; }
+.wjm-gold > img { width: 1.05em; height: 1.05em; object-fit: contain; }
+.wjm-gold > b { font-weight: 600; }
+.wjm-free { font: 500 0.8em/1 var(--f-label); letter-spacing: 0.06em; }
+.wf:not(.is-rtl) .wjm-free { font-variant-caps: all-small-caps; letter-spacing: 0.1em; font-size: 0.9em; }
+.wjm-cost-item { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.8em; }
+.wjm-cost-item > img { width: 1.2em; height: 1.2em; object-fit: contain; }
+.wjm-x { color: var(--paper-faint); }
+.wjm-price-right .wjm-cost { font-size: 1.05rem; }
+.wf-row.is-here .wjm-price-right .wjm-plus, .wf-row.is-here .wjm-price-right .wjm-x { color: rgba(17, 17, 17, 0.55); }
+.wf-row.is-here .wjm-gold > img { filter: none; }
+
+.wjm-foot { flex: none; margin-top: 0.5rem; font: 400 0.88rem/1.35 var(--f-serif); color: var(--paper-faint); }
+
+/* ── tiles ── */
+.wjm-tiles {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--wjm-cols, 4), minmax(0, 1fr));
+  gap: 0.4rem;
+  max-height: calc(var(--wjm-lines, 4) * ((min(30vw, 420px) + 48px - 2.5rem) / var(--wjm-cols, 4)));
+  overflow-y: auto;
+  padding: 0.25rem 0.15rem;
+}
+.wjm-tile {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: var(--ink-2);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  cursor: pointer;
+  transition: box-shadow 120ms var(--ease), background-color 120ms var(--ease);
+}
+.wjm-tile:hover { background: var(--ink-3); }
+.wjm-tile.is-here { background: var(--ink-3); box-shadow: inset 0 0 0 2px var(--paper), inset 0 -0.22rem 0 var(--red); }
+.wjm-tile.is-off { opacity: 0.42; }
+.wjm-tile-img { width: 78%; height: 78%; object-fit: contain; }
+.wjm-tile-corner { position: absolute; top: 0.2rem; inset-inline-end: 0.2rem; width: 0.95rem; height: 0.95rem; object-fit: contain; }
+.wjm-tile-qty {
+  position: absolute;
+  bottom: 0.2rem;
+  inset-inline-end: 0.2rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.6rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.75rem;
+}
+.wjm-tile-stars { position: absolute; top: 0.25rem; inset-inline-start: 0.25rem; display: flex; gap: 0.12rem; }
+.wjm-tile-stars > i { width: 0.42rem; height: 0.42rem; transform: rotate(45deg); background: var(--paper); }
+.wjm-tile-stars > i.is-off { background: var(--rule-2); }
+
+/* ── waiting for the menu's items ── */
+.wjm-loading { display: flex; justify-content: center; gap: 0.5rem; padding: 1.2rem 0; }
+.wjm-loading > i { width: 0.45rem; height: 0.45rem; border-radius: 50%; background: var(--paper-dim); animation: wjm-dot 900ms var(--ease) infinite; }
+.wjm-loading > i:nth-child(2) { animation-delay: 150ms; }
+.wjm-loading > i:nth-child(3) { animation-delay: 300ms; }
+@keyframes wjm-dot {
+  0%, 100% { opacity: 0.25; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-0.2rem); }
+}

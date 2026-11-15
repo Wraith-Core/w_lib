@@ -3,8 +3,8 @@ w.require("timeout")
 w.require("nui")
 w.require("string")
 
-local nuiLoaded = false
 local menuNuiChangeInProgress = false
+local resourceName = GetCurrentResourceName()
 
 -- The lock below is released in every path of menuNUIChange, so it can only
 -- stay set if a handler yields forever. The deadline turns that from "every
@@ -24,17 +24,6 @@ local function waitForIdle(step)
   end
 end
 
-CreateThread(function()
-  Wait(100)
-  if GetResourceMetadata(GetCurrentResourceName(), "ui_page") == "nui://w_lib/nui/menu/index.html" then
-    nuiLoaded = true
-    return
-  end
-  w.nui.load("w_menu", "nui://w_lib/nui/menu/index.html")
-  Wait(500)
-  nuiLoaded = true
-end)
-
 local menus = {}
 local menuCreators = {}
 w.menu.listeners = {}
@@ -44,14 +33,11 @@ local timeoutClose = nil
 local currentMinimapType = GetMinimapType()
 local currentData = {}
 local previousData = {}
-local previousKeepingInput = false
-local NativeSendNUIMessage = SendNUIMessage
+-- ★ The menu is drawn by w_lib's own frame (web/src/features/jomenu), never by this resource's:
+--   a consumer needs no ui_page for it. Messages, focus and the frame's callbacks all go through
+--   the host in modules/menu/g_client.lua -- see the header there.
 local function SendNUIMessage(data)
-  while not nuiLoaded do
-    Wait(0)
-  end
-  data.messageTargetUiName = "w_menu"
-  NativeSendNUIMessage(data)
+  exports.w_lib:w_menu_nui(resourceName, data)
 end
 local disabledKeys = {
   `INPUT_SELECT_NEXT_WEAPON`,
@@ -762,14 +748,11 @@ function w.menu.show(show, keepInput, hideRadar, playMenuAnimation, hideCursor)
     end
     if not nuiShow then
       timeoutClose = w.timeout.set(150, function()
-        SetNuiFocus(false, false)
-        SetNuiFocusKeepInput(previousKeepingInput)
+        exports.w_lib:w_menu_focus(resourceName, false)
         SendNUIMessage({ event = "updateShow", show = show, cancelAnimation = not playMenuAnimation })
       end)
     else
-      previousKeepingInput = IsNuiFocusKeepingInput()
-      SetNuiFocus(true, not hideCursor)
-      SetNuiFocusKeepInput(keepInput)
+      exports.w_lib:w_menu_focus(resourceName, true, keepInput, hideCursor)
       SendNUIMessage({ event = "updateShow", show = show, cancelAnimation = not playMenuAnimation })
       loopMenu()
     end
@@ -878,18 +861,16 @@ function w.menu.softHide(cb, playMenuAnimation, keepBackground)
   keepBackground = GetValue(keepBackground, false)
   if not cb then return end
   softHidden = true
-  local keepInput = IsNuiFocusKeepingInput()
+  local keepInput = exports.w_lib:w_menu_keeping_input(resourceName)
   local hideCursor = false
 
-  SetNuiFocus(false, false)
-  SetNuiFocusKeepInput(false)
+  exports.w_lib:w_menu_focus(resourceName, false)
   SendNUIMessage({ event = "updateShow", show = false, cancelAnimation = not playMenuAnimation, keepBackground = keepBackground })
 
   cb()
   Wait(1)
 
-  SetNuiFocus(true, not hideCursor)
-  SetNuiFocusKeepInput(keepInput)
+  exports.w_lib:w_menu_focus(resourceName, true, keepInput, hideCursor)
   SendNUIMessage({ event = "updateShow", show = true, cancelAnimation = not playMenuAnimation })
   softHidden = false
 end
@@ -945,46 +926,50 @@ end
 -- NUI
 -------------
 
-RegisterNUICallback("click", function(data, cb)
-  cb("ok")
+-- ★ The frame is w_lib's, so its callbacks arrive through the host (modules/menu/g_client.lua)
+--   rather than as this resource's own NUI callbacks. Registering them here as RegisterNUICallback
+--   would also have clashed with a consumer's own "click" or "backMenu".
+local nuiCallbacks = {}
 
+function nuiCallbacks.click(data)
   if not menus[data.menu] then return eprint("Menu doesn't exist", data.menu) end
-  if not menus[data.menu].items[data.item.index] then return eprint("Item doesn't exist", data.item.index) end
+  if not data.item or not menus[data.menu].items[data.item.index] then return eprint("Item doesn't exist", data.item and data.item.index) end
 
   w.menu.fireEvent(w.menu.getCurrentItem(), "onClick")
-end)
+end
 
-RegisterNUICallback("backMenu", function(data, cb)
-  cb("ok")
-
+function nuiCallbacks.backMenu(data)
   if not menus[data.menu] then return end
 
   w.menu.fireEvent(menus[data.menu], "onBack")
-end)
+end
 
-RegisterNuiCallback("missingMenu", function(data, cb)
-  cb("ok")
-
+function nuiCallbacks.missingMenu(data)
   missingMenu(data.menu)
-end)
+end
 
-RegisterNUICallback("onBeforeEnter", function(data, cb)
+function nuiCallbacks.onBeforeEnter(data)
   if menus[data.menu] then
     w.menu.fireEvent(menus[data.menu], "onBeforeEnter")
   end
-  cb("ok")
-end)
+end
 
-RegisterNUICallback("messageReceived", function(data, cb)
-  messageSending = false
-  cb("ok")
-end)
-
-RegisterNUICallback("updatePreview", function(data, cb)
-  cb("ok")
+function nuiCallbacks.updatePreview(data)
   menuNUIChange(data)
-end)
+end
 
+exports.w_lib:w_menu_attach(resourceName, function(name, data)
+  local fn = nuiCallbacks[name]
+  if not fn then return end
+  -- onBeforeEnter is answered only when its handler is done (the frame waits on it before
+  -- opening the child); every other callback runs on its own thread, as it did when it was a
+  -- NUI callback, so a handler that waits never holds the host.
+  if name == "onBeforeEnter" then
+    fn(data)
+  else
+    CreateThread(function() fn(data) end)
+  end
+end)
 
 --- Register a handler for missing menu error
 ---@param id string (The menu ID)
