@@ -3,7 +3,7 @@ import { useNuiEvent } from '../../../hooks/useNuiEvent';
 import { fetchNui } from '../../../utils/fetchNui';
 import { ContextMenuProps, Option } from '../../../typings';
 import { play } from '../../../wc/sound';
-import { Card, cls, Gauge, GlyphNext, HeadControl, isCriticalScheme, KitIcon, keyList, Keys, Txt, useKit, Where } from '../../../kit/ui';
+import { Card, cls, Gauge, GlyphNext, HeadControl, isCriticalScheme, KitIcon, Txt, useKit, Where } from '../../../kit/ui';
 
 /**
  * The context menu, on the board kit (4.4.0): a masthead with the title at the start and the close / back control
@@ -22,7 +22,7 @@ import { Card, cls, Gauge, GlyphNext, HeadControl, isCriticalScheme, KitIcon, ke
  *     subtitle         a quiet line at the top of the card (where you are, what this is for)
  *     option.where     a place line under the row ("فالنتاين · 12 م منك"); option.whereMiss draws it as missing.
  *                      Lua turns option.coords into it by itself (lib.showContext, the w_lib place words).
- *     keys             [{ key, label }] the keys row at the bottom; without it: Esc close, Backspace back (a sub menu)
+ *     keys             ignored: no keys row under the menu (owner 2026-11-15: not needed)
  *   Backspace goes back to the parent menu (when there is one), as the head's back arrow does.
  */
 
@@ -127,12 +127,6 @@ const ContextMenu: React.FC = () => {
 
   const entries = optionEntries(data.options);
   const withIcons = entries.some(({ opt }) => opt.icon || opt.image);
-  const keys =
-    keyList(data.keys) ??
-    [
-      ...(data.canClose !== false ? [{ key: 'Esc', label: t('close') }] : []),
-      ...(data.menu ? [{ key: 'Backspace', label: t('back') }] : []),
-    ];
 
   return (
     <div className={cls('wf', 'wk-ctx', rtl && 'is-rtl')}>
@@ -195,7 +189,6 @@ const ContextMenu: React.FC = () => {
               );
             })}
           </div>
-          <Keys keys={keys} foot />
         </Card>
       </div>
     </div>

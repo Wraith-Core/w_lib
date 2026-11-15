@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNuiEvent } from '../../../hooks/useNuiEvent';
 import { fetchNui } from '../../../utils/fetchNui';
 import { play } from '../../../wc/sound';
-import { Card, cls, Gauge, GlyphNext, GlyphPrev, HeadControl, isCriticalScheme, KitIcon, keyList, Keys, Txt, useKit } from '../../../kit/ui';
+import { Card, cls, Gauge, GlyphNext, GlyphPrev, HeadControl, isCriticalScheme, KitIcon, Txt, useKit } from '../../../kit/ui';
 
 interface MenuItem {
   label: string;
@@ -23,8 +23,6 @@ interface MenuState {
   startItemIndex?: number;
   /** 4.5.0: a quiet line at the top of the card. */
   subtitle?: string;
-  /** 4.5.0: the keys row, [{ key, label }]; without it the arrows, Enter and Esc are named. */
-  keys?: Array<{ key: string; label?: string }>;
 }
 
 /**
@@ -163,15 +161,6 @@ const ListMenu: React.FC = () => {
 
   const withIcons = menu.items.some((item) => item.icon);
   const dock = dockClass(menu.position);
-  const cur = menu.items[index];
-  const keys =
-    keyList(menu.keys) ??
-    [
-      { key: '↑ ↓', label: t('key_move') },
-      ...(menu.items.some((it) => it.values) ? [{ key: '← →', label: t('key_change') }] : []),
-      { key: 'Enter', label: cur && typeof cur.checked === 'boolean' ? t('key_tick') : t('key_pick') },
-      ...(menu.canClose !== false ? [{ key: 'Esc', label: t('close') }] : []),
-    ];
 
   return (
     <div className={cls('wf', 'wk-menu', rtl && 'is-rtl')}>
@@ -238,7 +227,7 @@ const ListMenu: React.FC = () => {
               );
             })}
           </div>
-          <Keys keys={keys} foot />
+          {/* No keys row under the menu (owner 2026-11-15: not needed). A script's `keys` is ignored. */}
         </Card>
       </div>
     </div>
