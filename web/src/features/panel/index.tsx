@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNuiEvent } from '../../hooks/useNuiEvent';
 import { fetchNui } from '../../utils/fetchNui';
 import { play } from '../../wc/sound';
-import { cls, Gauge, GlyphCross, GlyphDown, GlyphLock, GlyphSearch, KitIcon, keyList, Keys, Ready, Txt, useKit, Where } from '../../kit/ui';
+import { cls, Gauge, GlyphCross, GlyphDown, GlyphLock, GlyphSearch, KitIcon, Ready, Txt, useKit, Where } from '../../kit/ui';
 import Blocks, { AmountField, Block, Slot } from './Blocks';
 
 /**
@@ -30,8 +30,8 @@ import Blocks, { AmountField, Block, Slot } from './Blocks';
  *     item.where    a place line under a row ("فالنتاين · 12 م منك"); item.whereMiss draws it as missing
  *     ready         { ok?, text, fix?, fixLabel? } the ready line over the actions: what is still missing, in words;
  *                   «أصلحه» sends panelAction { action = fix } (or panelNav fix when fixNav = true)
- *     keys          the keys row under the actions; without `hints` the arrows, Enter (the main action) and Esc
- *                   are named. `hints` keeps its old place and meaning.
+ *     keys          ignored since 2026-11-15: the owner wants no keys row under any UI. `hints` keeps its
+ *                   old place and meaning.
  * ============================================================================
  */
 
@@ -152,7 +152,7 @@ interface PanelState {
   tags?: Array<{ label: string; bad?: boolean }>;
   /** 4.5.0: the ready line over the actions. */
   ready?: { ok?: boolean; text: string; fix?: string; fixNav?: boolean; fixLabel?: string };
-  /** 4.5.0: the keys row under the actions, [{ key, label }]. */
+  /** 4.5.0: the keys row under the actions -- ignored since 2026-11-15 (owner: no keys row anywhere). */
   keys?: Array<{ key: string; label?: string }>;
 }
 
@@ -482,16 +482,6 @@ const Panel: React.FC = () => {
     if (ready.fixNav) fetchNui('panelNav', ready.fix);
     else fetchNui('panelAction', { action: ready.fix, item: selectedRef.current });
   };
-  /* the keys row: the script's own, else what works here (only when it set no `hints`, which keep their place) */
-  const keys =
-    keyList(state.keys) ??
-    (state.hints?.length
-      ? []
-      : [
-          ...(items.length || isNav ? [{ key: '↑ ↓', label: t('key_move') }] : []),
-          ...(main && !state.progress ? [{ key: 'Enter', label: main.label }] : []),
-          { key: 'Esc', label: t('close') },
-        ]);
 
   const aside =
     typeof state.countdown === 'number' ? (
@@ -852,12 +842,9 @@ const Panel: React.FC = () => {
                       })}
                     </div>
                   ) : null}
-                  {keys.length ? <Keys keys={keys} className="wk-keys-row" /> : null}
                 </div>
               </div>
             </div>
-          ) : keys.length ? (
-            <Keys keys={keys} className="wk-keys-alone" />
           ) : null}
         </section>
       </div>
