@@ -2232,14 +2232,13 @@ The windows keep their place in every language (the context menu on the right, t
 
 Context menu (`lib.registerContext`):
 - `subtitle` (string): a quiet line on top of the card (the kicker), e.g. the place.
-- `keys` (`{ key, label? }[]`, at most 8): the keys row at the bottom. Without it the row names what works: Esc (unless
-  `canClose = false`) and Backspace (when the menu has a parent `menu`; Backspace now goes back like the arrow).
+- `keys`: accepted and ignored since 2026-11-15 (the owner wants no keys row under any window). Esc (unless
+  `canClose = false`) and Backspace (when the menu has a parent `menu`; it goes back like the arrow) still work.
 - option `where` (string) / `whereMiss` (boolean): a place line under the row, red when missing.
 - option `coords` (vector3 | `{x, y, z}`): the place itself; the line is written from it with `lib.place.describe`
   («فالنتاين · 12 م منك»). The coords stay in Lua.
 
-List menu (`lib.registerMenu`): `subtitle` and `keys` as above. The default keys row: ↑↓, ←→ (when a row has
-`values`), Enter, Esc.
+List menu (`lib.registerMenu`): `subtitle` as above; `keys` is ignored (no keys row).
 
 Input dialog (`lib.inputDialog`):
 - `options.subtitle` (string): a line under the heading.
@@ -2251,14 +2250,13 @@ Input dialog (`lib.inputDialog`):
 - With `required` rows, a ready line over the buttons names the first empty one («ينقصه: اسم الخطوة»); «أصلحه» opens
   the fold if needed and puts the cursor in that field. Submit is still not blocked: check the values in Lua.
 
-Alert (`lib.alertDialog`): a keys row (Enter = confirm, Esc = cancel or close). No new fields.
+Alert (`lib.alertDialog`): Enter = confirm, Esc = cancel or close (no keys row is drawn). No new fields.
 
 Panel (`lib.showPanel`):
 - `tags` (`{ label, bad? }[]`, at most 4): short state words beside the subtitle (مسودة · ينقصها مكان).
 - `ready` (`{ ok?, text, fix?, fixNav?, fixLabel? }`): the ready line over the actions. `fix` is sent like an action
   (`onAction(fix, selectedItem)`), or as a nav id with `fixNav = true` (`onNav(fix)`).
-- `keys` (`{ key, label? }[]`): the keys row under the actions. Without it (and without the old `hints`) the row names
-  ↑↓, Enter (the primary action) and Esc. `hints` keeps its old place and meaning.
+- `keys`: ignored since 2026-11-15 (no keys row). `hints` keeps its old place and meaning.
 - item `where` / `whereMiss` / `coords`: the place line under the row, as in the context menu.
 
 ```lua
@@ -14660,7 +14658,7 @@ The loader reads, per module folder, `shared.lua` and then `client.lua` / `serve
 
 **Menu (client only) and pricing (shared) have no `g_` files.** They are plain Lua loaded inside the consumer resource. Every consumer resource therefore owns a private menu registry: a menu created by resource A does not exist for resource B, and `w.menu.isOpen()` reports only your own menus. Because the code runs in your VM, handlers (`onClick`, `onActive`, ...) may be real Lua functions. Two exports (`w_menu_get`, `w_menu_get_current_data`) are registered by each resource that loads the module, under that resource's own name; w_lib's manifest lists only `version-checker` and `i18n`, so `exports.w_lib:w_menu_get` does not exist unless w_lib itself loaded the menu module. If you ever take a menu or item table through an export boundary, functions cannot cross it: use the string fields `onClickClientEvent` / `onClickServerEvent` (the same `<event>ClientEvent` / `<event>ServerEvent` suffix applies to `onActive`, `onChange`, `onExit`, `onEnter`, `onBack`, `onTick`, `onBeforeEnter`); `w.menu.fireEvent` triggers those event names with `(currentData, ...)` before calling the function field. `PriceClass` / `PriceGroupClass` are metatable objects; when you send a price to the server or through an export, send `price:getCosts()` (a plain array), not the object.
 
-**Where the menu is drawn.** The menu module sends its messages with `SendNUIMessage` from the consumer resource, so they land in the consumer's `ui_page` frame. `w.nui.load` (called at startup by the menu module) is a no-op, and the old page `nui://w_lib/nui/menu/index.html` is not in w_lib's `files` list, so nothing is mounted for you. A resource with no `ui_page` shows no menu at all (w_baloot's manifest comment records exactly this failure). w_lib's own default page `nui://w_lib/web/build/index.html` does not contain the menu message handlers (`updateMenu`, `setCurrentMenu`, `updatePreview`, ...); the page in w_lib's files that does is `nui://w_lib/html/dist/index.html`. Which page a consumer should declare could not be confirmed from a working sibling (w_gunsmith declares its own `web/build` and that bundle does not contain the menu handlers either), so treat "declare a `ui_page` that implements the w_menu protocol" as the rule and verify on your server. The NUI callbacks (`click`, `backMenu`, `missingMenu`, `onBeforeEnter`, `updatePreview`, `messageReceived`) are registered in your resource, so the page must post to the resource that declares the `ui_page`.
+**Where the menu is drawn.** Since 2026-11-15 the menu is drawn by w_lib's own frame (`web/src/features/jomenu`, the board kit look), so a consumer needs **no `ui_page`** and nothing in its manifest beyond `@w_lib/init.lua`. The module's `SendNUIMessage` / `SetNuiFocus` calls go through a host that w_lib loads once (`modules/menu/g_client.lua`, exports `w_menu_nui`, `w_menu_focus`, `w_menu_attach`, `w_menu_keeping_input`); the frame's callbacks (`click`, `backMenu`, `missingMenu`, `onBeforeEnter`, `updatePreview`) come back through that host to the resource that owns the menu. Every message carries its owner, so two resources may both have a menu called `main`. The menu shown last owns the keys; when it closes, the one under it gets them back. `messageReceived` is not sent any more. There is no keys row under the menu (owner, 2026-11-15).
 
 **Component (clothing) is the opposite.** `modules/component/shared.lua` is a three-line bridge that, in any resource other than w_lib, sets `w.component = exports.w_lib:w_component_get()`. The full API (data tables from `g_shared.lua` and the ped functions from `g_client.lua`) executes inside w_lib; every `w.component.<fn>(...)` call is a cross-resource export call. Consequences:
 
