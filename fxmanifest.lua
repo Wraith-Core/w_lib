@@ -6,7 +6,7 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 
 name 'w_lib'
 author 'WraithStudio'
-version '4.4.6'
+version '4.4.7'
 -- Includes adaptations from ox_lib and jo_libs; preserve their original notices.
 -- See CREDITS.md and LICENSES/ for upstream attribution and license copies.
 license 'LGPL-3.0-or-later'
