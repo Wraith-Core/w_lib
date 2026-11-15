@@ -77,6 +77,7 @@ if E.handsUp.enabled then
         keybind({
             name = 'handsup',
             description = L('keybinds.handsup'),
+            descriptionEn = 'Hands up (raise / lower)',   -- the key-binding page draws Latin only
             defaultKey = E.handsUp.key,
             onPressed = function()
                 local p = ped()
@@ -205,6 +206,7 @@ if E.pvp.enabled then
             keybind({ -- the label is a locale string: see L above
                 name = 'togglepvp',
                 description = L('keybinds.toggle_pvp'),
+                descriptionEn = 'Toggle PVP',   -- the key-binding page draws Latin only
                 defaultKey = E.pvp.key,
                 onReleased = function()
                     pvp = not pvp
