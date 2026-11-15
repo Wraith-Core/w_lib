@@ -96,6 +96,83 @@ if E.handsUp.enabled then
     end)
 end
 
+-- ── pointing (the owner, 2026-11-15: "B should make the player point") ──
+-- Held key: the game's own online "Point" emote, upper body only, so the player keeps walking:
+-- intro (0.8 s) -> loop while held -> outro (1.0 s) on release. The dictionary stands on its own
+-- (patchpack003/004 clip_script_mp.rpf; clips checked with ops/local/anim_tools/clips.py); the game
+-- has no female copy, its online emotes play this one for both. Flags = hands up's, loop bit off
+-- for intro / outro. Not while aiming: B is a horse prompt then (w_stables saddlebag, look + aim).
+if E.point.enabled then
+    local dict = 'script_mp@emotes@point@male@unarmed@upper'
+    local FLAGS, LOOP, INTRO_MS = 67109392, 67109393, 750
+    local HANDS_DICT, HANDS_CLIP = 'script_proc@robberies@homestead@lonnies_shack@deception', 'hands_up_loop'
+    local function yes(v) return v == true or v == 1 end   -- a BOOL native may answer 0 / 1 (4.1.5)
+
+    local function unarmed(p)
+        local ok, _, hash = pcall(function() return GetCurrentPedWeapon(p, true, 0, true) end)
+        return not ok or hash == nil or hash == 0 or hash == `WEAPON_UNARMED`
+    end
+
+    local function free(p)
+        if yes(IsEntityDead(p)) or yes(IsPedOnMount(p)) or yes(IsPedInAnyVehicle(p, false)) then return false end
+        if yes(IsPedLassoed(p)) or yes(IsPedCuffed(p)) or yes(IsPedUsingAnyScenario(p)) then return false end
+        if yes(IsPlayerFreeAiming(PlayerId())) or yes(IsAimCamActive()) then return false end
+        if yes(IsEntityPlayingAnim(p, HANDS_DICT, HANDS_CLIP, 3)) then return false end
+        return unarmed(p)
+    end
+
+    local function play(p, clip, flags)
+        TaskPlayAnim(p, dict, clip, 4.0, -4.0, -1, flags, 0.0, false, 1245184, false, 'UpperbodyFixup_filter', false)
+    end
+
+    feature(function(r)
+        local seq, pointing = 0, 0   -- each press its own number; a thread whose number is gone ends
+
+        local function finish(n, outro)
+            if n == 0 or pointing ~= n then return end
+            pointing = 0
+            local p = ped()
+            if outro and free(p) then
+                play(p, 'outro', FLAGS)
+            else
+                StopAnimTask(p, dict, 'intro', 4.0)
+                StopAnimTask(p, dict, 'loop', 4.0)
+            end
+        end
+
+        keybind({ -- the label is a locale string: see L above
+            name = 'point',
+            description = L('keybinds.point'),
+            descriptionEn = 'Point (hold)',   -- the key-binding page draws Latin only
+            defaultKey = E.point.key,
+            onPressed = function()
+                if pointing ~= 0 then return end
+                local p = ped()
+                if not free(p) then return end
+                lib.requestAnimDict(dict)
+                seq = seq + 1
+                local n = seq
+                pointing = n
+                play(p, 'intro', FLAGS)
+                CreateThread(function()
+                    local t0, looped = GetGameTimer(), false
+                    while pointing == n and alive(r) do
+                        local p2 = ped()
+                        if not free(p2) then return finish(n, false) end
+                        if not looped and GetGameTimer() - t0 >= INTRO_MS then
+                            play(p2, 'loop', LOOP)
+                            looped = true
+                        end
+                        Wait(100)
+                    end
+                end)
+            end,
+            onReleased = function() finish(pointing, true) end,
+        })
+        onStop(function() finish(pointing, false) end)
+    end)
+end
+
 -- ── PVP ──
 if E.pvp.enabled then
     feature(function(r)

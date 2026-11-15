@@ -28,6 +28,9 @@
 WEssentials = {
     handsUp = { enabled = true, key = 'x' },   -- rebindable (Settings > Key Bindings)
 
+    -- hold to point (the game's online Point emote, upper body; 2026-11-15). Rebindable like hands up.
+    point = { enabled = true, key = 'b' },
+
     -- friendly fire between players; togglePvp adds a rebindable key (default 8) to switch it off
     pvp = { enabled = true, toggle = false, key = '8' },
 

@@ -78,7 +78,8 @@
     },
     "keybinds": {
       "handsup": "Raise / lower your hands",
-      "toggle_pvp": "Toggle PVP"
+      "toggle_pvp": "Toggle PVP",
+      "point": "Point (hold the key)"
     },
     "discord": {
       "players": "Players: %d/%d",

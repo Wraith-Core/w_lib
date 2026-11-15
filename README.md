@@ -24,6 +24,11 @@ This document describes the public surface of the library as seen from another r
 (The builders' notebook look in every shared window, plus `lib.place`, `lib.setPins` and `lib.worldEdit` for the next
 waves. Backward compatible: every new field is optional. No window changed its place.)
 
+- جديد (2026-11-15): اضغط B باستمرار فيشير اللاعب بيده (حركة «الإشارة» الأصلية من اللعبة، للجزء العلوي فقط فيقدر يمشي).
+  لا تعمل وهو راكب أو في عربة أو يصوّب أو في يده سلاح أو مقيّد أو رافع يديه. المفتاح يتغير من إعدادات المفاتيح في اللعبة.
+  (Essentials `point = { enabled, key = 'b' }`: hold to point with the game's online Point emote
+  `script_mp@emotes@point@male@unarmed@upper` intro / loop / outro.)
+
 ## 4.4.3 (2026-11-08)
 
 - تنظيف العربات العالقة صار ينظف عربات اللعبة العشوائية فقط، ولا يحذف عربة صنعها سكربت (مثل عربة الوظائف وعربات السرقات). كانت عربة الوظيفة تختفي بعد ظهورها بثواني.
