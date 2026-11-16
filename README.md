@@ -6,6 +6,11 @@ w_lib is the shared library every Wraith resource is built on. It bundles a NUI 
 
 This document describes the public surface of the library as seen from another resource. The library ships encrypted; nothing in this document requires reading its source.
 
+## 4.4.10 (2026-11-16)
+
+إذا خرجت الشخصية من نطاق اللاعب أو تبدّلت أثناء رسم ملامح الوجه، تتوقف المكتبة عن رسم الملامح القديمة وتحرّر الخامة.
+للتجربة داخل اللعبة، راقب حواجب لاعب قريب أو ندوبه، ثم اطلب منه الابتعاد والعودة. تأكد من ظهور ملامحه المحفوظة عند عودته.
+
 ## 4.5.0 (2026-11-12)
 
 شكل الدفتر (تصميم أدوات البناء الجديدة) صار في واجهات المكتبة كلها، وأضيفت قطع مشتركة للسكربتات القادمة.

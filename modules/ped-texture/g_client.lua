@@ -428,17 +428,33 @@ local function checkIfTextureValid(textureId)
   return isValid
 end
 
-local function updateAllPedTexture(ped, category)
+local function pedNetworkId(ped)
+  if DoesEntityExist(ped) and NetworkGetEntityIsNetworked(ped) then
+    return NetworkGetNetworkIdFromEntity(ped)
+  end
+end
+
+local function updateAllPedTexture(ped, category, netId)
+  netId = netId or pedNetworkId(ped)
+  if not netId then return end
+
+  -- Keep the original network identity across streaming waits and retries.
+  local function targetChanged()
+    return pedNetworkId(ped) ~= netId
+  end
+
   if IsScreenFadedOut() or IsLoadingScreenVisible() then
     Wait(2000)
   end
+  if targetChanged() then return end
   delays["updatePedTexture" .. ped] = w.timeout.delay("updatePedTexture" .. ped, 200, function()
     dprint("updateAllPedTexture(), try number:", currentUpdate, json.encode(pedsTextures[ped]))
     GetNumberOfMicrosecondsSinceLastCall()
     dprint("Wait ped ready")
     w.waiter.exec(function()
-      return IsPedReadyToRender(ped)
+      return targetChanged() or IsPedReadyToRender(ped)
     end)
+    if targetChanged() then return end
     dprint(("Ped ready in %.4fms"):format(GetNumberOfMicrosecondsSinceLastCall() / 1000))
     if pedsTextures[ped] and pedsTextures[ped][category] and pedsTextures[ped][category].textureId ~= nil then
       ClearPedTexture(pedsTextures[ped][category].textureId)
@@ -461,13 +477,12 @@ local function updateAllPedTexture(ped, category)
       end
       Wait(200)
       dprint("Restart the updateAllPedTexture() function")
-      return updateAllPedTexture(ped, category)
+      return updateAllPedTexture(ped, category, netId)
     end
 
     dprint("Add layers to texture:", textureId)
     dprint(json.encode(pedsTextures[ped][category]))
 
-    pedsTextures[ped][category].textureId = textureId
     for c = 1, #w.pedTexture.ordersToApply[category] do
       local name = w.pedTexture.ordersToApply[category][c]
       local layer = pedsTextures[ped][category].layers[name]
@@ -491,17 +506,24 @@ local function updateAllPedTexture(ped, category)
       end
       Wait(200)
       dprint("Restart the updateAllPedTexture() function")
-      return updateAllPedTexture(ped, category)
+      return updateAllPedTexture(ped, category, netId)
     end
 
+    if targetChanged() then
+      ReleaseTexture(textureId)
+      return
+    end
+
+    pedsTextures[ped][category].textureId = textureId
     dprint("Apply the ped texture", textureId)
     ApplyTextureOnPed(ped, GetHashFromString(category), textureId)
     UpdatePedTexture(textureId)
     _updatePedVariation(ped)
-    Entity(ped).state:set("w_pedTexture", pedsTextures[ped])
+    if not targetChanged() then
+      Entity(ped).state:set("w_pedTexture", pedsTextures[ped])
+    end
     CreateThread(function()
-      local textureId = textureId
-      w.waiter.exec(function() return IsPedReadyToRender(ped) end)
+      w.waiter.exec(function() return targetChanged() or IsPedReadyToRender(ped) end)
       dprint("Release the ped texture", textureId)
       ReleaseTexture(textureId)
     end)
