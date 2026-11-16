@@ -294,7 +294,7 @@
   border: 1px solid rgba(242, 242, 242, 0.4);
   border-bottom-width: 2px;
   border-radius: 2px;
-  font-family: var(--w-f-num);
+  font-family: 'RDR Lino', var(--w-f-num);   /* the key letter in the Red Dead face (2026-11-16) */
   letter-spacing: 0.06em;
   font-size: clamp(11px, 1.3vh, 14px);
   font-style: normal;
@@ -511,7 +511,7 @@
     inset 0 -2px 0 rgba(10, 10, 10, 0.2),
     0 0 0 1px rgba(10, 10, 10, 0.35),
     0 1px 6px rgba(10, 10, 10, 0.55);
-  font-family: var(--w-f-num);
+  font-family: 'RDR Lino', var(--w-f-num);   /* the key letter in the Red Dead face (2026-11-16) */
   font-size: 0.8em;
   font-style: normal;
   line-height: 1;

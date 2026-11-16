@@ -223,7 +223,7 @@
 .wc-hints{display:flex;align-items:center;gap:clamp(10px,1.4vw,20px);margin-inline-start:auto;color:var(--wc-text-faint);font-family:var(--w-f-label);font-weight:var(--w-wt-label);font-size:calc(clamp(10px,1.3vh,12px) * var(--w-k-label));white-space:nowrap}
 .wc-hints>span{display:inline-flex;align-items:center;gap:6px}
 /* a key cap, the loading screen's kbd: paper outline, figures face, always left to right */
-.wc-key{display:inline-flex;align-items:center;justify-content:center;min-width:1.75em;padding:.2em .4em .1em;border:1px solid rgba(242,242,242,.4);border-radius:2px;font-family:var(--w-f-num);font-size:.95em;line-height:1;letter-spacing:.06em;color:var(--wc-text);background:transparent;direction:ltr;unicode-bidi:isolate;white-space:nowrap}
+.wc-key{display:inline-flex;align-items:center;justify-content:center;min-width:1.75em;padding:.2em .4em .1em;border:1px solid rgba(242,242,242,.4);border-radius:2px;font-family:'RDR Lino',var(--w-f-num);font-size:.95em;line-height:1;letter-spacing:.06em;color:var(--wc-text);background:transparent;direction:ltr;unicode-bidi:isolate;white-space:nowrap}
 .wc-progress{position:relative;flex:1;min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:clamp(12px,1.4vw,20px);padding:clamp(8px,1.2vh,12px) clamp(12px,1.2vw,18px);background:transparent;border-top:1px solid var(--wc-line)}
 .wc-progress .wc-slot{width:clamp(40px,6vh,54px)}
 .wc-progress-name{display:block;font-family:var(--w-f-action);font-weight:var(--w-wt-action);font-size:calc(clamp(15px,2vh,19px) * var(--w-k-action));line-height:calc(var(--w-lh-action) + .15 * var(--w-rtl));color:var(--wc-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

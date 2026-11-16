@@ -3,7 +3,8 @@
    board kit's key chip and faces. Families only: the store layer's sizes (body[data-store-theme])
    are left alone, and nothing here names a wst-* class.
 
-   ★ One key chip everywhere: a paper cap, an ink letter in EB Garamond 600 (kit-lib .wk-key).
+   ★ One key chip everywhere: a paper cap, an ink letter in the game's RDR Lino (kit-lib .wk-key; owner 2026-11-16:
+     the key letters in the Red Dead face in both languages -- this file used to put the prompt's back in Garamond).
    ★ Faces: EB Garamond for words and small figures, Lalezar for Arabic; RDR Catalogue stays for
      big figures only (the location plate's clock, prices on prompts).
    ══════════════════════════════════════════════════════════════════════════════════════════════ */
@@ -16,7 +17,7 @@ html .lb-textui .lb-key {
   border-radius: 0.1em;
   background: var(--w-paper, #F2F2F2);
   color: var(--w-ink, #0B0A0A);
-  font-family: 'EB Garamond', Georgia, serif;
+  font-family: 'RDR Lino', 'EB Garamond', Georgia, serif;
   font-weight: 600;
   font-variant-numeric: lining-nums;
   letter-spacing: 0.02em;
@@ -25,7 +26,7 @@ html .lb-textui .lb-key {
 
 /* the prompt's key caps: same letter face as every other chip */
 html .wl-prompt-root .keyboardKey .text {
-  font-family: 'EB Garamond', Georgia, serif;
+  font-family: 'RDR Lino', 'EB Garamond', Georgia, serif;
   font-weight: 600;
   font-variant-numeric: lining-nums;
   letter-spacing: 0.02em;
