@@ -63,7 +63,8 @@ end
 ---@return boolean
 function w.framework:giveItem(source, item, quantity, meta)
   local ItemData = Inventory.getItem(source, item, meta)
-  return ItemData?.AddItem(quantity, meta)
+  if not ItemData or not ItemData.AddItem then return false end
+  return ItemData.AddItem(quantity, meta)
 end
 
 ---@param invName string unique ID of the inventory
@@ -89,8 +90,8 @@ end
 ---@param invName string name of the inventory
 ---@return boolean
 function w.framework:openInventory(source, invName)
-  local config = inventories[invName]?.config
-  TriggerClientEvent("redemrp_inventory:OpenStash", source, invName, config.maxWeight)
+  local config = inventories[invName] and inventories[invName].config
+  TriggerClientEvent("redemrp_inventory:OpenStash", source, invName, config and config.maxWeight)
   return true
 end
 

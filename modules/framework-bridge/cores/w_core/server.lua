@@ -110,7 +110,7 @@ function w.framework:getItemCount(source, item, meta)
 end
 
 function w.framework:registerUseItem(item, closeAfterUsed, callback)
-  if type(closeAfterUsed) == "function" or (type(closeAfterUsed) == "table" and getmetatable(closeAfterUsed)?.__call) then
+  if type(closeAfterUsed) == "function" or (type(closeAfterUsed) == "table" and getmetatable(closeAfterUsed) and getmetatable(closeAfterUsed).__call) then
     callback = closeAfterUsed
     closeAfterUsed = true
   end

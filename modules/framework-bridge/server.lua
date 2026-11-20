@@ -112,9 +112,24 @@ end
 ---@return string|nil
 function w.framework:getCharacterName(source)
   local user = w.framework.UserClass:get(source)
-  if not user or type(user) ~= "table" then return nil end
-  local ok, name = pcall(user.getRPName, user)
-  return ok and name or nil
+  if user and type(user) == "table" and type(user.getRPName) == "function" then
+    local ok, name = pcall(user.getRPName, user)
+    if ok and type(name) == "string" then
+      local trimmed = name:match("^%s*(.-)%s*$")
+      if trimmed and trimmed ~= "" then return trimmed end
+    end
+  end
+  if w.resourceName ~= "w_lib" and type(exports) == "table" and exports.w_lib then
+    local ok, name = pcall(function() return exports.w_lib:FwGetCharacterName(source) end)
+    if ok and type(name) == "string" then
+      local trimmed = name:match("^%s*(.-)%s*$")
+      if trimmed and trimmed ~= "" then return trimmed end
+    end
+  end
+  if type(GetPlayerName) == "function" then
+    return GetPlayerName(source)
+  end
+  return nil
 end
 
 --- How many of an item the player carries. Adapters may override it; the default asks the
@@ -598,7 +613,7 @@ function w.framework:getUserSkin(source)
   if not skinStandardized.teethHash and not skinStandardized.teethIndex then
     local clothes = self:getUserClothes(source)
     if clothes.teeth then
-      skinStandardized.teethHash = clothes.teeth?.hash
+      skinStandardized.teethHash = type(clothes.teeth) == "table" and clothes.teeth.hash or nil
     end
   end
 
@@ -712,8 +727,8 @@ function w.framework:mergeInventoriesConfiguration(...)
 
   for c = 1, #configs do
     local config = configs[c]
-    inventoryConfig.maxSlots += GetValue(config.maxSlots or 0)
-    inventoryConfig.maxWeight += GetValue(config.maxWeight or 0)
+    inventoryConfig.maxSlots = inventoryConfig.maxSlots + GetValue(config.maxSlots or 0)
+    inventoryConfig.maxWeight = inventoryConfig.maxWeight + GetValue(config.maxWeight or 0)
     inventoryConfig.acceptWeapons = GetValue(config.acceptWeapons or true) and inventoryConfig.acceptWeapons
     inventoryConfig.shared = GetValue(config.shared or true) and inventoryConfig.shared
     inventoryConfig.ignoreStackLimit = GetValue(config.ignoreStackLimit or true) and inventoryConfig.ignoreStackLimit
@@ -723,6 +738,139 @@ function w.framework:mergeInventoriesConfiguration(...)
     inventoryConfig.permissions = table.merge(inventoryConfig.permissions, config.permissions)
   end
   return inventoryConfig
+end
+
+local function isCallable(cb)
+  return type(cb) == "function" or (type(cb) == "table" and getmetatable(cb) and getmetatable(cb).__call ~= nil)
+end
+
+local function delegateServerExport(exportName, cb)
+  if w.resourceName ~= "w_lib" and type(exports) == "table" and exports.w_lib then
+    local ok, registered = pcall(function()
+      return exports.w_lib[exportName](exports.w_lib, cb)
+    end)
+    if ok and registered == true then
+      return true
+    end
+  end
+  return false
+end
+
+local srvUnloadedCallbacks = {}
+local srvJobUpdateCallbacks = {}
+local srvGangUpdateCallbacks = {}
+local srvDutyChangeCallbacks = {}
+local srvPlayerDataCallbacks = {}
+
+local function fireServerLocal(list, ...)
+  for i = 1, #list do
+    pcall(list[i], ...)
+  end
+end
+
+for _, ev in ipairs({
+  "WCore:Server:OnPlayerUnload", "RSGCore:Server:OnPlayerUnload", "QBCore:Server:OnPlayerUnload",
+  "qbr-core:server:OnPlayerUnload", "vorp:PlayerLogout", "vorp_core:Server:OnPlayerUnload",
+}) do
+  AddEventHandler(ev, function(src)
+    fireServerLocal(srvUnloadedCallbacks, tonumber(src))
+  end)
+end
+AddEventHandler("playerDropped", function()
+  fireServerLocal(srvUnloadedCallbacks, tonumber(source))
+end)
+
+for _, ev in ipairs({
+  "WCore:Server:OnJobUpdate", "RSGCore:Server:OnJobUpdate", "QBCore:Server:OnJobUpdate", "qbr-core:server:OnJobUpdate",
+}) do
+  AddEventHandler(ev, function(src, job)
+    fireServerLocal(srvJobUpdateCallbacks, tonumber(src), job)
+  end)
+end
+
+for _, ev in ipairs({ "WCore:Server:OnGangUpdate", "RSGCore:Server:OnGangUpdate", "QBCore:Server:OnGangUpdate" }) do
+  AddEventHandler(ev, function(src, gang)
+    fireServerLocal(srvGangUpdateCallbacks, tonumber(src), gang)
+  end)
+end
+
+for _, ev in ipairs({ "WCore:Player:SetPlayerData", "RSGCore:Player:SetPlayerData", "QBCore:Player:SetPlayerData" }) do
+  AddEventHandler(ev, function(a, b)
+    local src = type(a) == "table" and a.source or a
+    local pd = type(a) == "table" and a or b
+    fireServerLocal(srvPlayerDataCallbacks, tonumber(src), pd)
+  end)
+end
+
+function w.framework:onCharacterUnloaded(cb)
+  if not isCallable(cb) then return false end
+  if delegateServerExport("FwOnCharacterUnloaded", cb) then return true end
+  table.insert(srvUnloadedCallbacks, cb)
+  return true
+end
+
+function w.framework:onJobUpdate(cb)
+  if not isCallable(cb) then return false end
+  if delegateServerExport("FwOnJobUpdate", cb) then return true end
+  table.insert(srvJobUpdateCallbacks, cb)
+  return true
+end
+
+function w.framework:onGangUpdate(cb)
+  if not isCallable(cb) then return false end
+  if delegateServerExport("FwOnGangUpdate", cb) then return true end
+  table.insert(srvGangUpdateCallbacks, cb)
+  return true
+end
+
+function w.framework:onDutyChange(cb)
+  if not isCallable(cb) then return false end
+  if delegateServerExport("FwOnDutyChange", cb) then return true end
+  table.insert(srvDutyChangeCallbacks, cb)
+  return true
+end
+
+function w.framework:onPlayerData(cb)
+  if not isCallable(cb) then return false end
+  if delegateServerExport("FwOnPlayerData", cb) then return true end
+  table.insert(srvPlayerDataCallbacks, cb)
+  return true
+end
+
+--- Resolves `(citizenid, playersRowId)` for the active character or citizenid.
+function w.framework:getCharacterGeneration(srcOrCid)
+  if self:isWraith() then
+    local srcNum = tonumber(srcOrCid)
+    if srcNum then
+      local user = self.UserClass:get(srcNum)
+      local pd = user and type(user.data) == "table" and user.data.PlayerData or nil
+      if type(pd) == "table" and pd.citizenid then
+        return tostring(pd.citizenid), tonumber(pd.id)
+      end
+    end
+  end
+  if w.resourceName ~= "w_lib" and type(exports) == "table" and exports.w_lib then
+    local ok, cid, rowId = pcall(function() return exports.w_lib:FwGetCharacterGeneration(srcOrCid) end)
+    if ok then return cid, rowId end
+  end
+  return srcOrCid ~= nil and tostring(srcOrCid) or nil, nil
+end
+
+--- Consumer-VM citizen generation lease wrapper. Running in the consumer VM keeps
+--- `GetInvokingResource()` equal to the consumer resource when calling `w_core`.
+function w.framework:withCitizenGeneration(cid, rowId, fn)
+  if not isCallable(fn) then return false, "invalid_generation" end
+  if self:isWraith() or (type(GetResourceState) == "function" and GetResourceState("w_core") == "started") then
+    local packed = table.pack(pcall(function()
+      return exports.w_core:WithCitizenGeneration(cid, rowId, fn)
+    end))
+    if not packed[1] or packed.n <= 1 then return false, "generation_unavailable" end
+    return table.unpack(packed, 2, packed.n)
+  end
+  local packed = table.pack(pcall(fn))
+  if not packed[1] then return false, "generation_callback_failed" end
+  if packed.n <= 1 then return true end
+  return table.unpack(packed, 2, packed.n)
 end
 
 -- -----------

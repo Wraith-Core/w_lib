@@ -42,13 +42,56 @@ local function isWeapon(name) local n = tostring(name):upper(); return n:sub(1, 
 -- resource - which is every caller of an export.
 local function isCallable(f)
     local t = type(f)
-    return t == 'function' or (t == 'table' and getmetatable(f)?.__call ~= nil)
+    if t == 'function' then return true end
+    if t == 'table' then
+        local mt = getmetatable(f)
+        return type(mt) == 'table' and mt.__call ~= nil
+    end
+    return false
+end
+
+local IGNORED_META_KEYS = {
+    _w_rsg = true,
+    _vorp = true,
+    durability = true,
+    degrade = true,
+    quality = true,
+    decay = true,
+}
+
+local function matchMetaValue(actual, expected, strict)
+    if actual == expected then return true end
+    if type(actual) ~= 'table' or type(expected) ~= 'table' then return false end
+    for k, v in pairs(expected) do
+        if not matchMetaValue(actual[k], v, strict) then return false end
+    end
+    if strict == true then
+        for k in pairs(actual) do
+            if not IGNORED_META_KEYS[k] and expected[k] == nil then
+                return false
+            end
+        end
+    end
+    return true
+end
+
+local function matchesItemMeta(itemMeta, filterMeta, strict)
+    if filterMeta == nil then return true end
+    if type(filterMeta) ~= 'table' then return itemMeta == filterMeta end
+    local actual = type(itemMeta) == 'table' and itemMeta or {}
+    return matchMetaValue(actual, filterMeta, strict)
 end
 
 -- ───────────────────────── w_inventory (مُتحقَّق) ─────────────────────────
 Adapters['w_inventory'] = {
     resource = 'w_inventory',
-    GetItemCount = function(src, item, meta) return exports.w_inventory:Search(src, 'count', item, meta) or 0 end,
+    GetItemCount = function(src, item, meta, strict)
+        if strict ~= nil then
+            local ok, n = pcall(function() return exports.w_inventory:GetItemCount(src, item, meta, strict) end)
+            if ok and tonumber(n) then return tonumber(n) end
+        end
+        return exports.w_inventory:Search(src, 'count', item, meta) or 0
+    end,
     CanCarry = function(src, item, count) return exports.w_inventory:CanCarryItem(src, item, count) == true end,
     AddItem = function(src, item, count, meta) return exports.w_inventory:AddItem(src, item, count, meta) == true end,
     RemoveItem = function(src, item, count, meta, slot) return exports.w_inventory:RemoveItem(src, item, count, meta, slot) == true end,
@@ -369,31 +412,60 @@ Adapters['qbr-inventory'].GetSlot = function(src, slot)
     return { name = it.name, label = it.label or it.name, count = it.amount or it.count or 1, metadata = it.info or {} }
 end
 
--- ═══════════ Items: an item's definition by name (nil when the inventory has none) ═══════════
---   w_inventory answers from its item list; vorp_inventory from the items table (getItemDB);
---   RSG / QBR from the core's Shared.Items. w_gunsmith asks this at boot to report items it
---   needs that the server never defined.
+-- ═══════════ Items: an item's definition by name (or full catalogue when name == nil) ═══════════
+--   w_inventory answers from its item list; vorp_inventory from getItemDB / CompatItems;
+--   RSG / QBR from the core's Shared.Items.
 Adapters['w_inventory'].Items = function(name)
     local ok, def = pcall(function() return exports.w_inventory:Items(name) end)
     return (ok and type(def) == 'table') and def or nil
 end
 Adapters['vorp_inventory'].Items = function(name)
+    if name == nil then
+        if exports and exports.w_lib then
+            local okC, all = pcall(function() return exports.w_lib:CompatItems() end)
+            if okC and type(all) == 'table' then return all end
+            local okS, shared = pcall(function() return exports.w_lib:FwGetSharedItems() end)
+            if okS and type(shared) == 'table' then return shared end
+        end
+        return {}
+    end
     local ok, def = pcall(function() return exports.vorp_inventory:getItemDB(name) end)
-    return (ok and type(def) == 'table') and def or nil
+    if ok and type(def) == 'table' then return def end
+    if exports and exports.w_lib then
+        local okC, all = pcall(function() return exports.w_lib:CompatItems() end)
+        if okC and type(all) == 'table' and type(all[name]) == 'table' then return all[name] end
+    end
+    return nil
 end
 Adapters['rsg-inventory'].Items = function(name)
-    local ok, def = pcall(function() return exports['rsg-core']:GetCoreObject().Shared.Items[name] end)
-    return (ok and type(def) == 'table') and def or nil
+    local ok, items = pcall(function() return exports['rsg-core']:GetCoreObject().Shared.Items end)
+    if not ok or type(items) ~= 'table' then
+        if exports and exports.w_lib then
+            local okS, shared = pcall(function() return exports.w_lib:FwGetSharedItems() end)
+            if okS and type(shared) == 'table' then items = shared end
+        end
+    end
+    if type(items) ~= 'table' then return name == nil and {} or nil end
+    if name == nil then return items end
+    return type(items[name]) == 'table' and items[name] or nil
 end
 Adapters['qbr-inventory'].Items = function(name)
-    local ok, def = pcall(function() return exports['qbr-core']:GetItems()[name] end)
-    return (ok and type(def) == 'table') and def or nil
+    local ok, items = pcall(function() return exports['qbr-core']:GetItems() end)
+    if not ok or type(items) ~= 'table' then
+        if exports and exports.w_lib then
+            local okS, shared = pcall(function() return exports.w_lib:FwGetSharedItems() end)
+            if okS and type(shared) == 'table' then items = shared end
+        end
+    end
+    if type(items) ~= 'table' then return name == nil and {} or nil end
+    if name == nil then return items end
+    return type(items[name]) == 'table' and items[name] or nil
 end
 
 -- ═══════════ SetMetadata: writing an item's metadata in place (by slot) ═══════════
 --   w_gunsmith keeps a weapon's customisation inside the item's metadata on the
 --   inventories that carry one per item (w_inventory, rsg, qbr). VORP has no per-item
---   metadata for weapons; its adapter answers false and the caller keeps its own table.
+--   metadata for weapons ('w...' slot); regular VORP items delegate to setItemMetadata.
 Adapters['w_inventory'].SetMetadata = function(src, slot, meta)
     local ok, r = pcall(function() return exports.w_inventory:SetMetadata(src, slot, meta) end)
     return ok and r ~= false
@@ -428,7 +500,15 @@ local function rsgFamilySetMetadata(getPlayer, invResource)
 end
 Adapters['rsg-inventory'].SetMetadata = rsgFamilySetMetadata(rsgPlayer, 'rsg-inventory')
 Adapters['qbr-inventory'].SetMetadata = rsgFamilySetMetadata(qbrPlayer, 'qbr-inventory')
-Adapters['vorp_inventory'].SetMetadata = function() return false end
+Adapters['vorp_inventory'].SetMetadata = function(src, slot, meta)
+    if type(slot) == 'string' and slot:sub(1, 1):lower() == 'w' then return false end
+    local id = tonumber(slot)
+    if not id or type(meta) ~= 'table' then return false end
+    local row = await1(function(cb) return exports.vorp_inventory:getItemById(src, id, cb) end)
+    local amount = (type(row) == 'table' and (tonumber(row.count) or tonumber(row.amount))) or 1
+    local res = await1(function(cb) return exports.vorp_inventory:setItemMetadata(src, id, meta, amount, cb) end)
+    return res == true or (type(res) == 'table' and res ~= false)
+end
 
 -- ───────────────────────── الاختيار (كسول) ─────────────────────────
 local INV_ORDER = { 'w_inventory', 'rsg-inventory', 'qbr-inventory', 'vorp_inventory' }
@@ -538,23 +618,70 @@ end
 
 -- ───────────────────────── API عبر exports.w_lib ─────────────────────────
 exports('InvName', function() return ensure() and Aname or nil end)
-exports('InvGetItemCount', function(src, item, meta) return ensure() and (A.GetItemCount(src, item, meta) or 0) or 0 end)
+exports('InvReady', function() return ensure() end)
+exports('InvIsReady', function() return ensure() end)
+exports('InvGetItemCount', function(src, item, meta, strict)
+    if not ensure() then return 0 end
+    if meta ~= nil and Aname ~= 'w_inventory' then
+        local total = 0
+        for _, it in ipairs(A.GetItems and A.GetItems(src) or {}) do
+            if it.name == item and matchesItemMeta(it.metadata, meta, strict) then
+                total = total + (tonumber(it.count) or 1)
+            end
+        end
+        return total
+    end
+    return A.GetItemCount(src, item, meta, strict) or 0
+end)
 exports('InvCanCarry', function(src, item, count) return ensure() and A.CanCarry(src, item, count) == true or false end)
 exports('InvAddItem', function(src, item, count, meta) return ensure() and A.AddItem(src, item, count, meta) == true or false end)
-exports('InvRemoveItem', function(src, item, count, meta, slot) return ensure() and A.RemoveItem(src, item, count, meta, slot) == true or false end)
---- options (optional): { owner = ..., groups = { [job] = minGrade }, coords = vector3 }, handed on to an
---- inventory that knows them (w_inventory). ⚠️ Until 2026-10-14 this export dropped them: boss_<job>
---- and gang_<name> were registered with no groups and no coords, and w_inventory's client open lets
---- anyone into a stash with neither -- from anywhere on the map.
-exports('InvRegisterStash', function(id, label, slots, maxWeight, options)
+exports('InvRemoveItem', function(src, item, count, meta, slot, strict)
+    if not ensure() then return false end
+    if meta ~= nil and slot == nil and Aname ~= 'w_inventory' then
+        local want = tonumber(count) or 1
+        if want <= 0 then return false end
+        local matchedSlots = {}
+        local available = 0
+        for _, it in ipairs(A.GetItems and A.GetItems(src) or {}) do
+            if it.name == item and matchesItemMeta(it.metadata, meta, strict) then
+                local c = tonumber(it.count) or 1
+                available = available + c
+                matchedSlots[#matchedSlots + 1] = { slot = it.slot, count = c, meta = it.metadata }
+            end
+        end
+        if available < want then return false end
+        local left = want
+        for _, s in ipairs(matchedSlots) do
+            if left <= 0 then break end
+            local take = math.min(left, s.count)
+            if A.RemoveItem(src, item, take, s.meta, s.slot) ~= true then
+                return false
+            end
+            left = left - take
+        end
+        return left == 0
+    end
+    return A.RemoveItem(src, item, count, meta, slot) == true
+end)
+--- options (optional): either 5th arg `{ owner, groups, coords }` OR positional `(owner, groups, coords)`
+exports('InvRegisterStash', function(id, label, slots, maxWeight, ownerOrOptions, groups, coords)
     id = tostring(id or '')
     if id == '' then return false end
+
+    local options
+    if type(ownerOrOptions) == 'table' and groups == nil and coords == nil
+        and (ownerOrOptions.owner ~= nil or ownerOrOptions.groups ~= nil or ownerOrOptions.coords ~= nil) then
+        options = ownerOrOptions
+    elseif ownerOrOptions ~= nil or groups ~= nil or coords ~= nil then
+        options = { owner = ownerOrOptions, groups = groups, coords = coords }
+    end
 
     StashDefinitions[id] = {
         id = id,
         label = label or id,
         slots = tonumber(slots) or 50,
         maxweight = tonumber(maxWeight) or 100000,
+        options = options,
     }
 
     return ensure() and A.RegisterStash(id, label or id,
@@ -664,34 +791,63 @@ CreateThread(function()
     end
 end)
 
--- ───────────────────────── several lines at once (w_shops, voice orders) ─────────────────────────
+-- ───────────────────────── several lines at once (w_shops, voice orders, stashes) ─────────────────────────
 -- lines = { { item = 'bread', count = 2, metadata = {...} }, ... } (`name` is accepted for `item`)
 
---- Can the player take every line? -> ok, reason ('inventory_full' | 'unavailable')
-exports('InvCanCarryItems', function(src, lines)
+local function isStashTarget(target)
+    return type(target) == 'string' and tonumber(target) == nil
+end
+
+--- Can the player (or stash) take every line? -> ok, reason ('inventory_full' | 'unavailable')
+exports('InvCanCarryItems', function(target, lines)
     if not ensure() then return false, 'unavailable' end
     if type(lines) ~= 'table' then return false, 'unavailable' end
+    if Aname == 'w_inventory' then
+        local okCall, res, why = pcall(function() return exports.w_inventory:CanCarryItems(target, lines) end)
+        if okCall and res ~= nil then
+            return res == true, res == true and nil or (why or 'inventory_full')
+        end
+    end
+    if isStashTarget(target) then
+        return StashDefinitions[target] ~= nil or Aname == 'w_inventory', nil
+    end
     for _, line in ipairs(lines) do
         local item = line.item or line.name
         if not item then return false, 'unavailable' end
-        if A.CanCarry(src, item, tonumber(line.count) or 1) ~= true then return false, 'inventory_full' end
+        if A.CanCarry(target, item, tonumber(line.count) or 1) ~= true then return false, 'inventory_full' end
     end
     return true
 end)
 
 --- Give every line; on a failure the lines already given are taken back.
 --- -> ok, reason ('inventory_full' | 'rollback_pending' | 'unavailable')
-exports('InvAddItems', function(src, lines)
+exports('InvAddItems', function(target, lines)
     if not ensure() then return false, 'unavailable' end
     if type(lines) ~= 'table' then return false, 'unavailable' end
+    if Aname == 'w_inventory' then
+        local okCall, res, why = pcall(function() return exports.w_inventory:AddItems(target, lines) end)
+        if okCall and res ~= nil then
+            return res == true, res == true and nil or (why or 'inventory_full')
+        end
+    end
+    if isStashTarget(target) then
+        for _, line in ipairs(lines) do
+            local item = line.item or line.name
+            local count = tonumber(line.count) or 1
+            if not item or A.AddItemToStash(target, item, count, line.metadata) ~= true then
+                return false, 'inventory_full'
+            end
+        end
+        return true
+    end
     local given = {}
     for _, line in ipairs(lines) do
         local item = line.item or line.name
         local count = tonumber(line.count) or 1
-        if not item or A.AddItem(src, item, count, line.metadata) ~= true then
+        if not item or A.AddItem(target, item, count, line.metadata) ~= true then
             for i = #given, 1, -1 do
                 local g = given[i]
-                if A.RemoveItem(src, g.item, g.count, g.metadata) ~= true then
+                if A.RemoveItem(target, g.item, g.count, g.metadata) ~= true then
                     return false, 'rollback_pending'
                 end
             end
@@ -700,4 +856,331 @@ exports('InvAddItems', function(src, lines)
         given[#given + 1] = { item = item, count = count, metadata = line.metadata }
     end
     return true
+end)
+
+-- ════════════════════════════════════════════════════════════════════════════
+-- Extended Inv* Server Surface (M1c: Catalogues, Images, Slots, Stashes, Hooks,
+-- Shops, OpenInventory, Weapon Wheel, and Specialized Passthroughs)
+-- ════════════════════════════════════════════════════════════════════════════
+
+local IMAGE_BASES = {
+    w_inventory = 'nui://w_inventory/web/images/',
+    vorp_inventory = 'nui://vorp_inventory/html/img/items/',
+    ['rsg-inventory'] = 'nui://rsg-inventory/html/images/',
+    ['qbr-inventory'] = 'nui://qbr-inventory/html/images/',
+}
+
+local function invImageBase()
+    local active = ensure() and Aname or 'w_inventory'
+    return IMAGE_BASES[active] or IMAGE_BASES.w_inventory
+end
+
+exports('InvImageBase', invImageBase)
+
+exports('InvItemImage', function(item)
+    if type(item) ~= 'string' or item == '' then return nil end
+    local def = ensure() and A.Items and A.Items(item) or nil
+    local img = (type(def) == 'table' and type(def.image) == 'string' and def.image ~= '') and def.image or (item .. '.png')
+    if img:find('^nui://') or img:find('^https?://') then
+        return img
+    end
+    return invImageBase() .. img
+end)
+
+exports('InvWeapons', function(name)
+    if not exports or not exports.w_lib then return name == nil and {} or nil end
+    if name ~= nil then
+        local ok, w = pcall(function() return exports.w_lib:FwGetSharedWeapon(name) end)
+        return ok and w or nil
+    end
+    local ok, all = pcall(function() return exports.w_lib:FwGetSharedWeapons() end)
+    return (ok and type(all) == 'table') and all or {}
+end)
+
+local function getSlotsWithItem(src, item, meta, strict)
+    if not ensure() or type(item) ~= 'string' or item == '' then return {} end
+    if Aname == 'w_inventory' and strict == nil then
+        local ok, rows = pcall(function() return exports.w_inventory:GetSlotsWithItem(src, item, meta) end)
+        if ok and type(rows) == 'table' then return rows end
+    end
+    local out = {}
+    for _, it in ipairs(A.GetItems and A.GetItems(src) or {}) do
+        if it.name == item and matchesItemMeta(it.metadata, meta, strict) then
+            out[#out + 1] = it
+        end
+    end
+    table.sort(out, function(a, b)
+        local sa, sb = tonumber(a.slot), tonumber(b.slot)
+        if sa and sb then return sa < sb end
+        return tostring(a.slot) < tostring(b.slot)
+    end)
+    return out
+end
+
+exports('InvGetSlotsWithItem', getSlotsWithItem)
+
+local function getSlotWithItem(src, item, meta, strict)
+    if not ensure() or type(item) ~= 'string' or item == '' then return nil end
+    if Aname == 'w_inventory' and meta == nil and strict == nil then
+        local ok, row = pcall(function() return exports.w_inventory:GetSlotWithItem(src, item) end)
+        if ok and type(row) == 'table' then return row end
+    end
+    local rows = getSlotsWithItem(src, item, meta, strict)
+    return rows[1]
+end
+
+exports('InvGetSlotWithItem', getSlotWithItem)
+
+exports('InvGetSlotIdWithItem', function(src, item, meta, strict)
+    if not ensure() or type(item) ~= 'string' or item == '' then return nil end
+    if Aname == 'w_inventory' and meta == nil and strict == nil then
+        local ok, slotId = pcall(function() return exports.w_inventory:GetSlotIdWithItem(src, item) end)
+        if ok and slotId ~= nil then return slotId end
+    end
+    local row = getSlotWithItem(src, item, meta, strict)
+    return row and row.slot or nil
+end)
+
+exports('InvGetInventory', function(srcOrId)
+    if not ensure() then return nil end
+    if Aname == 'w_inventory' then
+        local ok, inv = pcall(function() return exports.w_inventory:GetInventory(srcOrId) end)
+        if ok and inv ~= nil then return inv end
+    end
+    local numSrc = tonumber(srcOrId)
+    if numSrc and A.GetItems then
+        return { id = numSrc, items = A.GetItems(numSrc) }
+    end
+    return nil
+end)
+
+exports('InvGetInventoryItems', function(invId, owner)
+    if not ensure() then return {} end
+    if Aname == 'w_inventory' then
+        local ok, items = pcall(function() return exports.w_inventory:GetInventoryItems(invId, owner) end)
+        if ok and type(items) == 'table' then return items end
+    end
+    local numSrc = tonumber(invId)
+    if numSrc and A.GetItems then
+        return A.GetItems(numSrc)
+    end
+    if exports and exports.w_lib then
+        local ok, contents = pcall(function() return exports.w_lib:InvGetStashContents(tostring(invId)) end)
+        if ok and type(contents) == 'table' then return contents end
+    end
+    return {}
+end)
+
+exports('InvRemoveInventory', function(invId)
+    if not ensure() or invId == nil then return false end
+    if Aname == 'w_inventory' then
+        local ok, res = pcall(function() return exports.w_inventory:RemoveInventory(invId) end)
+        return ok and res ~= false
+    end
+    StashDefinitions[tostring(invId)] = nil
+    return true
+end)
+
+exports('InvSetMaxWeight', function(srcOrId, maxWeight)
+    if not ensure() or not tonumber(maxWeight) then return false end
+    if Aname == 'w_inventory' then
+        local ok, res = pcall(function() return exports.w_inventory:SetMaxWeight(srcOrId, tonumber(maxWeight)) end)
+        return ok and res ~= false
+    end
+    return false
+end)
+
+exports('InvRegisterShop', function(shopId, cfg)
+    if not shopId or type(cfg) ~= 'table' then return false end
+    if ensure() and Aname == 'w_inventory' then
+        local ok, res = pcall(function() return exports.w_inventory:RegisterShop(shopId, cfg) end)
+        return ok and res ~= false
+    end
+    return true
+end)
+
+exports('InvOpenInventory', function(src, invType, data)
+    if not ensure() or not tonumber(src) then return false end
+    src = tonumber(src)
+    invType = tostring(invType or 'stash')
+    if Aname == 'w_inventory' then
+        local ok, res = pcall(function() return exports.w_inventory:forceOpenInventory(src, invType, data) end)
+        return ok and res ~= false
+    end
+    if invType == 'stash' then
+        local stashId = type(data) == 'table' and (data.id or data.name) or data
+        if stashId then return A.OpenStash(src, tostring(stashId)) == true end
+    end
+    return false
+end)
+
+-- Hooks, Restart, and ItemAdded listeners
+local HookRegistrations = {}
+local RestartListeners = {}
+local ItemAddedListeners = {}
+
+local function currentInvoker()
+    if type(GetInvokingResource) == 'function' then
+        local inv = GetInvokingResource()
+        if type(inv) == 'string' and inv ~= '' then return inv end
+    end
+    return 'w_lib'
+end
+
+exports('InvRegisterHook', function(eventName, fn, opts)
+    if type(eventName) ~= 'string' or eventName == '' or not isCallable(fn) then return nil end
+    local owner = currentInvoker()
+    if ensure() and Aname == 'w_inventory' then
+        local ok, hookId = pcall(function() return exports.w_inventory:registerHook(eventName, fn, opts) end)
+        if ok and hookId ~= nil then
+            HookRegistrations[#HookRegistrations + 1] = { id = hookId, owner = owner }
+            return hookId
+        end
+    end
+    local syntheticId = #HookRegistrations + 1
+    HookRegistrations[syntheticId] = { id = syntheticId, owner = owner, event = eventName, fn = fn, opts = opts }
+    return syntheticId
+end)
+
+exports('InvOnRestart', function(cb)
+    if not isCallable(cb) then return false end
+    RestartListeners[#RestartListeners + 1] = { fn = cb, owner = currentInvoker() }
+    return true
+end)
+
+exports('InvOnItemAdded', function(cb)
+    if not isCallable(cb) then return false end
+    ItemAddedListeners[#ItemAddedListeners + 1] = { fn = cb, owner = currentInvoker() }
+    return true
+end)
+
+local function fireItemAdded(src, item, count, meta, rawData)
+    src = tonumber(src)
+    if not src or type(item) ~= 'string' or item == '' then return end
+    local amt = tonumber(count) or 1
+    if #ItemAddedListeners == 0 then return end
+    local snap = {}
+    for i = 1, #ItemAddedListeners do snap[i] = ItemAddedListeners[i] end
+    for i = 1, #snap do
+        pcall(snap[i].fn, src, item, amt, meta, rawData)
+    end
+end
+
+AddEventHandler('w_inventory:server:itemAdded', function(src, item, count, meta, rawData)
+    fireItemAdded(src, item, count, meta, rawData)
+end)
+
+AddEventHandler('rsg-inventory:server:itemAdded', function(src, item, count, meta, rawData)
+    if not isStarted('w_inventory') then
+        fireItemAdded(src, item, count, meta, rawData)
+    end
+end)
+
+AddEventHandler('vorp_inventory:Server:OnItemCreated', function(data, src)
+    if not isStarted('w_inventory') and type(data) == 'table' then
+        fireItemAdded(src or source, data.name or data.item, data.count or data.amount or 1, data.metadata, data)
+    end
+end)
+
+AddEventHandler('vorp_inventory:Server:OnItemAdded', function(data, src)
+    if type(data) == 'table' then
+        fireItemAdded(src or source, data.name or data.item, data.count or data.amount or 1, data.metadata, data)
+    end
+end)
+
+AddEventHandler('onResourceStart', function(resource)
+    if Adapters[resource] then
+        ensure()
+        local snap = {}
+        for i = 1, #RestartListeners do snap[i] = RestartListeners[i] end
+        for i = 1, #snap do
+            pcall(snap[i].fn, resource)
+        end
+    end
+end)
+
+AddEventHandler('onResourceStop', function(resource)
+    local own = resource == GetCurrentResourceName()
+    for i = #RestartListeners, 1, -1 do
+        if own or RestartListeners[i].owner == resource then
+            table.remove(RestartListeners, i)
+        end
+    end
+    for i = #ItemAddedListeners, 1, -1 do
+        if own or ItemAddedListeners[i].owner == resource then
+            table.remove(ItemAddedListeners, i)
+        end
+    end
+    for i = #HookRegistrations, 1, -1 do
+        if own or HookRegistrations[i].owner == resource then
+            local h = HookRegistrations[i]
+            table.remove(HookRegistrations, i)
+            if h.id and Aname == 'w_inventory' and isStarted('w_inventory') then
+                pcall(function() exports.w_inventory:removeHooks(h.id) end)
+            end
+        end
+    end
+end)
+
+-- Weapon Wheel & Specialized w_inventory Server Passthroughs
+local function callWInvServer(method, fallback, ...)
+    if ensure() and Aname == 'w_inventory' then
+        local packed = table.pack(pcall(function(...)
+            return exports.w_inventory[method](exports.w_inventory, ...)
+        end, ...))
+        if packed[1] then
+            return table.unpack(packed, 2, packed.n)
+        end
+    end
+    return fallback
+end
+
+exports('InvUseItem', function(src, itemData)
+    if ensure() and Aname == 'vorp_inventory' then
+        if type(TriggerClientEvent) == 'function' then
+            TriggerClientEvent('vorp_inventory:useItem', src, itemData)
+            return true
+        end
+        return false
+    end
+    return callWInvServer('UseItem', false, src, itemData)
+end)
+exports('InvGetEquippedWeapons', function(src) return callWInvServer('GetEquippedWeapons', {}, src) end)
+exports('InvGetLoadedVehicleInventoryId', function(netId) return callWInvServer('GetLoadedVehicleInventoryId', nil, netId) end)
+exports('InvBeginDebtAssetStorage', function(...) return callWInvServer('BeginDebtAssetStorage', false, ...) end)
+exports('InvDebtAssetStorageVersion', function(...) return callWInvServer('DebtAssetStorageVersion', nil, ...) end)
+exports('InvFinishDebtAssetStorage', function(...) return callWInvServer('FinishDebtAssetStorage', false, ...) end)
+exports('InvDebtAssetStorageValue', function(...) return callWInvServer('DebtAssetStorageValue', 0, ...) end)
+exports('InvEscrowMarketListing', function(...) return callWInvServer('EscrowMarketListing', false, ...) end)
+exports('InvDeliverMarketClaim', function(...) return callWInvServer('DeliverMarketClaim', false, ...) end)
+exports('InvSettleGatheringNode', function(...)
+    if not (ensure() and Aname == 'w_inventory') then return false, 'unavailable' end
+    return exports.w_inventory:SettleGatheringNode(...)
+end)
+exports('InvWashJobGold', function(...) return callWInvServer('WashJobGold', false, ...) end)
+exports('InvEnsureGatheringMaterial', function(...) return callWInvServer('EnsureGatheringMaterial', false, ...) end)
+exports('InvGatheringMaterials', function(...) return callWInvServer('GatheringMaterials', {}, ...) end)
+
+local GatheringMaterialListeners = {}
+exports('InvOnGatheringMaterialChanged', function(cb)
+    if not isCallable(cb) then return false end
+    GatheringMaterialListeners[#GatheringMaterialListeners + 1] = { fn = cb, owner = currentInvoker() }
+    return true
+end)
+AddEventHandler('w_inventory:gatheringMaterialChanged', function(item)
+    for i = 1, #GatheringMaterialListeners do
+        pcall(GatheringMaterialListeners[i].fn, item)
+    end
+end)
+
+local GatheringNodeListeners = {}
+exports('InvOnGatheringNodeSettled', function(cb)
+    if not isCallable(cb) then return false end
+    GatheringNodeListeners[#GatheringNodeListeners + 1] = { fn = cb, owner = currentInvoker() }
+    return true
+end)
+AddEventHandler('w_inventory:gatheringNodeSettled', function(cid, track)
+    for i = 1, #GatheringNodeListeners do
+        pcall(GatheringNodeListeners[i].fn, cid, track)
+    end
 end)

@@ -255,8 +255,18 @@ local fromFrameworkToStandard = {
 }
 
 local function getStandardValuefromFramework(category, id)
-  if not fromFrameworkToStandard[category]?[id] then return false end
+  if not (fromFrameworkToStandard[category] and fromFrameworkToStandard[category][id]) then return false end
   return fromFrameworkToStandard[category][id].standard
+end
+
+local function stdId(category, id)
+  local res = getStandardValuefromFramework(category, id)
+  return res and res.id or 0
+end
+
+local function stdPalette(id)
+  local res = getStandardValuefromFramework("ov_palette", id)
+  return res and res.palette or id
 end
 
 local function getFrameworkValueFromStandard(category, data)
@@ -467,7 +477,7 @@ function w.framework:standardizeSkinInternal(skin)
 
   standard.overlays = {}
   standard.overlays.ageing = skin.ageing_t and {
-    id = getStandardValuefromFramework("ov_ageing", skin.ageing_t)?.id or 0,
+    id = stdId("ov_ageing", skin.ageing_t),
     opacity = self:convertToPercent(skin.ageing_op)
   }
   skin.ageing_t = nil
@@ -481,8 +491,8 @@ function w.framework:standardizeSkinInternal(skin)
   skin.beardstabble_op = nil
 
   standard.overlays.blush = skin.blush_t and {
-    id = getStandardValuefromFramework("ov_blush", skin.blush_t)?.id or 0,
-    palette = getStandardValuefromFramework("ov_palette", skin.blush_id)?.palette or skin.blush_id,
+    id = stdId("ov_blush", skin.blush_t),
+    palette = stdPalette(skin.blush_id),
     tint0 = skin.blush_c1,
     opacity = self:convertToPercent(skin.blush_op)
   }
@@ -494,9 +504,9 @@ function w.framework:standardizeSkinInternal(skin)
   standard.overlays.eyebrow = skin.eyebrows_t and (function()
     local standardEyebrow = getStandardValuefromFramework("ov_eyebrows", skin.eyebrows_t)
     return {
-      id = standardEyebrow?.id or 0,
-      sexe = standardEyebrow?.sexe or "m",
-      palette = getStandardValuefromFramework("ov_palette", skin.eyebrows_id)?.palette or skin.eyebrows_id,
+      id = standardEyebrow and standardEyebrow.id or 0,
+      sexe = standardEyebrow and standardEyebrow.sexe or "m",
+      palette = stdPalette(skin.eyebrows_id),
       tint0 = skin.eyebrows_c1,
       opacity = self:convertToPercent(skin.eyebrows_op)
     }
@@ -509,7 +519,7 @@ function w.framework:standardizeSkinInternal(skin)
   standard.overlays.eyeliner = skin.eyeliners_t and {
     id = 0,
     sheetGrid = skin.eyeliners_t,
-    palette = getStandardValuefromFramework("ov_palette", skin.eyeliners_id)?.palette or skin.eyeliners_id,
+    palette = stdPalette(skin.eyeliners_id),
     tint0 = skin.eyeliners_c1,
     opacity = self:convertToPercent(skin.eyeliners_op)
   }
@@ -521,7 +531,7 @@ function w.framework:standardizeSkinInternal(skin)
   standard.overlays.eyeshadow = skin.shadows_t and {
     id = 0,
     sheetGrid = skin.shadows_t,
-    palette = getStandardValuefromFramework("ov_palette", skin.shadows_id)?.palette or skin.shadows_id,
+    palette = stdPalette(skin.shadows_id),
     tint0 = skin.shadows_c1,
     opacity = self:convertToPercent(skin.shadows_op)
   }
@@ -531,7 +541,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.shadows_op = nil
 
   standard.overlays.freckles = skin.freckles_t and {
-    id = getStandardValuefromFramework("ov_freckles", skin.freckles_t)?.id or 0,
+    id = stdId("ov_freckles", skin.freckles_t),
     opacity = self:convertToPercent(skin.freckles_op)
   }
   skin.freckles_t = nil
@@ -540,7 +550,7 @@ function w.framework:standardizeSkinInternal(skin)
   standard.overlays.lipstick = skin.lipsticks_t and {
     id = 0,
     sheetGrid = skin.lipsticks_t,
-    palette = getStandardValuefromFramework("ov_palette", skin.lipsticks_id)?.palette or skin.lipsticks_id,
+    palette = stdPalette(skin.lipsticks_id),
     tint0 = skin.lipsticks_c1,
     tint1 = skin.lipsticks_c2,
     opacity = self:convertToPercent(skin.lipsticks_op)
@@ -552,21 +562,21 @@ function w.framework:standardizeSkinInternal(skin)
   skin.lipsticks_op = nil
 
   standard.overlays.moles = skin.moles_t and {
-    id = getStandardValuefromFramework("ov_moles", skin.moles_t)?.id or 0,
+    id = stdId("ov_moles", skin.moles_t),
     opacity = self:convertToPercent(skin.moles_op)
   }
   skin.moles_t = nil
   skin.moles_op = nil
 
   standard.overlays.scar = skin.scars_t and {
-    id = getStandardValuefromFramework("ov_scars", skin.scars_t)?.id or 0,
+    id = stdId("ov_scars", skin.scars_t),
     opacity = self:convertToPercent(skin.scars_op)
   }
   skin.scars_t = nil
   skin.scars_op = nil
 
   standard.overlays.spots = skin.spots_t and {
-    id = getStandardValuefromFramework("ov_spots", skin.spots_t)?.id or 0,
+    id = stdId("ov_spots", skin.spots_t),
     opacity = self:convertToPercent(skin.spots_op)
   }
   skin.spots_t = nil

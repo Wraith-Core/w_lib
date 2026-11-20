@@ -10,22 +10,20 @@ function w.framework.UserClass:get(source)
     return false, eprint("w.framework.UserClass:get() -> source value is wrong:", GetValue(source, "nil"))
   end
 
-  local user = {}
-  setmetatable(user, self)
-  self.__index = self
-  self.source = tonumber(source)
-
-  local data = TPZ.GetPlayer(self.source)
+  local src = tonumber(source)
+  local data = TPZ.GetPlayer(src)
 
   if not data then
-    return false, eprint("User doesn't exist. source:", self.source)
+    return false, eprint("User doesn't exist. source:", src)
   end
 
   if not data.loaded() then
-    return false, eprint("User is on session, character is not selected.", self.source)
+    return false, eprint("User is on session, character is not selected.", src)
   end
 
-  self.data = data
+  local user = setmetatable({}, { __index = self })
+  user.source = src
+  user.data = data
   return user
 end
 

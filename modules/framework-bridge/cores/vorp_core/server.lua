@@ -221,8 +221,13 @@ local fromFrameworkToStandard = {
 }
 
 local function getStandardValuefromFramework(category, id)
-  if not fromFrameworkToStandard[category]?[id] then return false end
+  if not (fromFrameworkToStandard[category] and fromFrameworkToStandard[category][id]) then return false end
   return fromFrameworkToStandard[category][id].standard
+end
+
+local function stdId(category, id)
+  local res = getStandardValuefromFramework(category, id)
+  return res and res.id or 0
 end
 
 local function getFrameworkValueFromStandard(category, data)
@@ -246,17 +251,15 @@ function w.framework.UserClass:get(source)
     return false, eprint("w.framework.UserClass:get() -> source value is wrong:", GetValue(source, "nil"))
   end
 
-  local user = {}
-  setmetatable(user, self)
-  self.__index = self
-  self.source = tonumber(source)
-
-  local data = Core.getUser(self.source)
+  local src = tonumber(source)
+  local data = Core.getUser(src)
   if not data then
-    return false, eprint("User doesn't exist. source:", self.source)
+    return false, eprint("User doesn't exist. source:", src)
   end
 
-  self.data = data.getUsedCharacter
+  local user = setmetatable({}, { __index = self })
+  user.source = src
+  user.data = data.getUsedCharacter
   return user
 end
 
@@ -600,7 +603,7 @@ function w.framework:standardizeSkinInternal(skin)
   standard.overlays = {}
 
   standard.overlays.ageing = needOverlay(skin.ageing_visibility) and {
-    id = getStandardValuefromFramework("ov_ageing", skin.ageing_tx_id)?.id or 0,
+    id = stdId("ov_ageing", skin.ageing_tx_id),
     opacity = self:convertToPercent(skin.ageing_opacity)
   }
   skin.ageing_tx_id = nil
@@ -617,7 +620,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.beardstabble_visibility = nil
 
   standard.overlays.blush = needOverlay(skin.blush_visibility) and {
-    id = getStandardValuefromFramework("ov_blush", skin.blush_tx_id)?.id or 0,
+    id = stdId("ov_blush", skin.blush_tx_id),
     tint0 = skin.blush_palette_color_primary,
     opacity = self:convertToPercent(skin.blush_opacity)
   }
@@ -629,8 +632,8 @@ function w.framework:standardizeSkinInternal(skin)
   standard.overlays.eyebrow = needOverlay(skin.eyebrows_visibility) and (function()
     local standardEyebrow = getStandardValuefromFramework("ov_eyebrows", skin.eyebrows_tx_id)
     return {
-      id = standardEyebrow?.id or 0,
-      sexe = standardEyebrow?.sexe or "m",
+      id = standardEyebrow and standardEyebrow.id or 0,
+      sexe = standardEyebrow and standardEyebrow.sexe or "m",
       tint0 = skin.eyebrows_color,
       opacity = self:convertToPercent(skin.eyebrows_opacity)
     }
@@ -641,7 +644,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.eyebrows_visibility = nil
 
   standard.overlays.eyeliner = needOverlay(skin.eyeliner_visibility) and {
-    id = getStandardValuefromFramework("ov_eyeliners", skin.eyeliner_tx_id)?.id or 0,
+    id = stdId("ov_eyeliners", skin.eyeliner_tx_id),
     sheetGrid = decrease(skin.eyeliner_palette_id),
     tint0 = skin.eyeliner_color_primary,
     opacity = self:convertToPercent(skin.eyeliner_opacity)
@@ -668,7 +671,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.shadows_visibility = nil
 
   standard.overlays.freckles = needOverlay(skin.freckles_visibility) and {
-    id = getStandardValuefromFramework("ov_freckles", skin.freckles_tx_id)?.id or 0,
+    id = stdId("ov_freckles", skin.freckles_tx_id),
     opacity = self:convertToPercent(skin.freckles_opacity)
   }
   skin.freckles_tx_id = nil
@@ -691,7 +694,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.lipsticks_visibility = nil
 
   standard.overlays.moles = needOverlay(skin.moles_visibility) and {
-    id = getStandardValuefromFramework("ov_moles", skin.moles_tx_id)?.id or 0,
+    id = stdId("ov_moles", skin.moles_tx_id),
     opacity = self:convertToPercent(skin.moles_opacity)
   }
   skin.moles_tx_id = nil
@@ -699,7 +702,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.moles_visibility = nil
 
   standard.overlays.scar = needOverlay(skin.scars_visibility) and {
-    id = getStandardValuefromFramework("ov_scars", skin.scars_tx_id)?.id or 0,
+    id = stdId("ov_scars", skin.scars_tx_id),
     opacity = self:convertToPercent(skin.scars_opacity)
   }
   skin.scars_tx_id = nil
@@ -707,7 +710,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.scars_visibility = nil
 
   standard.overlays.spots = needOverlay(skin.spots_visibility) and {
-    id = getStandardValuefromFramework("ov_spots", skin.spots_tx_id)?.id or 0,
+    id = stdId("ov_spots", skin.spots_tx_id),
     opacity = self:convertToPercent(skin.spots_opacity)
   }
   skin.spots_tx_id = nil
@@ -715,7 +718,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.spots_visibility = nil
 
   standard.overlays.acne = needOverlay(skin.acne_visibility) and {
-    id = getStandardValuefromFramework("ov_acne", skin.acne_tx_id)?.id or 0,
+    id = stdId("ov_acne", skin.acne_tx_id),
     opacity = self:convertToPercent(skin.acne_opacity)
   }
   skin.acne_tx_id = nil
@@ -723,7 +726,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.acne_visibility = nil
 
   standard.overlays.grime = needOverlay(skin.grime_visibility) and {
-    id = getStandardValuefromFramework("ov_grime", skin.grime_tx_id)?.id or 0,
+    id = stdId("ov_grime", skin.grime_tx_id),
     opacity = self:convertToPercent(skin.grime_opacity)
   }
   skin.grime_tx_id = nil
@@ -731,7 +734,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.grime_visibility = nil
 
   standard.overlays.hair = needOverlay(skin.hair_visibility) and {
-    id = getStandardValuefromFramework("ov_hair", skin.hair_tx_id)?.id or 0,
+    id = stdId("ov_hair", skin.hair_tx_id),
     tint0 = skin.hair_color_primary,
     opacity = self:convertToPercent(skin.hair_opacity)
   }
@@ -741,7 +744,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.hair_visibility = nil
 
   standard.overlays.complex = needOverlay(skin.complex_visibility) and {
-    id = getStandardValuefromFramework("ov_complex", skin.complex_tx_id)?.id or 0,
+    id = stdId("ov_complex", skin.complex_tx_id),
     opacity = self:convertToPercent(skin.complex_opacity)
   }
   skin.complex_tx_id = nil
@@ -749,7 +752,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.complex_visibility = nil
 
   standard.overlays.disc = needOverlay(skin.disc_visibility) and {
-    id = getStandardValuefromFramework("ov_disc", skin.disc_tx_id)?.id or 0,
+    id = stdId("ov_disc", skin.disc_tx_id),
     opacity = self:convertToPercent(skin.disc_opacity)
   }
   skin.disc_tx_id = nil
@@ -757,7 +760,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.disc_visibility = nil
 
   standard.overlays.foundation = needOverlay(skin.foundation_visibility) and {
-    id = getStandardValuefromFramework("ov_foundation", skin.foundation_tx_id)?.id or 0,
+    id = stdId("ov_foundation", skin.foundation_tx_id),
     tint0 = skin.foundation_palette_color_primary,
     tint1 = skin.foundation_palette_color_secondary,
     tint2 = skin.foundation_palette_color_tertiary,
@@ -773,7 +776,7 @@ function w.framework:standardizeSkinInternal(skin)
   skin.foundation_visibility = nil
 
   standard.overlays.masks = needOverlay(skin.paintedmasks_visibility) and {
-    id = getStandardValuefromFramework("ov_paintedmasks", skin.paintedmasks_tx_id)?.id or 0,
+    id = stdId("ov_paintedmasks", skin.paintedmasks_tx_id),
     tint0 = skin.paintedmasks_palette_color_primary,
     tint1 = skin.paintedmasks_palette_color_secondary,
     tint2 = skin.paintedmasks_palette_color_tertiary,
@@ -1219,7 +1222,7 @@ function w.framework:updateUserClothesInternal(source, clothes, overwrite)
     newClothes[category] = table.copy(value)
     if type(value) == "table" then
       if not value.drawable and not value.wearableState then
-        newClothes[category].comp = GetValue(value?.hash, 0)
+        newClothes[category].comp = GetValue(value and value.hash, 0)
       else
         newClothes[category].comp = value
       end
@@ -1228,7 +1231,7 @@ function w.framework:updateUserClothesInternal(source, clothes, overwrite)
   local user = self.UserClass:get(source)
   local tints = overwrite and {} or UnJson(user.data.comptTints)
   for category, value in pairs(clothes) do
-    if type(value) == "table" and GetValue(value?.hash, 0) ~= 0 then
+    if type(value) == "table" and GetValue(value and value.hash, 0) ~= 0 then
       local tint = {
         state = value.state
       }

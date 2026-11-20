@@ -62,7 +62,7 @@ function w.framework:createInventory(id, name, invConfig)
   -- RSG Inventory is defined in g, not kg
   -------------
   if inventoriesCreated[id].config.maxWeight then
-    inventoriesCreated[id].config.maxWeight *= 1000
+    inventoriesCreated[id].config.maxWeight = inventoriesCreated[id].config.maxWeight * 1000
   end
 end
 

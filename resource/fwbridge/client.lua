@@ -29,3 +29,66 @@ exports('FwWeaponSerial', function()
     end
     return nil, hash
 end)
+
+local function isWCoreClient()
+    return WFW.Host == 'w_core' or (type(GetResourceState) == 'function' and GetResourceState('w_core') == 'started')
+end
+
+local function isPlayerLoaded()
+    if WFW._Client and WFW._Client.isLoaded and WFW._Client.isLoaded() then
+        return true
+    end
+    if WFW._Client and WFW._Client.hasExplicitState and WFW._Client.hasExplicitState() then
+        return false
+    end
+    if type(LocalPlayer) == 'table' and type(LocalPlayer.state) == 'table' then
+        if LocalPlayer.state.isLoggedIn == true or LocalPlayer.state.IsInSession == true then
+            return true
+        end
+    end
+    if WFW.Name == 'rsgcore' then
+        local pd = exports.w_lib:FwGetPlayerData()
+        if type(pd) == 'table' and pd.citizenid ~= nil and pd.citizenid ~= '' then
+            return true
+        end
+    end
+    return false
+end
+
+exports('FwIsPlayerLoaded', isPlayerLoaded)
+exports('FwIsLoggedIn', isPlayerLoaded)
+
+local function setHudVisible(visible)
+    local show = (visible ~= false)
+    pcall(TriggerEvent, show and 'hud:client:showui' or 'hud:client:Hideui')
+    pcall(TriggerEvent, show and 'hud:client:showUiWithHoutStement' or 'hud:client:hideUiWithHoutStement')
+    if WFW.Name == 'vorp' or (type(GetResourceState) == 'function' and GetResourceState('vorp_core') == 'started' and not isWCoreClient()) then
+        pcall(TriggerEvent, 'vorp:showUi', show)
+    end
+    if not show then
+        pcall(TriggerEvent, 'chat:clear')
+    end
+    return true
+end
+
+exports('FwSetHudVisible', setHudVisible)
+exports('FwHideFrameworkHud', function(hide)
+    return setHudVisible(not (hide == true))
+end)
+
+exports('FwToggleDuty', function()
+    if type(TriggerServerEvent) == 'function' then
+        TriggerServerEvent('w_lib:fw:server:toggleDuty')
+        return true
+    end
+    return false
+end)
+
+exports('FwReloadAppearance', function()
+    if type(GetResourceState) == 'function' and GetResourceState('vorp_character') == 'started' then
+        Wait(200)
+        TriggerEvent('vorpcharacter:reloadafterdeath')
+        return true
+    end
+    return false
+end)

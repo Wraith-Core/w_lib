@@ -41,14 +41,22 @@ function FW.GetCharacterIdentifier(source)
     return nil
 end
 
+local function trimNonEmpty(s)
+    if type(s) ~= 'string' then return nil end
+    local trimmed = s:match('^%s*(.-)%s*$')
+    return (trimmed and trimmed ~= '') and trimmed or nil
+end
+
 function FW.GetCharacterName(source)
     local char = FW.GetCharacter(source)
     if not char then return GetPlayerName(source) end
     if WFW.Name == "vorp" then
-        return (char.firstname or "") .. " " .. (char.lastname or "")
+        local name = trimNonEmpty((char.firstname or "") .. " " .. (char.lastname or ""))
+        return name or GetPlayerName(source)
     elseif WFW.Name == "rsgcore" then
         local info = char.charinfo or {}
-        return (info.firstname or "") .. " " .. (info.lastname or "")
+        local name = trimNonEmpty((info.firstname or "") .. " " .. (info.lastname or ""))
+        return name or GetPlayerName(source)
     end
     return GetPlayerName(source)
 end
@@ -233,6 +241,9 @@ function FW.SetJob(source, jobName, grade)
             local char = user.getUsedCharacter
             char.setJob(jobName, false)
             char.setJobGrade(grade or 0, false)
+            if WFW._Server and WFW._Server.emitJobUpdate then
+                WFW._Server.emitJobUpdate(source)
+            end
             return true
         end
     elseif WFW.Name == "rsgcore" then
@@ -258,6 +269,9 @@ function FW.SetJobLabel(source, label)
         local user = FW.GetUser(source)
         if user and user.getUsedCharacter then
             user.getUsedCharacter.setJobLabel(label)
+            if WFW._Server and WFW._Server.emitJobUpdate then
+                WFW._Server.emitJobUpdate(source)
+            end
             return true
         end
     elseif WFW.Name == "rsgcore" then
@@ -288,6 +302,9 @@ function FW.SetJobGrade(source, grade)
         local user = FW.GetUser(source)
         if user and user.getUsedCharacter then
             user.getUsedCharacter.setJobGrade(grade, false)
+            if WFW._Server and WFW._Server.emitJobUpdate then
+                WFW._Server.emitJobUpdate(source)
+            end
             return true
         end
     elseif WFW.Name == "rsgcore" then
@@ -1009,7 +1026,7 @@ function FW.RemoveItemOffline(charId, itemName, count)
 
         for _, item in pairs(inventory) do
             if type(item) == 'table' and item.name == itemName then
-                available += tonumber(item.count or item.amount) or 0
+                available = available + (tonumber(item.count or item.amount) or 0)
             end
         end
 
@@ -1023,8 +1040,8 @@ function FW.RemoveItemOffline(charId, itemName, count)
             if type(item) == 'table' and item.name == itemName then
                 local itemCount = tonumber(item.count or item.amount) or 0
                 local take = math.min(itemCount, remaining)
-                itemCount -= take
-                remaining -= take
+                itemCount = itemCount - take
+                remaining = remaining - take
 
                 if itemCount <= 0 then
                     inventory[key] = nil
@@ -1113,7 +1130,7 @@ function FW.AddWeaponOffline(charId, weaponName, ammo)
 
         local ammoCount = 0
         if type(ammo) == 'table' then
-            for _, amount in pairs(ammo) do ammoCount += tonumber(amount) or 0 end
+            for _, amount in pairs(ammo) do ammoCount = ammoCount + (tonumber(amount) or 0) end
         else
             ammoCount = tonumber(ammo) or 0
         end
@@ -1209,9 +1226,344 @@ local API = {
     'CanCarryItem', 'CanCarryWeapon', 'ClearInventory',
     'GetOfflineInventory', 'AddItemOffline', 'RemoveItemOffline', 'AddWeaponOffline', 'RemoveWeaponOffline',
 }
-for _, name in ipairs(API) do
-    exports('Fw' .. name, FW[name])
+-- The native VORP/RSG/QBR implementations above keep their exact behaviour. Every
+-- other detected core comes through the module UserClass contract here, so consumers
+-- still see one Fw* API and never learn which core is running underneath.
+local function moduleUser(source)
+    if WFW.Name ~= 'module' or type(w) ~= 'table' or not w.framework then return nil end
+    local ok, user = pcall(w.framework.UserClass.get, w.framework.UserClass, tonumber(source))
+    return ok and type(user) == 'table' and user or nil
 end
+
+local function moduleIds(source)
+    if WFW.Name ~= 'module' or type(w) ~= 'table' or not w.framework then return nil end
+    local ok, ids = pcall(w.framework.getUserIdentifiers, w.framework, tonumber(source))
+    return ok and type(ids) == 'table' and ids or nil
+end
+
+local function moduleCall(user, method, ...)
+    if not user or type(user[method]) ~= 'function' then return nil end
+    local ok, value = pcall(user[method], user, ...)
+    return ok and value or nil
+end
+
+local function moduleMoney(source, kind)
+    return tonumber(moduleCall(moduleUser(source), 'getMoney', kind)) or 0
+end
+
+local function moduleGrade(source)
+    local user = moduleUser(source)
+    return tonumber(moduleCall(user, 'getJobGrade'))
+        or (WFW.Core and WFW.Core.Shared and 0) or 0
+end
+
+local GENERIC
+GENERIC = {
+    GetUser = function(source)
+        local user = moduleUser(source)
+        return user and user.data or nil
+    end,
+    GetCharacter = function(source)
+        return GENERIC.GetUser(source)
+    end,
+    GetCharacterIdentifier = function(source)
+        local ids = moduleIds(source)
+        if not ids then return nil end
+        local value = ids.charid
+        if value == nil or value == 0 or value == '' then value = ids.identifier end
+        return value ~= nil and tostring(value) or nil
+    end,
+    GetIdentifier = function(source)
+        local ids = moduleIds(source)
+        return ids and ids.identifier or nil
+    end,
+    GetCharacterName = function(source)
+        local name = trimNonEmpty(moduleCall(moduleUser(source), 'getRPName'))
+        return name or GetPlayerName(source)
+    end,
+    GetJob = function(source)
+        return moduleCall(moduleUser(source), 'getJob') or 'unemployed'
+    end,
+    GetJobLabel = function(source)
+        return GENERIC.GetJob(source)
+    end,
+    GetJobGrade = moduleGrade,
+    GetMoney = function(source) return moduleMoney(source, 0) end,
+    GetGold = function(source) return moduleMoney(source, 1) end,
+    SetJob = function(source, job, grade)
+        local ok = moduleCall(moduleUser(source), 'setJob', job, tonumber(grade) or 0) == true
+        if ok and WFW._Server and WFW._Server.emitJobUpdate then
+            WFW._Server.emitJobUpdate(source)
+        end
+        return ok
+    end,
+    SetJobGrade = function(source, grade)
+        return GENERIC.SetJob(source, GENERIC.GetJob(source), grade)
+    end,
+    AddCurrency = function(source, kind, amount)
+        return moduleCall(moduleUser(source), 'addMoney', amount, kind) == true
+    end,
+    RemoveCurrency = function(source, kind, amount)
+        return moduleCall(moduleUser(source), 'removeMoney', amount, kind) == true
+    end,
+    GetCharacterData = function(source)
+        local cid = GENERIC.GetCharacterIdentifier(source)
+        if not cid then return nil end
+        return {
+            firstname = '', lastname = GENERIC.GetCharacterName(source) or '',
+            job = GENERIC.GetJob(source), jobLabel = GENERIC.GetJobLabel(source),
+            jobGrade = GENERIC.GetJobGrade(source), money = GENERIC.GetMoney(source),
+            gold = GENERIC.GetGold(source), xp = 0,
+            charIdentifier = cid, identifier = GENERIC.GetIdentifier(source),
+        }
+    end,
+}
+
+for _, name in ipairs(API) do
+    exports('Fw' .. name, function(...)
+        if WFW.Name == 'module' and GENERIC[name] then return GENERIC[name](...) end
+        return FW[name](...)
+    end)
+end
+
+local function getChar(source)
+    if WFW.Name == 'module' then return GENERIC.GetCharacter(source) end
+    return FW.GetCharacter(source)
+end
+
+local vorpDuty = {}
+local vorpMeta = {}
+local vorpMetaLoaded = {}
+local vorpMetaTableReady = false
+
+local function ensureVorpMetaTable()
+    if vorpMetaTableReady then return true end
+    if type(MySQL) ~= 'table' or not MySQL.query or not MySQL.query.await then return false end
+    local ok = pcall(MySQL.query.await, [[
+        CREATE TABLE IF NOT EXISTS w_fw_metadata (
+            charid VARCHAR(64) NOT NULL,
+            meta_key VARCHAR(64) NOT NULL,
+            meta_val LONGTEXT NULL,
+            PRIMARY KEY (charid, meta_key)
+        )
+    ]])
+    if ok then vorpMetaTableReady = true end
+    return ok
+end
+
+local function vorpCidKey(source)
+    local cid = exports.w_lib:FwGetCharacterIdentifier(source)
+    if cid == nil then return nil end
+    return tostring(cid)
+end
+
+local function loadVorpMeta(source, force)
+    local src = tonumber(source)
+    if not src then return {} end
+    local cid = vorpCidKey(src)
+    if not cid then return vorpMeta[src] or {} end
+    if vorpMetaLoaded[src] == cid and not force then
+        return vorpMeta[src] or {}
+    end
+    vorpMeta[src] = vorpMeta[src] or {}
+    if ensureVorpMetaTable() then
+        local ok, rows = pcall(MySQL.query.await, 'SELECT meta_key, meta_val FROM w_fw_metadata WHERE charid = ?', { cid })
+        if ok and type(rows) == 'table' then
+            for _, row in ipairs(rows) do
+                if type(row.meta_key) == 'string' then
+                    local val = row.meta_val
+                    if type(val) == 'string' then
+                        local dok, decoded = pcall(json.decode, val)
+                        if dok then val = decoded end
+                    end
+                    if vorpMeta[src][row.meta_key] == nil then
+                        vorpMeta[src][row.meta_key] = val
+                    end
+                end
+            end
+        end
+    end
+    vorpMetaLoaded[src] = cid
+    return vorpMeta[src]
+end
+
+local function clearVorpState(source)
+    local src = tonumber(source)
+    if not src then return end
+    vorpDuty[src] = nil
+    vorpMeta[src] = nil
+    vorpMetaLoaded[src] = nil
+end
+
+WFW._Server = {
+    FW = FW,
+    GENERIC = GENERIC,
+    getChar = getChar,
+    trimNonEmpty = trimNonEmpty,
+    activeBag = activeBag,
+    vorpDuty = vorpDuty,
+    vorpMeta = vorpMeta,
+    vorpMetaLoaded = vorpMetaLoaded,
+    ensureVorpMetaTable = ensureVorpMetaTable,
+    loadVorpMeta = loadVorpMeta,
+    clearVorpState = clearVorpState,
+}
+
+local function buildJobInfo(source)
+    local src = tonumber(source)
+    local data = getChar(src)
+    local job = type(data) == 'table' and data.job or nil
+    if WFW.Name == 'vorp' or WFW.Name == 'module' then job = nil end
+
+    local jobName = exports.w_lib:FwGetJob(src) or 'unemployed'
+    local jobLabelVal = exports.w_lib:FwGetJobLabel(src) or jobName
+    local gradeNum = tonumber(exports.w_lib:FwGetJobGrade(src)) or 0
+
+    local sharedJobs = WFW._Shared and WFW._Shared.getSharedJobs and WFW._Shared.getSharedJobs() or {}
+    local jobDef = type(sharedJobs) == 'table' and sharedJobs[jobName] or nil
+    local gradeDef = jobDef and type(jobDef.grades) == 'table' and (jobDef.grades[gradeNum] or jobDef.grades[tostring(gradeNum)]) or nil
+
+    local onduty = true -- cores without a duty flag: holding the job is enough unless toggled
+    if (WFW.Name == 'vorp' or WFW.Name == 'module') and src and vorpDuty[src] ~= nil then
+        onduty = vorpDuty[src] == true
+    elseif type(job) == 'table' and job.onduty ~= nil then
+        onduty = job.onduty == true
+    end
+
+    local gradeTable = type(job) == 'table' and type(job.grade) == 'table' and job.grade or nil
+    local gradeName = (gradeTable and gradeTable.name) or (gradeDef and gradeDef.name) or ''
+    local gradeNameAr = (gradeTable and gradeTable.name_ar) or (gradeDef and gradeDef.name_ar) or gradeName
+    local labelAr = (type(job) == 'table' and job.label_ar) or (jobDef and jobDef.label_ar) or jobLabelVal
+    local jobType = (type(job) == 'table' and job.type) or (jobDef and jobDef.type) or 'none'
+    local payment = (type(job) == 'table' and tonumber(job.payment))
+        or (gradeTable and tonumber(gradeTable.payment))
+        or (gradeDef and tonumber(gradeDef.payment))
+        or 0
+    local isboss = (type(job) == 'table' and job.isboss == true)
+        or (gradeTable and gradeTable.isboss == true)
+        or (gradeDef and gradeDef.isboss == true)
+        or false
+
+    return {
+        name = jobName,
+        label = jobLabelVal,
+        label_ar = labelAr,
+        grade = gradeNum,
+        gradeName = gradeName,
+        grade_name_ar = gradeNameAr,
+        onduty = onduty,
+        isboss = isboss,
+        type = jobType,
+        payment = payment,
+    }
+end
+
+WFW._Server.buildJobInfo = buildJobInfo
+
+-- Normalised contracts used by all w_* resources. These functions deliberately do
+-- not expose a framework object, so a new core cannot leak into a consumer script.
+exports('FwGetJobInfo', buildJobInfo)
+
+-- Metadata that several resources need (death, last stand, cuffs, jail, hunger,
+-- thirst, licences). On RSG-shaped cores it is PlayerData.metadata; on VORP/module
+-- the character fields + vorpMeta / w_fw_metadata overlay are returned.
+exports('FwGetMetadata', function(source, key)
+    local src = tonumber(source)
+    local data = getChar(src)
+    local out
+    if WFW.Name == 'rsgcore' then
+        if type(data) ~= 'table' then
+            return key ~= nil and nil or {}
+        end
+        out = type(data.metadata) == 'table' and data.metadata or data
+        if type(out) ~= 'table' then out = {} end
+    else
+        out = {}
+        if type(data) == 'table' then
+            if type(data.metadata) == 'table' then
+                for k, v in pairs(data.metadata) do out[k] = v end
+            else
+                for k, v in pairs(data) do
+                    if type(v) ~= 'function' then out[k] = v end
+                end
+            end
+        end
+        local overlay = src and loadVorpMeta(src) or {}
+        for k, v in pairs(overlay) do out[k] = v end
+        if out.licences == nil then
+            out.licences = type(out.licenses) == 'table' and out.licenses or {}
+        end
+        if out.licenses == nil then
+            out.licenses = out.licences
+        end
+    end
+
+    if key ~= nil then
+        if key == 'licences' and out.licences == nil then
+            return type(out.licenses) == 'table' and out.licenses or {}
+        end
+        if key == 'licenses' and out.licenses == nil then
+            return type(out.licences) == 'table' and out.licences or {}
+        end
+        return out[key]
+    end
+    return out
+end)
+
+exports('FwGetHelpless', function(source)
+    local metadata = exports.w_lib:FwGetMetadata(source)
+    if metadata.isdead == true or metadata.inlaststand == true then return 'down' end
+    if metadata.ishandcuffed == true then return 'cuffed' end
+    if (tonumber(metadata.injail) or 0) > 0 then return 'jailed' end
+    if WFW.Host == 'w_core' and GetResourceState('w_medic') == 'started' then
+        local ok, dead = pcall(function() return exports.w_medic:IsDead(tonumber(source)) end)
+        if ok and dead then return 'down' end
+    end
+    return false
+end)
+
+exports('FwGetLoadedPlayers', function()
+    local out = {}
+    for _, id in ipairs(GetPlayers()) do
+        local src = tonumber(id)
+        if src and exports.w_lib:FwGetCharacterIdentifier(src) then out[#out + 1] = src end
+    end
+    return out
+end)
+
+exports('FwGetSource', function(cid)
+    cid = tostring(cid or '')
+    for _, src in ipairs(exports.w_lib:FwGetLoadedPlayers()) do
+        if tostring(exports.w_lib:FwGetCharacterIdentifier(src) or '') == cid then return src end
+    end
+    return nil
+end)
+
+-- Event registration exports (FwOnCharacterLoaded, FwOnCharacterUnloaded, FwOnJobUpdate, etc.)
+-- live in resource/fwbridge/server/events.lua (loaded immediately after server.lua).
+
+-- The complete identity contract used by resource bridges. A consumer can keep
+-- its own local semantics without ever naming a core resource or event.
+exports('FwGetFrameworkContract', function()
+    return {
+        cid = function(src)
+            local id = exports.w_lib:FwGetCharacterIdentifier(src)
+            return id ~= nil and tostring(id) or nil
+        end,
+        name = function(src)
+            return exports.w_lib:FwGetCharacterName(src) or GetPlayerName(src) or ('#' .. tostring(src))
+        end,
+        job = function(src)
+            local job = exports.w_lib:FwGetJobInfo(src)
+            return job and job.name and job or nil
+        end,
+        players = function() return exports.w_lib:FwGetLoadedPlayers() end,
+        source = function(cid) return exports.w_lib:FwGetSource(cid) end,
+        helpless = function(src) return exports.w_lib:FwGetHelpless(src) end,
+        onLoaded = function(cb) return exports.w_lib:FwOnCharacterLoaded(cb) end,
+        onUnloaded = function(cb) return exports.w_lib:FwOnCharacterUnloaded(cb) end,
+    }
+end)
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- OFFLINE (DB مباشر) — تعديل حقول الشخصيّة/الوظيفة/العملة للاعب غير متصل،
@@ -1347,7 +1699,7 @@ exports('FwSetPlayerJobOffline', function(identifier, charId, jobName, jobGrade,
     if WFW.Name == 'rsgcore' then
         local sharedJobs = (WFW.Core and WFW.Core.Shared and WFW.Core.Shared.Jobs) or {}
         local jobDef = sharedJobs[jobName]
-        local gradeData = jobDef and jobDef.grades and jobDef.grades[tostring(jobGrade)]
+        local gradeData = jobDef and jobDef.grades and (jobDef.grades[tonumber(jobGrade)] or jobDef.grades[tostring(jobGrade)])
         local jobObj = {
             name = jobName, label = jobDef and jobDef.label or jobName, onduty = false,
             grade = {
@@ -1509,12 +1861,9 @@ exports('FwGetCharactersWithDiscord', function(limit)
     return rows
 end)
 
--- بيانات النواة المشتركة (RSG: Core.Shared.*) — تُعاد كجداول بيانات تعبر exports بأمان.
--- بديل عن قراءة Framework.Core.Shared مباشرةً (توابع النواة لا تعبر الحدود، لكن البيانات تعبر).
--- فورب: لا Core.Shared → تُعاد {} (فورب يحمّل العناصر/الأسلحة بمسار آخر).
-exports('FwGetSharedItems', function() return (WFW.Core and WFW.Core.Shared and WFW.Core.Shared.Items) or {} end)
-exports('FwGetSharedWeapons', function() return (WFW.Core and WFW.Core.Shared and WFW.Core.Shared.Weapons) or {} end)
-exports('FwGetSharedJobs', function() return (WFW.Core and WFW.Core.Shared and WFW.Core.Shared.Jobs) or {} end)
+-- Shared tables (FwGetSharedItems, FwGetSharedWeapons, FwGetSharedJobs, FwGetSharedGangs,
+-- FwGetSharedItem, FwGetSharedWeapon, FwJobLabel, FwGradeName) are exported by fwbridge/shared.lua
+-- on both server and client.
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- Host / backend, character rows, offline roles, bank accounts, native core calls
