@@ -397,12 +397,43 @@ function FW.SetDescription(source, description)
 end
 
 -- ============================ CURRENCY ============================
--- 0 = cash · 1 = gold(VORP)/bloodmoney(RSG) · 2 = rol(VORP)/blkbank(RSG)
+-- 0 / 'cash' / 'money' = cash · 1 / 'gold' / 'bloodmoney' = gold · 2 / 'rol' / 'blkbank' = rol · 'bank' = bank
 local RSG_MONEY_TYPES = { [0] = "cash", [1] = "bloodmoney", [2] = "blkbank" }
+
+local function normalizeCurrencyCode(currencyType)
+    if type(currencyType) == 'number' then
+        if currencyType == 0 or currencyType == 1 or currencyType == 2 then return currencyType end
+        return nil
+    end
+    if type(currencyType) == 'string' then
+        local k = currencyType:lower()
+        if k == 'cash' or k == 'money' then return 0 end
+        if k == 'gold' or k == 'bloodmoney' then return 1 end
+        if k == 'rol' or k == 'blkbank' then return 2 end
+    end
+    return nil
+end
 
 local function qbMoneyType(player, currencyType)
     local balances = player and player.PlayerData and player.PlayerData.money or nil
     if not balances then return nil end
+
+    if type(currencyType) == 'string' then
+        local k = currencyType:lower()
+        if k == 'cash' or k == 'money' then return balances.cash ~= nil and 'cash' or nil end
+        if k == 'bank' then return balances.bank ~= nil and 'bank' or nil end
+        if k == 'gold' or k == 'bloodmoney' then
+            if balances.gold ~= nil then return 'gold' end
+            if balances.bloodmoney ~= nil then return 'bloodmoney' end
+            return nil
+        end
+        if k == 'rol' or k == 'blkbank' then
+            if balances.blkbank ~= nil then return 'blkbank' end
+            if balances.rol ~= nil then return 'rol' end
+            return nil
+        end
+        return balances[k] ~= nil and k or nil
+    end
 
     if currencyType == 0 then return balances.cash ~= nil and 'cash' or nil end
     if currencyType == 1 then
@@ -418,11 +449,13 @@ local function qbMoneyType(player, currencyType)
     return nil
 end
 
-function FW.AddCurrency(source, currencyType, amount)
+function FW.AddCurrency(source, currencyType, amount, reason)
     if WFW.Name == "vorp" then
+        local code = normalizeCurrencyCode(currencyType)
+        if code == nil then return false end
         local user = FW.GetUser(source)
         if user and user.getUsedCharacter then
-            user.getUsedCharacter.addCurrency(currencyType, amount)
+            user.getUsedCharacter.addCurrency(code, amount)
             return true
         end
     elseif WFW.Name == "rsgcore" then
@@ -431,17 +464,19 @@ function FW.AddCurrency(source, currencyType, amount)
         if not player or not moneyType or not player.PlayerData.money
             or player.PlayerData.money[moneyType] == nil then return false end
         if player and moneyType then
-            return player.Functions.AddMoney(moneyType, amount) ~= false
+            return player.Functions.AddMoney(moneyType, amount, reason) ~= false
         end
     end
     return false
 end
 
-function FW.RemoveCurrency(source, currencyType, amount)
+function FW.RemoveCurrency(source, currencyType, amount, reason)
     if WFW.Name == "vorp" then
+        local code = normalizeCurrencyCode(currencyType)
+        if code == nil then return false end
         local user = FW.GetUser(source)
         if user and user.getUsedCharacter then
-            user.getUsedCharacter.removeCurrency(currencyType, amount)
+            user.getUsedCharacter.removeCurrency(code, amount)
             return true
         end
     elseif WFW.Name == "rsgcore" then
@@ -450,7 +485,7 @@ function FW.RemoveCurrency(source, currencyType, amount)
         if not player or not moneyType or not player.PlayerData.money
             or player.PlayerData.money[moneyType] == nil then return false end
         if player and moneyType then
-            return player.Functions.RemoveMoney(moneyType, amount) ~= false
+            return player.Functions.RemoveMoney(moneyType, amount, reason) ~= false
         end
     end
     return false
@@ -1301,10 +1336,14 @@ GENERIC = {
         return GENERIC.SetJob(source, GENERIC.GetJob(source), grade)
     end,
     AddCurrency = function(source, kind, amount)
-        return moduleCall(moduleUser(source), 'addMoney', amount, kind) == true
+        local code = normalizeCurrencyCode(kind)
+        if code == nil then return false end
+        return moduleCall(moduleUser(source), 'addMoney', amount, code) == true
     end,
     RemoveCurrency = function(source, kind, amount)
-        return moduleCall(moduleUser(source), 'removeMoney', amount, kind) == true
+        local code = normalizeCurrencyCode(kind)
+        if code == nil then return false end
+        return moduleCall(moduleUser(source), 'removeMoney', amount, code) == true
     end,
     GetCharacterData = function(source)
         local cid = GENERIC.GetCharacterIdentifier(source)

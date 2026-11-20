@@ -1217,6 +1217,39 @@ class TestModuleFrameworkBridgeFixes(unittest.TestCase):
         self.assertTrue(lua.eval("w.framework:onJobUpdate(function() end)"))
         self.assertIsNotNone(lua.eval("DELEGATED_JOB_CB"))
 
+    def test_currency_strings_and_codes_across_all_five_frameworks(self):
+        # RSG / WCore / QBR: string ('cash', 'gold', 'bank') and integer (0, 1) all work
+        for core in ("w_core", "rsg-core", "qbr-core"):
+            lua = build_fwbridge_runtime(core, is_server=True)
+            before_cash = lua.eval("EXPORTS['FwGetCurrency'](1, 'cash')")
+            before_bank = lua.eval("EXPORTS['FwGetCurrency'](1, 'bank')")
+            self.assertTrue(lua.eval("EXPORTS['FwAddCurrency'](1, 'cash', 25, 'test')"))
+            self.assertEqual(lua.eval("EXPORTS['FwGetCurrency'](1, 'cash')"), before_cash + 25)
+            self.assertTrue(lua.eval("EXPORTS['FwRemoveCurrency'](1, 'cash', 10, 'test')"))
+            self.assertEqual(lua.eval("EXPORTS['FwGetCurrency'](1, 0)"), before_cash + 15)
+            self.assertTrue(lua.eval("EXPORTS['FwAddCurrency'](1, 'bank', 50, 'test')"))
+            self.assertEqual(lua.eval("EXPORTS['FwGetCurrency'](1, 'bank')"), before_bank + 50)
+            self.assertTrue(lua.eval("EXPORTS['FwAddCurrency'](1, 'gold', 3, 'test')"))
+            self.assertTrue(lua.eval("EXPORTS['FwRemoveCurrency'](1, 1, 1, 'test')"))
+
+        # VORP: string ('cash', 'gold') maps cleanly to 0 / 1; 'bank' returns false safely
+        lua_v = build_fwbridge_runtime("vorp_core", is_server=True)
+        before_m = lua_v.eval("EXPORTS['FwGetCurrency'](1, 'cash')")
+        before_g = lua_v.eval("EXPORTS['FwGetCurrency'](1, 'gold')")
+        self.assertTrue(lua_v.eval("EXPORTS['FwAddCurrency'](1, 'cash', 30)"))
+        self.assertEqual(lua_v.eval("EXPORTS['FwGetCurrency'](1, 'cash')"), before_m + 30)
+        self.assertTrue(lua_v.eval("EXPORTS['FwRemoveCurrency'](1, 'cash', 5)"))
+        self.assertEqual(lua_v.eval("EXPORTS['FwGetCurrency'](1, 0)"), before_m + 25)
+        self.assertTrue(lua_v.eval("EXPORTS['FwAddCurrency'](1, 'gold', 4)"))
+        self.assertEqual(lua_v.eval("EXPORTS['FwGetCurrency'](1, 'gold')"), before_g + 4)
+        self.assertFalse(lua_v.eval("EXPORTS['FwAddCurrency'](1, 'bank', 10)"))
+
+        # Module (TPZ/RedEM/QR/RPX/FRP): string and integer map cleanly to numeric code
+        lua_m = build_fwbridge_runtime("module", is_server=True)
+        self.assertTrue(lua_m.eval("EXPORTS['FwAddCurrency'](1, 'cash', 15)"))
+        self.assertTrue(lua_m.eval("EXPORTS['FwRemoveCurrency'](1, 'gold', 2)"))
+        self.assertFalse(lua_m.eval("EXPORTS['FwAddCurrency'](1, 'bank', 10)"))
+
 
 if __name__ == "__main__":
     unittest.main()
