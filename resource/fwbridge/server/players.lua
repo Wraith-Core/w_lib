@@ -146,6 +146,39 @@ end
 
 exports('FwGetPlayerData', buildPlayerSnapshot)
 
+exports('FwGetCurrency', function(src, currency)
+    src = tonumber(src)
+    if not src then return nil end
+    local k = type(currency) == 'string' and currency:lower() or currency
+    if k == 'cash' or k == 'money' or k == 0 or k == nil then
+        return tonumber(exports.w_lib:FwGetMoney(src)) or 0
+    end
+    if k == 'gold' or k == 'bloodmoney' or k == 1 then
+        return tonumber(exports.w_lib:FwGetGold(src)) or 0
+    end
+    if k == 'rol' or k == 2 then
+        if exports.w_lib.FwGetRol then
+            local ok, v = pcall(function() return exports.w_lib:FwGetRol(src) end)
+            if ok and tonumber(v) then return tonumber(v) end
+        end
+        return 0
+    end
+    if k == 'bank' then
+        local user = exports.w_lib:FwGetUser(src)
+        if type(user) == 'table' then
+            if type(user.Functions) == 'table' and type(user.Functions.GetMoney) == 'function' then
+                local ok, v = pcall(user.Functions.GetMoney, 'bank')
+                if ok and tonumber(v) then return tonumber(v) end
+            end
+            if type(user.PlayerData) == 'table' and type(user.PlayerData.money) == 'table' and user.PlayerData.money.bank ~= nil then
+                return tonumber(user.PlayerData.money.bank) or 0
+            end
+        end
+        return nil
+    end
+    return nil
+end)
+
 local function makeFilterSet(val)
     if type(val) == 'string' and val ~= '' then
         return { [val] = true }

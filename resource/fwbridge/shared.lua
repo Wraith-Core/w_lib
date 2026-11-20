@@ -123,6 +123,7 @@ end)
 
 exports('FwName', function() return WFW.PublicName or WFW.Name end)
 exports('FwReady', function() return WFW.Ready end)
+exports('FwIsAvailable', function() return WFW.Ready == true end)
 exports('FwInventory', function()
     -- الحقيبة الفعّالة من جسر الحقيبة (invbridge) لا من الفريمورك — تتّفق مع InvName.
     -- (الاشتقاق من الفريمورك كان يُرجع vorp_inventory دائمًا حتى لو الفعّالة w_inventory.)
