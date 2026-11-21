@@ -127,6 +127,8 @@ const WARM_FACES = [
   '400 20px "Hapna Slab"',
   '400 20px "RDR Catalogue"',
   '400 20px "RDR Lino"',
+  '400 20px "Crock"',
+  '400 20px "BebasNeue"',
 ];
 
 function warmFaces(): void {
@@ -163,6 +165,14 @@ export function bootstrapWcAssets(): void {
   root.setProperty('--tex-grain', tex('tex/kit/grain.png'));
   root.setProperty('--tex-band', tex('tex/ui/selection_box_bg_1a.png'));
   root.setProperty('--tex-band-sm', tex('tex/ui/selection_box_bg_1c.png'));
+
+  /* ★ jo_libs prompt faces (Crock for prompt text, BebasNeue for keyboard keycaps). */
+  const promptFontStyle = document.createElement('style');
+  promptFontStyle.textContent = `
+    @font-face { font-family: "Crock"; src: url("${ABS_BASE}fonts/crock.ttf") format("truetype"); font-display: block; }
+    @font-face { font-family: "BebasNeue"; src: url("${ABS_BASE}fonts/BebasNeue-Regular.ttf") format("truetype"); font-display: block; }
+  `;
+  document.head.appendChild(promptFontStyle);
 
   // ★ The faces come from the theme's fonts.css. It is a <link> in <head>, so by 'load' it has
   //   been parsed and every @font-face is known; ask for them then.
