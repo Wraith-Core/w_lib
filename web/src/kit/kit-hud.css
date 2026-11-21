@@ -24,11 +24,10 @@ html .lb-textui .lb-key {
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
 }
 
-/* the prompt's key caps: same letter face as every other chip */
+/* the prompt's key caps: authentic jo_libs BebasNeue font (RDR2 PC keyboard prompts) */
 html .wl-prompt-root .keyboardKey .text {
-  font-family: 'RDR Lino', 'EB Garamond', Georgia, serif;
-  font-weight: 600;
-  font-variant-numeric: lining-nums;
+  font-family: 'BebasNeue', sans-serif;
+  font-weight: 400;
   letter-spacing: 0.02em;
 }
 
