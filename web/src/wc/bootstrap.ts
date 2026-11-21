@@ -134,7 +134,7 @@ const WARM_FACES = [
 function warmFaces(): void {
   const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
   if (!fonts || typeof fonts.load !== 'function') return;
-  for (const face of WARM_FACES) fonts.load(face, 'Aa\u0639').catch(() => undefined);
+  for (const face of WARM_FACES) fonts.load(face, 'Aa0\u0639').catch(() => undefined);
 }
 
 let done = false;
@@ -166,10 +166,11 @@ export function bootstrapWcAssets(): void {
   root.setProperty('--tex-band', tex('tex/ui/selection_box_bg_1a.png'));
   root.setProperty('--tex-band-sm', tex('tex/ui/selection_box_bg_1c.png'));
 
-  /* ★ jo_libs prompt faces (Crock for prompt text, BebasNeue for keyboard keycaps). */
+  /* ★ jo_libs prompt faces (Crock for prompt text with RDR Catalogue digits, BebasNeue for keyboard keycaps). */
   const promptFontStyle = document.createElement('style');
   promptFontStyle.textContent = `
-    @font-face { font-family: "Crock"; src: url("${ABS_BASE}fonts/crock.ttf") format("truetype"); font-display: block; }
+    @font-face { font-family: "Crock"; font-weight: 100 900; src: url("${ABS_BASE}fonts/crock.ttf") format("truetype"); font-display: block; }
+    @font-face { font-family: "Crock"; font-weight: 100 900; src: url("${ABS_BASE}fonts/RDRCatalogueBold-Bold.woff2") format("woff2"); unicode-range: U+0030-0039; font-display: block; }
     @font-face { font-family: "BebasNeue"; src: url("${ABS_BASE}fonts/BebasNeue-Regular.ttf") format("truetype"); font-display: block; }
   `;
   document.head.appendChild(promptFontStyle);
