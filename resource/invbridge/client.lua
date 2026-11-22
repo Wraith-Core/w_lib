@@ -375,7 +375,7 @@ for _, ev in ipairs({
     'vorp_inventory:componentRemoved',
     'vorpinventory:loaded',
 }) do
-    AddEventHandler(ev, function()
+    RegisterNetEvent(ev, function()
         fireClientListeners(WheelRefreshListeners, ev)
     end)
 end
