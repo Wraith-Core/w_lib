@@ -180,7 +180,7 @@ local function fwAdjustPlayer(cid, rawKind, delta, reason)
             local hasBank, user = hasRsgBankAccount(src)
             if hasBank then
                 local fn = isAdd and user.Functions.AddMoney or user.Functions.RemoveMoney
-                if type(fn) ~= 'function' then
+                if not WECON.isCallable(fn) then
                     return false, 'unsupported_currency'
                 end
                 local ok, res = pcall(fn, 'bank', absAmount, reason)
