@@ -92,11 +92,8 @@ end
 -- ───────────────────────── Framework Fallback Helpers ─────────────────────────
 
 local function isWCoreWithoutCentral()
-    if type(GetResourceState) == 'function' and GetResourceState('w_core') == 'started' then
-        return true
-    end
-    local ok, backend = pcall(function() return exports.w_lib:FwBackend() end)
-    return ok and backend == 'wcore'
+    -- w_core manages standard server money directly when w_centralbank is not installed.
+    return false
 end
 
 local function isFwReady()
@@ -112,7 +109,7 @@ end
 
 local function hasRsgBankAccount(src)
     local okB, backend = pcall(function() return exports.w_lib:FwBackend() end)
-    if not okB or (backend ~= 'rsg' and backend ~= 'qbr') then
+    if not okB or (backend ~= 'rsg' and backend ~= 'qbr' and backend ~= 'wcore') then
         return false, nil
     end
     local okU, user = pcall(function() return exports.w_lib:FwGetUser(src) end)
@@ -552,7 +549,8 @@ exports('EconBankTransfer', function(src, branch, from, to, amount, reason, key)
         local ok, why, tax = callCentralMutate('BankTransfer', src, branch, from, to, amount, reason, key)
         return ok, why, tax
     end
-    return false, 'centralbank_unavailable', nil
+    local ok, why = exports.w_lib:EconTransfer(from, to, amount, reason, key)
+    return ok, why, 0
 end)
 
 exports('EconPlayerOutflows', function(cid, limit, beforeId)
