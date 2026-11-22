@@ -60,6 +60,16 @@ local function detectCores()
   coresStarted = getMatchedEntries(supportedCores)
 
   if #coresStarted == 0 then
+    -- Core resources (e.g. w_core) depend on w_lib and start right after it.
+    -- Skip the error banner while w_lib itself is booting or a supported core is installed and waiting to start.
+    if GetCurrentResourceName() == "w_lib" then return {} end
+    for i = 1, #supportedCores do
+      local res = supportedCores[i].matchResources and supportedCores[i].matchResources[1]
+      if res and res:sub(1, 1) ~= "!" then
+        local name = res:extractConvarComparator()
+        if GetResourceState(name) == "stopped" then return {} end
+      end
+    end
     eprint("=====================================")
     eprint("No compatible core found on your server")
     eprint("=====================================")

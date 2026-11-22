@@ -6,12 +6,12 @@ rdr3_warning 'I acknowledge that this is a prerelease build of RedM, and I am aw
 
 name 'w_lib'
 author 'WraithStudio'
-version '4.4.15'
+version '4.4.16'
 -- Includes adaptations from ox_lib and jo_libs; preserve their original notices.
 -- See CREDITS.md and LICENSES/ for upstream attribution and license copies.
 license 'LGPL-3.0-or-later'
-repository ''
-description 'discord.gg/stellar | w_lib — one NUI frame for every interface: context, dialogs, notifications, text UI, menus, progress, skill check, prompt, gizmo and minigames, on the w_crafting design. Built on ox_lib and RedM-jo_libs — see CREDITS.md.'
+repository 'https://github.com/Wraith-Core/w_lib'
+description 'w_lib — unified NUI frame and core library for Wraith Framework RedM'
 
 dependencies {
     '/server:14901',
